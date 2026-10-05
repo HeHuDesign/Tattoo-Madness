@@ -993,7 +993,7 @@ function startJob(opts){
   $('#freeTools').classList.toggle('hide',!free); $('#wipeBtn').classList.toggle('hide',!free); $('#tSave').classList.toggle('hide',!free||!downloads); $('#tDone').classList.toggle('hide',free);
   $('#tTimer').classList.toggle('hide',!isClient(job.mode));
   if(!free){ job.color='#151515'; job.ink=1; }
-  drawPortrait($('#tPortrait'), job.mode==='customer'?CH[job.cust.ch]:CH.dee);
+  drawPortrait($('#tPortrait'), isClient(job.mode)?CH[job.cust.ch]:CH.dee);
   if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`; $('#tSub').textContent='Practice. No clock. Scored on your linework.'; }
   else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}. Real skin, scored on linework.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
