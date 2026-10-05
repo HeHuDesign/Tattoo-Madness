@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tattoo Madness</string>
+    <string name="title_activity_main">Tattoo Madness</string>
+    <string name="package_name">com.tattoomadness.game</string>
+    <string name="custom_url_scheme">com.tattoomadness.game</string>
+</resources>

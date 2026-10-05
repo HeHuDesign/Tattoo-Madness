@@ -1,0 +1,19 @@
+{
+  "name": "tattoo-madness",
+  "version": "1.0.0",
+  "description": "Tattoo Madness, a pixel-art tattoo apprenticeship game",
+  "scripts": {
+    "sync": "npx cap sync android",
+    "open": "npx cap open android",
+    "android": "npx cap sync android && npx cap open android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@fontsource/pixelify-sans": "^5.3.0"
+  }
+}

@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tattoo Madness</title>
+<style>
+@font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/pixelify-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/pixelify-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/pixelify-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/pixelify-sans-latin-700-normal.woff2) format("woff2")}
+:root{
+  --night:#1b1424; --parch:#f6dcaa; --parch-2:#e9c48a; --wood:#8a4b22; --wood-d:#5a2e14; --wood-l:#c98a3f;
+  --ink:#3d1f0e; --ink-soft:#7a4a2a; --btn:#e7b46a; --btn-hi:#f8d79c; --btn-lo:#b97a35;
+  --go:#86c060; --go-hi:#b5e08e; --go-lo:#5a8f3c; --neon:#ff6fa8; --gold:#f2c14e; --bad:#c2453a; --warn:#d9a12b;
+  --bench:#5b3a26; --bench-2:#53341f;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --parch:#efd29c; --parch-2:#ddb57a; --bench:#4c2f1f; --bench-2:#45291a; }
+}
+:root[data-theme="dark"]{ --parch:#efd29c; --parch-2:#ddb57a; --bench:#4c2f1f; --bench-2:#45291a; }
+:root[data-theme="light"]{ --parch:#f6dcaa; --parch-2:#e9c48a; --bench:#5b3a26; --bench-2:#53341f; }
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;
+  font-family:"Pixelify Sans","Courier New",ui-monospace,monospace;font-size:18px;line-height:1.3;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit}
+#game{position:relative;width:100%;height:100%;overflow:hidden}
+#scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
+.screen{position:absolute;inset:0;display:none}
+.screen.active{display:block}
+
+/* --- framed panels & buttons --- */
+.wood{background:var(--parch);border:4px solid var(--wood-d);border-radius:6px;color:var(--ink);
+  box-shadow:inset 0 0 0 3px var(--wood-l),inset 0 0 0 6px var(--parch-2),5px 5px 0 rgba(0,0,0,.35)}
+.gbtn{font-size:20px;color:var(--ink);background:var(--btn);border:3px solid var(--wood-d);border-radius:4px;padding:7px 16px;cursor:pointer;
+  box-shadow:inset -3px -3px 0 var(--btn-lo),inset 3px 3px 0 var(--btn-hi);white-space:nowrap}
+.gbtn:hover{filter:brightness(1.08)}
+.gbtn:active{box-shadow:inset 3px 3px 0 var(--btn-lo)}
+.gbtn:disabled{opacity:.45;cursor:default;filter:none}
+.gbtn.go{background:var(--go);box-shadow:inset -3px -3px 0 var(--go-lo),inset 3px 3px 0 var(--go-hi)}
+.gbtn.small{font-size:16px;padding:4px 10px}
+.gbtn[aria-pressed="true"]{background:var(--ink);color:var(--parch);box-shadow:inset 3px 3px 0 #000}
+.gbtn:focus-visible{outline:3px solid #fff3b0;outline-offset:3px}
+/* controller / keyboard highlight: gold fill, white ring, pink glow, and a bouncing pointer */
+.pad-focus{position:relative;z-index:2;
+  background:#ffe36e!important;color:#3d1f0e!important;
+  outline:4px solid #fff!important;outline-offset:2px;
+  box-shadow:0 0 0 9px var(--neon),0 0 22px 10px rgba(255,111,168,.75),inset -3px -3px 0 #d9a520!important;
+  transform:scale(1.08);animation:pfglow .9s ease-in-out infinite alternate}
+.pad-focus::before{content:"▶";position:absolute;left:-30px;top:50%;transform:translateY(-50%);
+  color:#fff;font-size:20px;line-height:1;text-shadow:2px 2px 0 var(--neon),-1px -1px 0 #3d1f0e;
+  animation:pfpoint .45s steps(2) infinite;pointer-events:none;font-family:system-ui,sans-serif}
+.ink.pad-focus::before,.padcard.pad-focus::before{left:-26px}
+@keyframes pfglow{to{box-shadow:0 0 0 9px #fff3b0,0 0 30px 14px rgba(255,111,168,.95),inset -3px -3px 0 #d9a520}}
+@keyframes pfpoint{50%{transform:translate(5px,-50%)}}
+.hide{display:none!important}
+
+/* --- title --- */
+#scr-title.active{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:16px}
+.logo{text-align:center;color:#ffe08a;line-height:.9}
+.logo h1{margin:0;font-size:clamp(46px,10vw,104px);font-weight:700;letter-spacing:.02em;
+  text-shadow:4px 4px 0 #b8432f,8px 8px 0 #3a1830}
+.logo p{margin:14px 0 0;font-size:clamp(17px,2.6vw,22px);color:#ffd7e6;text-shadow:2px 2px 0 #3a1830}
+.menu{display:flex;flex-direction:column;gap:10px;padding:18px 20px;min-width:min(320px,90vw)}
+.menu .gbtn{font-size:22px}
+.foot{color:#f4e3ff;text-shadow:2px 2px 0 #2a1830;font-size:16px;text-align:center}
+.corner{position:absolute;top:12px;right:12px}
+.padstat{font-size:15px;opacity:.85}
+.padstat.ok{color:#b5e08e;opacity:1}
+.padstat.warn{color:#ffd27a;opacity:1}
+#padDbg{font-size:13px;max-width:92vw;overflow-wrap:anywhere}
+
+/* --- shop & dialogue --- */
+.hud{position:absolute;top:10px;left:10px;display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:17px}
+.coin{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset -2px -2px 0 #a86b16,0 0 0 2px #6b3a10}
+#dlg{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(860px,calc(100% - 20px));
+  display:flex;gap:14px;padding:14px 16px;min-height:120px;cursor:pointer}
+#dlgPortrait{width:84px;height:84px;flex:none;image-rendering:pixelated;border:3px solid var(--wood-d);border-radius:4px;background:#e8c59a}
+#dlg .who{font-weight:700;font-size:20px;color:var(--wood)}
+#dlg .txt{font-size:21px;margin-top:2px;min-height:2.6em}
+#dlg .more{position:absolute;right:16px;bottom:8px;animation:bob .7s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+#dlg.narrator{justify-content:center;text-align:center}
+#dlg.narrator #dlgPortrait,#dlg.narrator .who{display:none}
+#dlg.narrator .txt{font-size:24px}
+
+/* --- practice board --- */
+.dim{position:absolute;inset:0;background:rgba(27,20,36,.55);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+.board{width:min(820px,100%);padding:18px 20px}
+.board h2,.res h2{margin:0;font-size:30px}
+.board .sub{margin:2px 0 14px;color:var(--ink-soft)}
+.pads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.padcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;background:var(--parch-2);
+  border:3px solid var(--wood-d);border-radius:4px;cursor:pointer;box-shadow:inset -3px -3px 0 var(--btn-lo)}
+.padcard canvas{width:96px;height:96px;border-radius:12px;image-rendering:auto}
+.padcard b{font-size:19px}
+.padcard .st{color:#b8432f;letter-spacing:2px;font-family:system-ui,sans-serif;font-size:17px}
+.padcard:disabled{cursor:default;filter:grayscale(.8) brightness(.85)}
+.padcard .lock{position:absolute;inset:0;display:grid;place-items:center;font-size:18px;color:var(--parch);background:rgba(40,20,10,.45)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+@media (max-width:560px){.pads{grid-template-columns:repeat(2,1fr)}}
+
+/* --- tattoo station --- */
+#scr-tattoo.active{display:flex;flex-direction:column;background:var(--bench);
+  background-image:repeating-linear-gradient(0deg,var(--bench) 0 22px,var(--bench-2) 22px 24px)}
+.thud{display:flex;align-items:center;gap:12px;margin:8px;padding:8px 12px;flex-wrap:wrap}
+.thud canvas{width:52px;height:52px;image-rendering:pixelated;border:3px solid var(--wood-d);border-radius:4px;background:#e8c59a}
+.tinfo{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.tinfo b{font-size:21px}
+.tinfo span{color:var(--ink-soft);font-size:16px}
+.timer{display:flex;align-items:center;gap:8px}
+.bar{width:150px;height:16px;border:3px solid var(--wood-d);background:#4a2c1d;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--go);width:100%}
+#tTime{min-width:64px;font-variant-numeric:tabular-nums}
+.inputchip{font-size:15px;padding:2px 8px;border:2px solid var(--wood-d);border-radius:3px;background:var(--parch-2)}
+.twork{flex:1;min-height:0;display:grid;place-items:center;position:relative;overflow:hidden}
+.pad{position:relative;border-radius:22px;box-shadow:0 0 0 6px #e9d7c4,0 0 0 9px var(--wood-d),8px 10px 0 9px rgba(0,0,0,.3);touch-action:none;cursor:crosshair;overflow:hidden}
+.pad::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:22px;
+  background-image:radial-gradient(rgba(120,60,40,.07) 1px,transparent 1.4px);background-size:7px 7px;mix-blend-mode:multiply}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pad canvas.sten{mix-blend-mode:multiply}
+.pad canvas.warn{opacity:0;transition:opacity .2s}
+.pad.danger{box-shadow:0 0 0 6px #ff5a4a,0 0 0 9px #7a1010,0 0 28px 12px rgba(255,60,40,.55)}
+.pad.danger canvas.warn{opacity:1}
+.slips{display:flex;gap:4px;align-items:center;font-size:16px}
+#cDirt{display:none}
+.fhud{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fchips{display:flex;gap:6px;flex-wrap:wrap;margin-right:auto}
+.chip.low{color:var(--bad);font-weight:700}
+#fPrompt{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));font-size:18px;max-width:92vw;white-space:normal;text-align:center}
+#fPrompt.pad-focus{transform:translateX(-50%) scale(1.08)}
+.store{width:min(780px,100%);padding:18px 20px;max-height:100%;overflow:auto}
+.sthead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sthead h2{margin:0;font-size:30px}
+.tabs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.items{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;gap:12px;align-items:center;padding:8px 10px;background:var(--parch-2);border:2px solid var(--wood-l);border-radius:4px}
+.item .grow{flex:1;min-width:0}
+.item .nm{font-weight:700;font-size:19px}
+.item .ds{color:var(--ink-soft);font-size:15px}
+.item .pr{white-space:nowrap;display:inline-flex;gap:5px;align-items:center}
+.hint{color:var(--ink-soft);margin:8px 0 0;font-size:16px}
+.mapwrap{display:flex;flex-direction:column;gap:10px;width:min(980px,100%);padding:14px;max-height:100%;overflow:auto}
+.mapbox{position:relative;width:min(100%,calc((100vh - 270px)*16/9));min-width:260px;aspect-ratio:16/9;margin:0 auto;border:3px solid var(--wood-d);border-radius:4px;overflow:visible}
+.mapbox canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.pin{position:absolute;transform:translate(-50%,-100%);font-size:14px;padding:3px 8px;white-space:nowrap}
+.pin.owned{background:var(--go)}
+.pin.home{background:#ffd7e6}
+.pin[aria-pressed="true"]{background:var(--ink);color:var(--parch)}
+.mapinfo{display:flex;gap:12px;align-items:center;flex-wrap:wrap;min-height:44px}
+.mapinfo .grow{flex:1;min-width:200px}
+.revs{margin:8px 0 0;padding-left:20px}
+.slips i{width:13px;height:13px;border-radius:50%;border:2px solid var(--wood-d);background:var(--parch-2)}
+.slips i.used{background:var(--bad)}
+.failtag{color:var(--bad)}
+.ring{position:absolute;pointer-events:none;border:1.5px solid rgba(255,255,255,.95);box-shadow:0 0 0 1.5px rgba(0,0,0,.6);border-radius:50%;transform:translate(-50%,-50%);display:none;z-index:2}
+.ring.padcur::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:var(--neon);border-radius:50%}
+.ttools{display:flex;align-items:center;gap:8px;margin:8px;padding:8px 10px;flex-wrap:wrap;justify-content:center}
+.sep{width:3px;align-self:stretch;background:var(--wood-l);margin:0 2px}
+.sizev{min-width:52px;text-align:center}
+.inks{display:flex;gap:5px}
+.ink{width:28px;height:28px;border-radius:50%;border:3px solid var(--wood-d);padding:0;cursor:pointer}
+.ink[aria-pressed="true"]{outline:3px solid var(--neon);outline-offset:1px}
+.free-only{display:contents}
+
+/* --- results --- */
+.res{width:min(640px,100%);padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:6px 20px;align-items:start}
+.res h2{grid-column:1 / -1}
+.res canvas{width:180px;height:180px;border-radius:16px;border:3px solid var(--wood-d)}
+.bigstars{font-size:40px;color:#b8432f;letter-spacing:4px;font-family:system-ui,sans-serif;line-height:1}
+.stats{display:grid;grid-template-columns:auto auto;gap:2px 14px;margin:8px 0;font-size:19px;justify-content:start}
+.stats dt{color:var(--ink-soft)}
+.stats dd{margin:0;font-weight:600}
+.quote{grid-column:1 / -1;display:flex;gap:10px;align-items:center;padding:10px;background:var(--parch-2);border-radius:4px;border:2px solid var(--wood-l)}
+.quote canvas{width:44px;height:44px;border-width:2px;border-radius:4px;image-rendering:pixelated;flex:none}
+.res .row{grid-column:1 / -1}
+@media (max-width:560px){.res{grid-template-columns:1fr}.res canvas{justify-self:center}}
+
+/* --- controls --- */
+.ctl{width:min(820px,100%);padding:18px 20px}
+.ctl h2{margin:0 0 10px;font-size:30px}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.cgrid h3{margin:0 0 6px;font-size:21px;color:var(--wood)}
+.cgrid dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:16px}
+.cgrid dt{font-weight:700}
+.cgrid dd{margin:0}
+@media (max-width:700px){.cgrid{grid-template-columns:1fr}}
+
+/* --- overlays --- */
+#modal{position:fixed;inset:0;background:rgba(20,10,25,.6);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+#modal .wood{padding:18px 22px;max-width:440px;text-align:center}
+#modal p{margin:0 0 14px;font-size:21px}
+#modal .row{justify-content:center}
+#fade{position:fixed;inset:0;background:var(--night);opacity:0;pointer-events:none;transition:opacity .45s steps(6);z-index:30;display:grid;place-items:center;color:#ffe08a;text-align:center}
+#fade.on{opacity:1;pointer-events:auto}
+#fade h2{margin:0;font-size:56px;text-shadow:4px 4px 0 #b8432f}
+#fade p{margin:6px 0 0;font-size:22px;color:#ffd7e6}
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);padding:6px 14px;z-index:25;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.pad-focus,.pad-focus::before,#dlg .more{animation:none}#fade{transition:none}}
+@media (max-width:640px){
+  .thud{gap:8px;padding:6px 8px}.thud canvas{width:40px;height:40px}.tinfo b{font-size:18px}.bar{width:90px}
+  .gbtn{font-size:17px;padding:5px 10px}.ttools{gap:5px;padding:6px}
+  #dlg .txt{font-size:18px}#dlgPortrait{width:60px;height:60px}
+}
+
+/* ===== responsive: everything fits without scrolling ===== */
+.tfit{display:flex;flex-direction:column;align-items:center;gap:18px}
+.toolrow,.szrow{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.tfloat{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:8px;z-index:5;display:none;gap:8px;align-items:center}
+.tfloat .chip{font-size:15px}
+#scr-tattoo.full .thud,#scr-tattoo.full .ttools{display:none}
+#scr-tattoo.full .tfloat{display:flex}
+
+/* short landscape screens (phones turned sideways) */
+.compact .gbtn{font-size:17px;padding:5px 12px}
+.compact .gbtn.small{font-size:15px;padding:3px 9px}
+.compact #scr-title.active{padding:8px}
+.compact .tfit{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:10px 28px}
+.compact .logo h1{font-size:clamp(34px,13vh,68px);text-shadow:3px 3px 0 #b8432f,6px 6px 0 #3a1830}
+.compact .logo p{margin-top:8px;font-size:17px}
+.compact .menu{gap:7px;padding:12px 14px;min-width:240px}
+.compact .menu .gbtn{font-size:18px;padding:5px 12px}
+.compact .foot{width:100%;font-size:14px}
+.compact .dim{padding:8px}
+.compact .board,.compact .store,.compact .ctl{padding:10px 14px}
+.compact .board h2,.compact .res h2,.compact .sthead h2,.compact .ctl h2{font-size:22px}
+.compact .board .sub{margin:0 0 8px;font-size:15px}
+.compact .pads{grid-template-columns:repeat(6,1fr);gap:8px}
+.compact .padcard{padding:6px 4px}
+.compact .padcard canvas{width:64px;height:64px;border-radius:9px}
+.compact .padcard b{font-size:14px;text-align:center}
+.compact .padcard .st{font-size:14px}
+.compact .row{margin-top:8px}
+.compact .tabs{margin:6px 0}
+.compact .items{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.compact .item{padding:5px 8px;gap:8px}
+.compact .item .nm{font-size:16px}
+.compact .item .ds{font-size:13px}
+.compact .hint{grid-column:1/-1;margin:2px 0 0;font-size:14px}
+.compact .res{padding:10px 14px;gap:4px 16px;grid-template-columns:auto 1fr}
+.compact .res canvas{width:118px;height:118px;border-radius:12px}
+.compact .bigstars{font-size:28px}
+.compact .stats{font-size:15px;margin:4px 0;gap:1px 12px}
+.compact .res .stats,.compact #deStats{grid-template-columns:auto auto auto auto}
+.compact .quote{padding:6px 8px;font-size:15px}
+.compact .quote canvas{width:34px;height:34px}
+.compact .cgrid{gap:8px}
+.compact .cgrid h3{font-size:17px;margin:0 0 3px}
+.compact .cgrid dl{font-size:13px;gap:1px 8px}
+.compact .mapwrap{display:grid;grid-template-columns:auto minmax(170px,230px);grid-template-rows:auto 1fr auto;gap:8px 12px;padding:10px;width:auto}
+.compact .mapwrap .sthead{grid-column:1/-1}
+.compact .mapbox{grid-row:2/4;width:min(calc((100vh - 90px)*16/9),calc(100vw - 300px));min-width:220px}
+.compact .mapinfo{flex-direction:column;align-items:flex-start;font-size:15px;gap:6px}
+.compact .mapwrap>.row{grid-column:2;margin:0}
+.compact .pin{font-size:12px;padding:2px 6px}
+.compact #dlg{min-height:0;padding:8px 12px;gap:10px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.compact #dlgPortrait{width:54px;height:54px}
+.compact #dlg .who{font-size:17px}
+.compact #dlg .txt{font-size:17px;min-height:2.4em}
+.compact #dlg.narrator .txt{font-size:19px}
+.compact .hud .chip,.compact .fchips .chip{font-size:14px;padding:2px 8px}
+.compact #fPrompt{font-size:15px}
+.compact #modal .wood{padding:12px 16px}
+.compact #modal p{font-size:17px;margin:0 0 10px}
+.compact #fade h2{font-size:40px}
+
+/* tattoo station on short screens: info on the left, tools on the right, skin as big as the screen allows */
+.compact #scr-tattoo.active{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr)}
+.compact #scr-tattoo.full.active{grid-template-columns:minmax(0,1fr)}
+.compact .thud{flex-direction:column;flex-wrap:nowrap;align-items:stretch;align-self:center;width:156px;gap:6px;margin:6px 0 6px 6px;padding:8px}
+.compact .thud canvas{width:40px;height:40px;align-self:center}
+.compact .tinfo{margin:0;text-align:center}
+.compact .tinfo b{font-size:15px;line-height:1.15}
+.compact .tinfo span{font-size:12px;line-height:1.2}
+.compact .timer{flex-direction:column;gap:2px;font-size:14px}
+.compact .bar{width:100%}
+.compact .slips{justify-content:center;flex-wrap:wrap}
+.compact .inputchip{display:none}
+.compact .ttools{flex-direction:column;flex-wrap:nowrap;align-self:center;width:150px;gap:6px;margin:6px 6px 6px 0;padding:8px}
+.compact .ttools .sep{width:100%;height:3px;margin:0}
+.compact .toolrow,.compact .szrow{gap:5px}
+.compact .ttools .inks{flex-wrap:wrap;justify-content:center;gap:4px}
+.compact .ttools .ink{width:22px;height:22px;border-width:2px}
+.compact .twork{min-width:0}
+
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="scene" width="320" height="180"></canvas>
+
+  <section class="screen" id="scr-title">
+    <div class="tfit" id="tfit">
+    <div class="logo"><h1>Tattoo Madness</h1><p>an apprentice's tale</p></div>
+    <div class="menu wood">
+      <button class="gbtn go" id="bNew">New apprenticeship</button>
+      <button class="gbtn" id="bCont">Continue</button>
+      <button class="gbtn" id="bFree">Free tattoo</button>
+      <button class="gbtn" id="bCtl">Controls</button>
+      <button class="gbtn" id="bSound">Sound: on</button>
+    </div>
+    <div class="foot">Play with a mouse, your finger, or a controller</div>
+    <div class="foot padstat" id="padStat">Using a controller? Click the game once, then press any button.</div>
+    <div class="foot padstat hide" id="padDbg"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-shop">
+    <div class="hud" id="hud"></div>
+    <div id="dlg" class="wood hide" role="button" tabindex="0" aria-live="polite">
+      <canvas id="dlgPortrait" width="60" height="60"></canvas>
+      <div><div class="who" id="dlgWho"></div><div class="txt" id="dlgTxt"></div></div>
+      <span class="more" id="dlgMore">▼</span>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-board"><div class="dim">
+    <div class="board wood">
+      <h2>Fake skin practice</h2>
+      <p class="sub">Stay right on the line. Go too far out and the pad is wiped clean, so you start over. Five wipes and the round fails.</p>
+      <div class="pads" id="pads"></div>
+      <div class="row">
+        <button class="gbtn" id="bBoardMenu">Title menu</button>
+        <button class="gbtn go hide" id="bReady">Tell Dee you're ready</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="screen" id="scr-tattoo">
+    <div class="thud wood">
+      <canvas id="tPortrait" width="60" height="60"></canvas>
+      <div class="tinfo"><b id="tTitle"></b><span id="tSub"></span></div>
+      <div class="timer" id="tTimer"><div class="bar"><i id="tBar"></i></div><span id="tTime"></span></div>
+      <span class="slips" id="tSlips" title="Slips outside the lines. Five and the round fails."></span>
+      <span class="inputchip" id="inputChip">Mouse</span>
+      <button class="gbtn small" id="tFull" title="Hide the panels and make the skin as big as possible (F)">Full view</button>
+      <button class="gbtn small" id="tMenu">Menu</button>
+      <button class="gbtn small go" id="tDone">Done</button>
+      <button class="gbtn small go hide" id="tSave">Save PNG</button>
+    </div>
+    <div class="tfloat" id="tFloat">
+      <button class="gbtn small" id="tShow" title="Show the tools and menu again (F)">☰ Tools</button>
+      <span class="chip wood" id="tMini"></span>
+    </div>
+    <div class="twork" id="twork">
+      <div class="pad" id="pad">
+        <canvas id="cShade" width="600" height="600"></canvas>
+        <canvas id="cLine" width="600" height="600"></canvas>
+        <canvas id="cDirt" width="600" height="600"></canvas>
+        <canvas id="cBuf" width="600" height="600"></canvas>
+        <canvas id="cSten" class="sten" width="600" height="600"></canvas>
+        <canvas id="cWarn" class="warn" width="600" height="600"></canvas>
+        <div class="ring" id="ring"></div>
+      </div>
+    </div>
+    <div class="ttools wood">
+      <span class="toolrow">
+      <button class="gbtn small" data-tool="liner" title="Liner (L)">Liner</button>
+      <button class="gbtn small" data-tool="shade" title="Shader (S)">Shader</button>
+      <button class="gbtn small" data-tool="erase" id="wipeBtn" title="Wipe / erase (E)">Wipe</button>
+      </span>
+      <span class="sep"></span>
+      <span class="szrow">
+      <button class="gbtn small" id="szDown" title="Smaller needle ([)">−</button>
+      <span class="sizev" id="szVal">7RL</span>
+      <button class="gbtn small" id="szUp" title="Bigger needle (])">+</button>
+      </span>
+      <span class="sep"></span>
+      <button class="gbtn small" id="tSten" title="Show or hide stencil (T)">Stencil</button>
+      <span class="free-only hide" id="freeTools">
+        <span class="sep"></span>
+        <span class="inks" id="inks"></span>
+        <button class="gbtn small" id="tDesign">Stencil: Blank</button>
+        <button class="gbtn small" id="tUpload">Upload</button>
+        <input type="file" id="fileIn" accept="image/*" class="hide">
+      </span>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-results"><div class="dim">
+    <div class="res wood" id="res"></div>
+  </div></section>
+
+  <section class="screen" id="scr-controls"><div class="dim">
+    <div class="ctl wood">
+      <h2>Controls</h2>
+      <div class="cgrid">
+        <div><h3>Mouse or touchpad</h3><dl>
+          <dt>Hold + drag</dt><dd>Ink</dd><dt>Slow / fast</dt><dd>Heavier / lighter line</dd>
+          <dt>L S E</dt><dd>Liner, shader, wipe</dd><dt>[ ]</dt><dd>Needle size</dd>
+          <dt>Arrows + Enter</dt><dd>Menus</dd><dt>T</dt><dd>Stencil on / off</dd><dt>F</dt><dd>Full view (hide panels)</dd><dt>Esc</dt><dd>Pause</dd><dt>Space</dt><dd>Next line of dialogue</dd></dl></div>
+        <div><h3>Touch</h3><dl>
+          <dt>Finger drag</dt><dd>Ink</dd><dt>Lift</dt><dd>Stop</dd><dt>Stylus</dt><dd>Real pressure</dd>
+          <dt>Buttons</dt><dd>Tools and needle size along the bottom</dd><dt>Tap</dt><dd>Next line of dialogue</dd></dl></div>
+        <div><h3>Controller</h3><dl>
+          <dt>Left stick</dt><dd>Move machine</dd><dt>RT</dt><dd>Ink (squeeze = pressure)</dd>
+          <dt>LT</dt><dd>Slow, precise movement</dd><dt>X</dt><dd>Swap tool</dd><dt>LB / RB</dt><dd>Needle size</dd>
+          <dt>D-pad</dt><dd>Move between any buttons, menus and the station</dd><dt>A / any face button</dt><dd>Select, next line</dd><dt>B</dt><dd>Pause (at the station)</dd><dt>Select / Back</dt><dd>Go back in menus</dd><dt>Y</dt><dd>Stencil on / off</dd><dt>Start</dt><dd>Finish tattoo</dd><dt>L3 / R3</dt><dd>Full view (hide panels)</dd></dl></div>
+      </div>
+      <div class="row"><button class="gbtn" id="bCtlBack">Back</button></div>
+    </div>
+  </div></section>
+
+  <section class="screen" id="scr-end"><div class="dim">
+    <div class="board wood" style="text-align:center">
+      <h2>Apprenticeship complete</h2>
+      <p class="sub">Dee hung your rose on the flash wall.</p>
+      <dl class="stats" id="endStats" style="justify-content:center"></dl>
+      <div class="row" style="justify-content:center">
+        <button class="gbtn go" id="bEndCareer">Open your own shop</button>
+        <button class="gbtn" id="bEndFree">Free tattoo</button>
+        <button class="gbtn" id="bEndTitle">Title menu</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="screen" id="scr-floor">
+    <div class="fhud"><span class="fchips" id="fChips"></span><button class="gbtn small" id="fMenuBtn">Menu</button></div>
+    <button class="gbtn go small hide" id="fPrompt"></button>
+  </section>
+
+  <section class="screen" id="scr-store"><div class="dim"><div class="store wood">
+    <div class="sthead"><h2>Shop counter</h2><span class="chip" id="stCoins"></span></div>
+    <div class="tabs" id="stTabs"></div>
+    <div class="items" id="stItems"></div>
+    <div class="row"><button class="gbtn" id="stBack">Back</button></div>
+  </div></div></section>
+
+  <section class="screen" id="scr-map"><div class="dim"><div class="mapwrap wood">
+    <div class="sthead"><h2>Town map</h2><span class="chip" id="mapCoins"></span></div>
+    <div class="mapbox" id="mapBox"><canvas id="mapC" width="320" height="180"></canvas></div>
+    <div class="mapinfo" id="mapInfo"></div>
+    <div class="row"><button class="gbtn" id="mapBack">Back to the shop</button></div>
+  </div></div></section>
+
+  <section class="screen" id="scr-dayend"><div class="dim"><div class="board wood">
+    <h2 id="deTitle">Closing time</h2>
+    <dl class="stats" id="deStats"></dl>
+    <div id="deReviews"></div>
+    <div class="row"><button class="gbtn go" id="bNextDay">Start the next day</button></div>
+  </div></div></section>
+
+  <div id="modal" class="hide"><div class="wood"><p id="mText"></p><div class="row" id="mBtns"></div></div></div>
+  <div id="fade"><div><h2 id="fadeH"></h2><p id="fadeP"></p></div></div>
+  <div id="toast" class="wood"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const clamp = (v,a=0,b=1) => Math.max(a,Math.min(b,v));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* =============== DESIGNS =============== */
+const circ = (cx,cy,r) => `M${cx-r},${cy} A${r},${r} 0 1 0 ${cx+r},${cy} A${r},${r} 0 1 0 ${cx-r},${cy}`;
+function starP(cx,cy,R,r){ let s=''; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r:R; s+=(i?'L':'M')+(cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1); } return s+'Z'; }
+const DESIGNS = {
+  smiley:{name:'Smiley',tol:7,d: circ(300,300,200)+circ(230,240,18)+circ(370,240,18)+'M407,364 A120,120 0 0 1 193,364'},
+  heart:{name:'Heart',tol:6,d:'M300,520 C120,390 90,260 170,190 C230,140 290,180 300,230 C310,180 370,140 430,190 C510,260 480,390 300,520 Z'},
+  star:{name:'Star',tol:6,d: starP(300,315,215,88)},
+  anchor:{name:'Anchor',tol:5,d: circ(300,110,28)+'M300,138 L300,470 M230,190 L370,190 M170,380 C190,470 410,470 430,380 M150,402 L170,380 L195,398 M405,398 L430,380 L452,402'},
+  dagger:{name:'Dagger',tol:5,d:'M300,80 L326,140 L326,355 L274,355 L274,140 Z M300,118 L300,345 M218,355 L382,355 L382,382 L218,382 Z M284,382 L284,478 L316,478 L316,382 M284,410 L316,402 M284,440 L316,432 '+circ(300,500,22)},
+  rose:{name:'Rose',tol:5,d:'M300,200 C280,200 275,225 295,232 C320,240 332,210 312,197 C294,185 266,199 266,222 M250,240 C265,268 335,268 350,240 M220,232 C215,302 385,302 380,232 M220,232 C200,180 250,150 278,172 M380,232 C400,180 350,150 322,172 M262,178 C272,138 330,138 340,178 M300,292 C294,360 312,420 300,525 M302,382 C340,352 390,357 412,340 C396,382 350,400 302,388 M299,452 C260,427 215,432 194,416 C210,456 256,471 299,458 M301,330 L320,320 L304,342'},
+  moon:{name:'Crescent moon',tol:5,d:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9)}
+};
+const PRACTICE = ['smiley','heart','star','anchor','dagger','rose'];
+const pathCache = {}; const pathOf = k => pathCache[k] || (pathCache[k] = new Path2D(DESIGNS[k].d));
+
+/* =============== CHARACTERS =============== */
+const CH = {
+  dee:{name:'Dee',hair:'#1f1d2b',style:'bun',skin:'#b97d5a',shirt:'#2b2b33',shirtD:'#1c1c22',pants:'#30304a',boots:'#151515',tattoos:1,apron:'#7a4a2e'},
+  you:{name:'You',hair:'#6b3d1f',style:'short',skin:'#eab894',shirt:'#4f7cac',shirtD:'#3a5d85',pants:'#3b3950',boots:'#4a2c1d'},
+  pip:{name:'Pip',hair:'#e7c35a',style:'long',skin:'#f2c9a5',shirt:'#6fb26a',shirtD:'#4f8a4b',pants:'#4a5b8c',boots:'#5a3a22'},
+  june:{name:'June Harlow',hair:'#8b2f2f',style:'long',skin:'#d9a07a',shirt:'#d97aa0',shirtD:'#b35a80',pants:'#3e3a5a',boots:'#2a1a14'},
+  fenwick:{name:'Old Fenwick',hair:'#dadada',style:'cap',hat:'#2c3e66',beard:1,skin:'#d39a76',shirt:'#e8e1d0',shirtD:'#2c3e66',pants:'#2c3e66',boots:'#1a1a1a'},
+  ray:{name:'Ray "Knuckles" Ortiz',hair:'#2b1d14',style:'bald',beard:1,skin:'#8a5a3c',shirt:'#2a2a2a',shirtD:'#151515',pants:'#3a3a48',boots:'#111',tattoos:1},
+  luna:{name:'Luna Vale',hair:'#9b5de5',style:'mohawk',skin:'#f0c7a8',shirt:'#3d2b55',shirtD:'#2a1d3b',pants:'#1f1f2a',boots:'#111'},
+  tobias:{name:'Tobias Greene',hair:'#3a2a1a',style:'short',skin:'#5e3b26',shirt:'#e0a33a',shirtD:'#b57e22',pants:'#3b4a5c',boots:'#2a1a14'},
+  marisol:{name:'Marisol Reyes',hair:'#1a1414',style:'long',skin:'#c48a62',shirt:'#b3263e',shirtD:'#861b2e',pants:'#2b2b3a',boots:'#1a1a1a'}
+};
+const CUSTOMERS = [
+  {ch:'pip',design:'smiley',spot:'ankle',skin:'#f2cfb1',time:240,tip:15,
+   hi:["Hi! Is this where the tattoos happen?","I want a tiny smiley on my ankle. My very first tattoo!"],
+   dee:"Easy one to start. Steady hands.",
+   react:["Oh... it's a bit wobbly. I'll wear socks.","It's cute! A little wonky, but cute.","I love it! He's smiling at me!","It's perfect. I'm telling everyone about this place!"]},
+  {ch:'june',design:'heart',spot:'wrist',skin:'#e0aa86',time:240,tip:20,
+   hi:["Hello. This one's for my mom.","A simple heart on my wrist. She always drew them on my notes."],
+   dee:"Smooth curves. Meet the point at the bottom clean.",
+   react:["I... maybe it'll heal better.","It means a lot. Thank you.","She would have loved this.","It's beautiful. I can't stop looking at it."]},
+  {ch:'fenwick',design:'anchor',spot:'forearm',skin:'#d9a07c',time:300,tip:30,
+   hi:["Forty years on the water and never had one done.","Give me an anchor, kid. Old school, on the forearm."],
+   dee:"Long straight shaft. Pull it in one go, don't stitch it.",
+   react:["Hmph. Looks like it lost a storm.","It'll hold. Mostly.","Now that's a proper anchor.","Fine work. Shipshape, the whole thing."]},
+  {ch:'ray',design:'dagger',spot:'upper arm',skin:'#93623f',time:300,tip:35,
+   hi:["Dee says you're the new hand. Don't make me regret it.","Dagger. Upper arm. Sharp lines."],
+   dee:"He sits like a rock. Your lines are the only thing that can shake.",
+   react:["Crooked blade. Not happy.","It's alright. I've had worse.","Sharp. I like it.","Now THAT is a blade. You've got hands, kid."]},
+  {ch:'luna',design:'moon',spot:'shoulder blade',skin:'#f3cdb0',time:300,tip:40,
+   hi:["Hey! I want a crescent moon with two little stars.","On my shoulder blade. Something to watch over me."],
+   dee:"Never practiced a moon? Welcome to shop life. Same rules apply.",
+   react:["Hmm, the moon looks a bit lumpy.","It's sweet. Thank you!","Dreamy. Exactly what I pictured.","It's glowing! You're amazing!"]},
+  {ch:'tobias',design:'star',spot:'calf',skin:'#6a4430',time:200,tip:30,
+   hi:["Quick one, I'm on my lunch break.","A star on my calf. Five points, nice and crisp."],
+   dee:"He's in a hurry. Don't rush the corners anyway.",
+   react:["Those points are all over the place.","Good enough, gotta run!","Nice and crisp. Thanks!","Fast AND clean? I'm coming back."]},
+  {ch:'marisol',design:'rose',spot:'forearm',skin:'#cb946c',time:420,tip:60,
+   hi:["I heard the new apprentice did my cousin's moon.","I want a rose. Petals, leaves, a thorn. The whole thing."],
+   dee:"Your hardest piece yet. Petals first, then leaves, then stem. Breathe.",
+   react:["It's... not quite a rose.","It's nice. Maybe touch it up later.","It's gorgeous. Really.","This is art. You're the real thing."]}
+];
+
+/* =============== SAVE =============== */
+const SAVE_KEY='tattooMadness.v1';
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false});
+let save = (()=>{ try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)); return s?{...fresh(),...s}:fresh(); }catch(_){ return fresh(); } })();
+function persist(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(save)); }catch(_){} }
+const dayNum = () => 1 + (save.graduated?1:0) + (save.cust>=4?1:0);
+
+/* =============== AUDIO =============== */
+let actx=null, buzzG=null;
+function ensureAudio(){
+  if(actx) return;
+  try{
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(); o.type='sawtooth'; o.frequency.value=96;
+    const o2=actx.createOscillator(); o2.type='square'; o2.frequency.value=193;
+    const f=actx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=850;
+    buzzG=actx.createGain(); buzzG.gain.value=0;
+    o.connect(f); o2.connect(f); f.connect(buzzG); buzzG.connect(actx.destination); o.start(); o2.start();
+  }catch(_){}
+}
+function buzz(on){ if(buzzG) buzzG.gain.setTargetAtTime(on&&save.sound?0.03:0,actx.currentTime,0.02); }
+function blip(freq=660){
+  if(!actx||!save.sound) return;
+  const o=actx.createOscillator(), g=actx.createGain(); o.type='square'; o.frequency.value=freq;
+  g.gain.value=0.025; g.gain.setTargetAtTime(0,actx.currentTime+0.03,0.02); o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+0.12);
+}
+window.addEventListener('pointerdown',ensureAudio,{once:true});
+window.addEventListener('keydown',ensureAudio,{once:true});
+
+/* =============== PIXEL SPRITES =============== */
+function spriteRows(c,frame){
+  const r=["...hhhh...","..hhhhhh..",".hhhhhhhh.",".hssssssh.",".sesssses.",".ssssssss.","..ssmmss..","...ssss...",
+    "..cccccc..",".cccccccc.","sccccccccs","sccccccccs",".dddddddd.","..pppppp..",
+    frame?".pp....pp.":"..pp..pp..", frame?".bb....bb.":"..bb..bb.."];
+  const set=(i,j,k)=>{ r[i]=r[i].slice(0,j)+k+r[i].slice(j+1); };
+  switch(c.style){
+    case 'long': for(let i=3;i<=9;i++){ set(i,0,'h'); set(i,9,'h'); } break;
+    case 'bun': r[0]="...hhhh.hh"; r[1]="..hhhhhhhh"; break;
+    case 'bald': r[0]=".........."; r[1]="...ssss..."; r[2]="..ssssss.."; r[3]=".ssssssss."; break;
+    case 'mohawk': r[0]="....hh...."; r[1]="....hh...."; r[2]="..sshhss.."; r[3]=".ssssssss."; break;
+    case 'cap': r[0]="...kkkk..."; r[1]="..kkkkkk.."; r[2]=".kkkkkkkkk"; break;
+  }
+  if(c.beard){ r[6]=".hhhmmhhh."; r[7]="..hhhhhh.."; }
+  if(c.tattoos){ set(10,0,'T'); set(11,9,'T'); }
+  if(c.apron){ for(let i=9;i<=12;i++) for(let j=3;j<=6;j++) set(i,j,'A'); }
+  return r;
+}
+function palette(c){ return {h:c.hair,s:c.skin,e:'#2a1a14',m:'#9c4a44',c:c.shirt,d:c.shirtD,p:c.pants,b:c.boots,T:'#2e5866',A:c.apron,k:c.hat}; }
+function drawSprite(ctx,c,x,y,frame,flip,sc=2){
+  const rows=spriteRows(c,frame), pal=palette(c), w=10*sc, h=16*sc, ox=Math.round(x-w/2), oy=Math.round(y-h);
+  ctx.fillStyle='rgba(30,15,10,.28)'; ctx.fillRect(ox+2,oy+h-2,w-4,3);
+  for(let i=0;i<16;i++) for(let j=0;j<10;j++){
+    const k=rows[i][j]; if(k==='.') continue;
+    ctx.fillStyle=pal[k]; ctx.fillRect(ox+(flip?9-j:j)*sc,oy+i*sc,sc,sc);
+  }
+}
+function drawPortrait(cv,c){
+  const x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
+  x.fillStyle='#e8c59a'; x.fillRect(0,0,60,60); x.fillStyle='#d9ab78'; x.fillRect(0,40,60,20);
+  if(!c) return;
+  const rows=spriteRows(c,0), pal=palette(c);
+  for(let i=0;i<10;i++) for(let j=0;j<10;j++){ const k=rows[i][j]; if(k==='.') continue; x.fillStyle=pal[k]; x.fillRect(j*6,i*6+2,6,6); }
+}
+
+/* =============== SCENE RENDERER =============== */
+const sc=$('#scene'), sx=sc.getContext('2d');
+let W=320,H=180,sceneMode='exterior',tick=0;
+const actors=[];
+function resizeScene(){
+  const a=innerWidth/Math.max(1,innerHeight);
+  if(a>=1){ H=180; W=Math.min(420,Math.round(180*a)); } else { W=220; H=Math.min(480,Math.round(220/a)); }
+  sc.width=W; sc.height=H; sx.imageSmoothingEnabled=false;
+}
+const R=(x,y,w,h,c)=>{ sx.fillStyle=c; sx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
+const GL={T:["111","010","010","010","010"],A:["010","101","111","101","101"],O:["111","101","101","101","111"],
+  I:["111","010","010","010","111"],N:["101","111","111","101","101"],K:["101","110","100","110","101"],
+  S:["111","100","111","001","111"],H:["101","101","111","101","101"],P:["111","101","111","100","100"]};
+const HEART=["01010","11111","11111","01110","00100"];
+function pixText(str,x,y,s,col,glow){
+  [...str].forEach((ch,n)=>{ const g=ch==='♥'?HEART:GL[ch]; if(!g) return;
+    g.forEach((row,i)=>[...row].forEach((v,j)=>{ if(v==='1'){ if(glow) R(x+n*(4*s)+j*s-1,y+i*s-1,s+2,s+2,glow); } })); });
+  [...str].forEach((ch,n)=>{ const g=ch==='♥'?HEART:GL[ch]; if(!g) return;
+    g.forEach((row,i)=>[...row].forEach((v,j)=>{ if(v==='1') R(x+n*(4*s)+j*s,y+i*s,s,s,col); })); });
+}
+const STARS=Array.from({length:60},(_,i)=>({x:((i*97)%101)/101,y:((i*53)%89)/89,p:(i*7)%5}));
+function drawExterior(t){
+  const gy=Math.round(H*0.78), cx=W>>1;
+  const sky=['#241a3d','#2e2050','#3c2760','#563067','#7a3a6a','#a64a63','#d0655d','#e98a5f'];
+  const bh=Math.ceil(gy/sky.length); sky.forEach((c,i)=>R(0,i*bh,W,bh+1,c));
+  STARS.forEach(s=>{ if(((t/450+s.p)|0)%4) R(s.x*W,s.y*gy*0.5,1,1,'#fff6d5'); });
+  R(W*0.82,12,8,10,'#fff1c1'); R(W*0.82-1,14,10,6,'#fff1c1');
+  for(let x=0;x<W;x++){ const h=14+7*Math.sin(x*0.045)+4*Math.sin(x*0.13); R(x,gy-h-6,1,h+6,'#3a2550'); }
+  for(let x=0;x<W;x++){ const h=6+4*Math.sin(x*0.07+2); R(x,gy-h,1,h,'#2c1d3f'); }
+  R(0,gy,W,H-gy,'#4c7a3b');
+  for(let x=0;x<W;x+=7) R(x+((x*3)%5),gy+((x*11)%(H-gy-2||1)),2,1,'#5f9149');
+  const bw=170,bhh=86,bx=cx-85,by=gy-bhh;
+  R(cx+20,gy,24,H-gy,'#a08a72'); for(let y=gy+4;y<H;y+=8) R(cx+20,y,24,1,'#8a7660');
+  R(bx,by,bw,bhh,'#9a6440'); for(let y=by+5;y<gy;y+=6) R(bx,y,bw,1,'#7e4f32');
+  for(let r=0;r<20;r++) R(bx+14-r,by-20+r,bw-28+2*r,1,(r>>2)%2?'#6b2f3c':'#5a2533');
+  R(bx-6,by-1,bw+12,3,'#3d1b26');
+  // sign
+  R(bx+18,by+4,134,16,'#2a1a2a'); R(bx+18,by+4,134,1,'#4a304a');
+  const on=!(Math.sin(t/90)>0.96);
+  pixText('TATTOO SHOP',bx+42,by+7,2,on?'#ffd7e6':'#6a4a5a',on?'rgba(255,111,168,.4)':null);
+  // window
+  const wx=bx+16, wy=by+28; R(wx-3,wy-3,70,46,'#4a2c1d'); R(wx,wy,64,40,'#ffd77a'); R(wx,wy+20,64,20,'#ffc35c');
+  R(wx+31,wy,2,40,'#4a2c1d'); R(wx,wy+19,64,2,'#4a2c1d');
+  R(wx+8,wy+26,6,14,'#a8323c'); R(wx+44,wy+12,10,10,'#e9a85a');
+  R(wx-6,gy,76,3,'rgba(255,200,100,.25)');
+  // door
+  const dx=bx+110; R(dx-3,gy-47,32,47,'#3a2214'); R(dx,gy-44,26,44,'#5c3520'); R(dx+3,gy-40,8,16,'#4a2a18'); R(dx+15,gy-40,8,16,'#4a2a18');
+  R(dx+20,gy-22,3,3,'#e8c25a'); R(dx+9,gy-52,8,4,'#ffe9a6');
+  // bushes & lamp
+  [[bx-6,gy-8,18,8],[bx+84,gy-7,22,7],[bx+bw-10,gy-9,20,9]].forEach(b=>{ R(b[0],b[1],b[2],b[3],'#3f6b33'); R(b[0]+2,b[1]-2,b[2]-4,3,'#4f8540'); });
+  const lx=bx+bw+24; R(lx,gy-52,3,52,'#2b2233'); R(lx-3,gy-58,9,7,'#2b2233'); R(lx-1,gy-56,5,4,'#ffe9a6'); R(lx-6,gy-60,15,13,'rgba(255,233,166,.12)');
+  for(let i=0;i<8;i++){ const fx=(W*(i*0.13+0.05)+Math.sin(t/900+i)*14)%W, fy=gy-10-((i*17)%30)+Math.cos(t/700+i*2)*6;
+    if(((t/300+i)|0)%3) R(fx,fy,1,1,'#f8f2a0'); }
+}
+function drawInterior(t){
+  const cx=W>>1, wb=Math.round(H*0.55), fy=wb+22;
+  R(0,0,W,wb,'#7b4a5c'); for(let x=0;x<W;x+=10) R(x,0,4,wb,'#835264');
+  for(let y=6;y<wb-26;y+=12) for(let x=((y/12)|0)%2*5+2;x<W;x+=10) R(x,y,1,1,'#a0687a');
+  R(0,wb-22,W,22,'#6a3f25'); R(0,wb-24,W,3,'#a2683c'); for(let x=4;x<W;x+=16) R(x,wb-20,1,18,'#57331e');
+  R(0,wb,W,H-wb,'#b07a46');
+  for(let y=wb,row=0;y<H;y+=8,row++){ R(0,y,W,1,'#8f5d33'); for(let x=(row%2)*20;x<W;x+=40) R(x,y,1,8,'#8f5d33'); }
+  R(0,wb,W,2,'#5a3520');
+  // window
+  const wy=Math.round(wb*0.16), wh=Math.round(wb*0.42); R(cx-27,wy-3,54,wh+6,'#4a2c1d'); R(cx-24,wy,48,wh,'#a9dcef'); R(cx-24,wy,48,wh/3,'#cfeefa');
+  R(cx-1,wy,2,wh,'#4a2c1d'); R(cx-24,wy+wh/2,48,2,'#4a2c1d'); R(cx-30,wy+wh+3,60,3,'#a2683c');
+  sx.fillStyle='rgba(255,244,210,.10)'; sx.beginPath(); sx.moveTo(cx-24,wy+wh); sx.lineTo(cx+24,wy+wh); sx.lineTo(cx+50,fy+20); sx.lineTo(cx-10,fy+20); sx.fill();
+  // flash wall
+  const fwY=Math.round(wb*0.2);
+  [[cx-118,'#b8432f'],[cx-90,'#2e5866'],[cx-62,'#e0a33a']].forEach(([x,c],i)=>{
+    R(x,fwY,22,28,'#3d2414'); R(x+2,fwY+2,18,24,'#f2e6cc');
+    if(i===0){ R(x+6,fwY+8,4,4,c); R(x+12,fwY+8,4,4,c); R(x+6,fwY+11,10,5,c); R(x+9,fwY+16,4,3,c); }
+    if(i===1){ R(x+10,fwY+5,2,16,c); R(x+6,fwY+8,10,2,c); R(x+5,fwY+18,12,2,c); }
+    if(i===2){ R(x+8,fwY+6,6,6,c); R(x+6,fwY+14,10,8,'#5a8f3c'); }
+  });
+  if(save.graduated && sceneMode==='interior'){ const x=cx-34; R(x,fwY,22,28,'#3d2414'); R(x+2,fwY+2,18,24,'#f2e6cc'); R(x+7,fwY+6,8,7,'#b3263e'); R(x+10,fwY+13,2,9,'#3f6b33'); R(x+12,fwY+16,4,2,'#3f6b33'); }
+  // neon
+  const nx=cx+46; R(nx,fwY,62,20,'#2a1a2a'); const on=!(Math.sin(t/110)>0.95);
+  pixText('♥',nx+5,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
+  pixText('INK',nx+19,fwY+5,2,on?'#9fe8ff':'#3a5a66',on?'rgba(159,232,255,.3)':null);
+  pixText('♥',nx+45,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
+  // rug, chair, lamp, plant
+  R(cx-42,fy+2,84,26,'#7a2f4f'); R(cx-38,fy+5,76,20,'#9c4467'); for(let x=cx-34;x<cx+34;x+=8) R(x,fy+14,3,3,'#e0a33a');
+  R(cx+62,fy-4,22,8,'#2b2b2b'); R(cx+70,fy-10,6,8,'#555'); R(cx+50,fy-18,44,10,'#a8323c'); R(cx+50,fy-18,44,2,'#d0505a');
+  R(cx+86,fy-42,10,26,'#a8323c'); R(cx+88,fy-40,2,22,'#d0505a'); R(cx+48,fy-24,10,4,'#2b2b2b');
+  R(cx+104,fy-62,2,60,'#333'); R(cx+96,fy-66,16,6,'#d8d0c0'); R(cx+98,fy-60,12,3,'rgba(255,240,200,.5)');
+  R(cx+122,fy-14,14,14,'#b5562d'); R(cx+122,fy-14,14,2,'#d0703f'); [[-4,-30,6,18],[4,-36,6,24],[12,-28,6,16]].forEach(l=>R(cx+122+l[0],fy+l[1],l[2],l[3],'#4e8a3e'));
+  if(F.active) drawFloorFurniture(cx,fy);
+  // mentor behind counter, then counter, then others
+  actors.filter(a=>a.behind).forEach(drawActor);
+  R(cx-124,fy-26,68,5,'#d39a5a'); R(cx-122,fy-21,64,24,'#8a5532'); for(let x=cx-118;x<cx-60;x+=14) R(x,fy-17,10,16,'#7a4a2a');
+  R(cx-112,fy-36,16,10,'#5b5b6b'); R(cx-110,fy-34,12,3,'#9fe8ff'); R(cx-86,fy-34,8,8,'#bfe3e0'); R(cx-84,fy-31,4,4,'#f2c14e');
+  actors.filter(a=>!a.behind).sort((a,b)=>a.y-b.y).forEach(drawActor);
+  if(F.active) drawFloorOverlay(t);
+}
+function drawActor(a){ drawSprite(sx,CH[a.ch],a.x,a.y,a.moving?((tick/9)|0)%2:0,a.flip); }
+function updateActors(){
+  actors.forEach(a=>{
+    if(a.ctrl) return;
+    const dx=a.tx-a.x, dy=a.ty-a.y, d=Math.hypot(dx,dy);
+    if(d>0.6){ const s=Math.min(d,0.9); a.x+=dx/d*s; a.y+=dy/d*s; a.moving=true; if(Math.abs(dx)>0.5) a.flip=dx<0; }
+    else { a.x=a.tx; a.y=a.ty; if(a.moving){ a.moving=false; if(a.done){ const f=a.done; a.done=null; f(); } } }
+  });
+}
+const sceneGeo=()=>{ const cx=W>>1, wb=Math.round(H*0.55); return {cx,fy:wb+22}; };
+function setActors(list){ actors.length=0; list.forEach(a=>actors.push({...a,tx:a.tx??a.x,ty:a.ty??a.y,moving:false,flip:!!a.flip})); }
+function walk(id,tx,ty){ const a=actors.find(a=>a.ch===id); if(!a) return Promise.resolve(); a.tx=tx; a.ty=ty; return new Promise(r=>{ a.done=r; if(Math.hypot(tx-a.x,ty-a.y)<0.6){ a.done=null; r(); } }); }
+
+/* =============== SCREENS / UI =============== */
+let current='title', modalOpen=false;
+const SCENE_FOR={title:'exterior',controls:'exterior',shop:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+id));
+  current=id; sceneMode=SCENE_FOR[id]||(id==='tattoo'?null:sceneMode);
+  F.active=!!save.career&&['floor','store','dayend','results','tattoo'].includes(id); F.keys={};
+  sc.style.display=id==='tattoo'?'none':'';
+  if(id==='tattoo') requestAnimationFrame(layoutPad);
+  clearPadFocus(); if(inputMode==='pad') setTimeout(focusFirst,30);
+  if(id==='title') refreshTitle();
+}
+let toastT; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400); }
+function fade(on){ $('#fade').classList.toggle('on',on); return sleep(480); }
+async function dayCard(h,p){ $('#fadeH').textContent=h; $('#fadeP').textContent=p; await fade(true); await sleep(1500); $('#fadeH').textContent=''; $('#fadeP').textContent=''; }
+function modal(text,btns){
+  return new Promise(res=>{
+    modalOpen=true; $('#mText').textContent=text; const box=$('#mBtns'); box.innerHTML='';
+    btns.forEach(([label,val,go])=>{ const b=document.createElement('button'); b.className='gbtn'+(go?' go':''); b.textContent=label;
+      b.onclick=()=>{ $('#modal').classList.add('hide'); modalOpen=false; clearPadFocus(); res(val); if(inputMode==='pad') setTimeout(focusFirst,30); }; box.appendChild(b); });
+    $('#modal').classList.remove('hide'); if(inputMode==='pad') setTimeout(focusFirst,30); else box.lastChild.focus();
+  });
+}
+function renderHud(){
+  $('#hud').innerHTML=`<span class="chip wood">Day ${dayNum()}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span>`+(save.graduated?`<span class="chip wood">${supText()}</span>`:'');
+}
+
+/* ---------- dialogue ---------- */
+const dlg={active:false,full:'',shown:0,resolve:null};
+function say(who,text){
+  return new Promise(res=>{
+    const box=$('#dlg'); box.classList.remove('hide'); box.classList.toggle('narrator',!who);
+    if(who){ const c=CH[who]; $('#dlgWho').textContent=c.name; drawPortrait($('#dlgPortrait'),c); }
+    dlg.active=true; dlg.full=text; dlg.shown=0; dlg.resolve=res; $('#dlgTxt').textContent=''; $('#dlgMore').style.visibility='hidden';
+  });
+}
+function tickDialogue(){
+  if(!dlg.active||dlg.shown>=dlg.full.length) return;
+  dlg.shown=Math.min(dlg.full.length,dlg.shown+1.2);
+  $('#dlgTxt').textContent=dlg.full.slice(0,Math.floor(dlg.shown));
+  if(Math.floor(dlg.shown)%4===0) blip(520+Math.random()*80);
+  if(dlg.shown>=dlg.full.length) $('#dlgMore').style.visibility='visible';
+}
+function advance(){
+  if(!dlg.active) return;
+  if(dlg.shown<dlg.full.length){ dlg.shown=dlg.full.length; $('#dlgTxt').textContent=dlg.full; $('#dlgMore').style.visibility='visible'; return; }
+  dlg.active=false; const r=dlg.resolve; dlg.resolve=null; r&&r();
+}
+function hideDlg(){ $('#dlg').classList.add('hide'); }
+$('#scr-shop').addEventListener('click',e=>{ if(!e.target.closest('.hud')) advance(); });
+
+/* =============== INPUT MODE =============== */
+let inputMode=matchMedia('(pointer:coarse)').matches?'touch':'mouse';
+function setInput(m){
+  if(m===inputMode) return; inputMode=m;
+  $('#inputChip').textContent={mouse:'Mouse',touch:'Touch',pad:'Controller'}[m];
+  if(m!=='pad'){ clearPadFocus(); padCursor.show=false; updateRing(); }
+  else { padCursor.show=true; if(!document.querySelector('.pad-focus') && current!=='tattoo') focusFirst(); updateRing(); }
+}
+window.addEventListener('pointerdown',e=>setInput(e.pointerType==='touch'||e.pointerType==='pen'?'touch':'mouse'),true);
+$('#inputChip').textContent={mouse:'Mouse',touch:'Touch',pad:'Controller'}[inputMode];
+function controlsLine(){
+  if(inputMode==='pad') return "Left stick moves your machine. Squeeze RT to ink, harder for a heavier line. Hold LT to slow down for detail. X swaps tools. The D-pad reaches every button on the station.";
+  if(inputMode==='touch') return "Use your finger like the needle. Press and drag to ink, lift to stop. The buttons along the bottom swap tools and needle size.";
+  return "Hold the mouse button and drag to ink. Slow movement lays a heavy line, fast movement a light one.";
+}
+
+/* ---------- focus nav for controllers ---------- */
+let padFocusEl=null;
+function focusables(){
+  const root=modalOpen?$('#modal'):document.querySelector('.screen.active'); if(!root) return [];
+  return [...root.querySelectorAll('button:not([disabled])')].filter(e=>e.offsetParent!==null && !e.closest('.hide'));
+}
+function clearPadFocus(){ if(padFocusEl) padFocusEl.classList.remove('pad-focus'); padFocusEl=null; }
+function setPadFocus(el){ clearPadFocus(); if(!el) return; padFocusEl=el; el.classList.add('pad-focus'); el.focus({preventScroll:true}); el.scrollIntoView({block:'nearest'}); }
+function focusFirst(){ if((current==='tattoo'||current==='floor')&&!modalOpen) return; const f=focusables(); setPadFocus(f.find(e=>e.classList.contains('go'))||f[0]); }
+function moveFocus(dir){
+  const f=focusables(); if(!f.length) return;
+  if(!padFocusEl||!f.includes(padFocusEl)){ setPadFocus(f[0]); return; }
+  const r0=padFocusEl.getBoundingClientRect(), c0=[r0.left+r0.width/2,r0.top+r0.height/2]; let best=null,bs=1e9;
+  f.forEach(el=>{ if(el===padFocusEl) return; const r=el.getBoundingClientRect(), dx=r.left+r.width/2-c0[0], dy=r.top+r.height/2-c0[1];
+    let p,s; if(dir==='r'){p=dx;s=dy}else if(dir==='l'){p=-dx;s=dy}else if(dir==='d'){p=dy;s=dx}else{p=-dy;s=dx}
+    if(p<=4) return; const sc2=p+Math.abs(s)*2.2; if(sc2<bs){bs=sc2;best=el;} });
+  if(!best){ const i=f.indexOf(padFocusEl), step=(dir==='d'||dir==='r')?1:-1; best=f[(i+step+f.length)%f.length]; }
+  if(best){ setPadFocus(best); blip(440); }
+}
+
+/* =============== TATTOO ENGINE =============== */
+const DOC=600;
+const cShade=$('#cShade'), cLine=$('#cLine'), cBuf=$('#cBuf'), cSten=$('#cSten');
+const cWarn=$('#cWarn'), wctx=cWarn.getContext('2d');
+const sctx=cShade.getContext('2d'), lctx=cLine.getContext('2d'), bctx=cBuf.getContext('2d'), stx=cSten.getContext('2d');
+const padEl=$('#pad'), ring=$('#ring');
+const LINER_SIZES=[[3,'3RL'],[5,'5RL'],[7,'7RL'],[9,'9RL'],[12,'11RL'],[15,'14RL']];
+const MAG_SIZES=[[18,'7M1'],[26,'9M1'],[36,'13M1'],[50,'23RM'],[70,'31RM']];
+const WIPE_SIZES=[[10,'Small'],[18,'Medium'],[28,'Large'],[44,'Huge']];
+const TOOLS={
+  liner:{sizes:LINER_SIZES,i:2,taper:14,smooth:.55},
+  shade:{sizes:MAG_SIZES,i:2,strength:.07,soft:.9,smooth:.3},
+  erase:{sizes:WIPE_SIZES,i:1,soft:.4,smooth:.2}
+};
+const job={strikes:0,maxStrikes:5,strikeMask:null,failed:false,mode:'practice',idx:0,design:null,cust:null,elapsed:0,limit:0,stenVisible:true,stenOp:.85,tool:'liner',color:'#151515',ink:1,upload:null,dirty:false,freeDesign:null};
+const sizeOf=t=>TOOLS[t].sizes[TOOLS[t].i][0];
+
+// Bounding box of a design in skin coordinates (0-600), measured once with an SVG path.
+const bboxCache={};
+function designBox(key){
+  if(!key) return null; if(bboxCache[key]) return bboxCache[key];
+  const ns='http://www.w3.org/2000/svg', svg=document.createElementNS(ns,'svg'), p=document.createElementNS(ns,'path');
+  svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); p.setAttribute('d',DESIGNS[key].d); svg.appendChild(p); document.body.appendChild(svg);
+  const b=p.getBBox(); svg.remove(); return (bboxCache[key]={x:b.x,y:b.y,w:b.width,h:b.height});
+}
+// Size the skin so the DESIGN (not the whole pad) fills the work area, then centre on it.
+function layoutPad(){
+  const tw=$('#twork'), r=tw.getBoundingClientRect(), m=document.documentElement.classList.contains('compact')?18:34;
+  const aw=Math.max(100,r.width-m), ah=Math.max(100,r.height-m);
+  const base=Math.min(aw,ah);
+  let s=base, dx=0, dy=0;
+  const bb=job.mode==='free'?null:designBox(job.design); // free mode keeps the whole skin visible
+  if(bb){
+    const M=46, bw=Math.max(bb.w+M*2,200), bh=Math.max(bb.h+M*2,200);
+    s=Math.min(aw*DOC/bw,ah*DOC/bh,base*2.6); s=Math.max(s,base);
+    const cx=bb.x+bb.w/2, cy=bb.y+bb.h/2;
+    dx=(DOC/2-cx)*s/DOC; dy=(DOC/2-cy)*s/DOC;
+  }
+  s=Math.floor(s);
+  padEl.style.width=padEl.style.height=s+'px'; padEl.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+  // the part of the skin that is actually on screen, so the controller cursor can't wander off-screen
+  const pr=padEl.getBoundingClientRect(), k=DOC/pr.width;
+  job.vis={x0:clamp((r.left-pr.left)*k+8,0,DOC),y0:clamp((r.top-pr.top)*k+8,0,DOC),x1:clamp((r.right-pr.left)*k-8,0,DOC),y1:clamp((r.bottom-pr.top)*k-8,0,DOC)};
+  updateRing();
+}
+new ResizeObserver(()=>{ if(current==='tattoo') layoutPad(); }).observe($('#twork'));
+
+const dabCache=new Map();
+function hexRgb(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+function dab(color,hard){
+  const k=color+hard.toFixed(2); if(dabCache.has(k)) return dabCache.get(k);
+  const c=document.createElement('canvas'); c.width=c.height=96; const x=c.getContext('2d'); const [r,g,b]=hexRgb(color);
+  const gr=x.createRadialGradient(48,48,0,48,48,48); const h=clamp(hard,0,.97);
+  gr.addColorStop(0,`rgba(${r},${g},${b},1)`); gr.addColorStop(h,`rgba(${r},${g},${b},1)`); gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+  x.fillStyle=gr; x.fillRect(0,0,96,96); dabCache.set(k,c); return c;
+}
+
+
+/* strokes */
+let stk=null;
+function spacing(p){
+  const s=sizeOf(stk.tool);
+  return stk.tool==='liner'?Math.max(.35,s*(.45+.55*p)*.12):Math.max(1,s*.09);
+}
+function strokeBegin(x,y,p){
+  if(job.phase==='clean'){ wipeLast=null; job.wiping=true; wipeAt(x,y); return; }
+  if(job.failed) return;
+  if(job.tool==='shade') job.usedShade=true;
+  job.dirty=true;
+  stk={out:0,slipped:false,tool:job.tool,cfg:TOOLS[job.tool],lazy:{x,y},raw:{x,y},last:null,gap:0,dist:0,pts:[],total:null,pressure:p};
+  if(stk.tool==='liner'){ bctx.clearRect(0,0,DOC,DOC); cBuf.style.opacity=job.ink; }
+  addPt(x,y,p); buzz(true);
+}
+function strokeMove(x,y,p){
+  if(job.phase==='clean'){ if(job.wiping) wipeAt(x,y); return; }
+  if(!stk||job.failed||stk.slipped) return; stk.raw={x,y}; const k=1-stk.cfg.smooth;
+  stk.lazy.x+=(x-stk.lazy.x)*k; stk.lazy.y+=(y-stk.lazy.y)*k; addPt(stk.lazy.x,stk.lazy.y,p);
+}
+function strokeEnd(){
+  if(job.phase==='clean'){ job.wiping=false; wipeLast=null; return; }
+  if(!stk) return;
+  if(stk.slipped){ bctx.clearRect(0,0,DOC,DOC); stk=null; buzz(false); return; }
+  for(let i=0;i<25&&Math.hypot(stk.raw.x-stk.lazy.x,stk.raw.y-stk.lazy.y)>.5;i++){
+    stk.lazy.x+=(stk.raw.x-stk.lazy.x)*.5; stk.lazy.y+=(stk.raw.y-stk.lazy.y)*.5; addPt(stk.lazy.x,stk.lazy.y,stk.pressure);
+  }
+  if(stk.tool==='liner'){
+    if(stk.pts.length>1){ bctx.clearRect(0,0,DOC,DOC); stk.total=stk.dist; stk.last=null; stk.gap=0; stk.dist=0; stk.pts.forEach(q=>interp(q.x,q.y,q.p)); }
+    lctx.globalAlpha=job.ink; lctx.drawImage(cBuf,0,0); lctx.globalAlpha=1; bctx.clearRect(0,0,DOC,DOC);
+  }
+  stk=null; buzz(false);
+}
+function addPt(x,y,p){ stk.pts.push({x,y,p}); interp(x,y,p); }
+function interp(x,y,p){
+  if(!stk.last){ stamp(x,y,p,0); stk.last={x,y,p}; stk.gap=spacing(p); return; }
+  const dx=x-stk.last.x, dy=y-stk.last.y, seg=Math.hypot(dx,dy); if(seg<.01){ stk.last.p=p; return; }
+  let pos=stk.gap;
+  while(pos<=seg){ const k=pos/seg, pp=stk.last.p+(p-stk.last.p)*k; stamp(stk.last.x+dx*k,stk.last.y+dy*k,pp,stk.dist+pos); pos+=spacing(pp); }
+  stk.gap=pos-seg; stk.dist+=seg; stk.last={x,y,p};
+}
+function stamp(x,y,p,d){
+  if(stk.slipped) return;
+  const t=stk.cfg, size=sizeOf(stk.tool);
+  if(stk.tool==='liner'){
+    let f=1; if(t.taper){ f=Math.min(f,.2+.8*clamp(d/t.taper)); if(stk.total!=null) f=Math.min(f,.2+.8*clamp((stk.total-d)/t.taper)); }
+    if(job.strikeMask&&stk.total==null&&!stk.slipped){
+      const xi=Math.round(clamp(x,0,DOC-1)), yi=Math.round(clamp(y,0,DOC-1));
+      if(!job.strikeMask[yi*DOC+xi]){ stk.out++; showWarn(true); if(stk.out>=3){ stk.slipped=true; slip(); return; } }
+    }
+    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.color; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
+  } else if(stk.tool==='shade'){
+    const r=size/2; sctx.globalAlpha=clamp(t.strength*job.ink*p); sctx.drawImage(dab(job.color,1-t.soft),x-r,y-r,r*2,r*2); sctx.globalAlpha=1;
+  } else {
+    const r=size/2, im=dab('#000000',1-t.soft);
+    [lctx,sctx].forEach(c=>{ c.save(); c.globalCompositeOperation='destination-out'; c.globalAlpha=clamp(.5+.5*p); c.drawImage(im,x-r,y-r,r*2,r*2); c.restore(); });
+  }
+}
+
+/* pointer on pad */
+let ptr=null;
+const toDoc=(cx,cy)=>{ const r=padEl.getBoundingClientRect(); return [(cx-r.left)/r.width*DOC,(cy-r.top)/r.height*DOC]; };
+function ptrPressure(e,speed){
+  if(e.pointerType==='pen'&&e.pressure>0) return e.pressure;
+  const target=clamp(1-(speed-.3)*.3,.45,1); ptr.p+=(target-ptr.p)*.25; return ptr.p;
+}
+padEl.addEventListener('pointerdown',e=>{
+  if(e.button!==0||modalOpen) return; padEl.setPointerCapture(e.pointerId);
+  ptr={id:e.pointerId,t:e.timeStamp,c:[e.clientX,e.clientY],p:1};
+  const [x,y]=toDoc(e.clientX,e.clientY); strokeBegin(x,y,ptrPressure(e,0));
+});
+padEl.addEventListener('pointermove',e=>{
+  hover=[e.clientX,e.clientY]; if(e.pointerType!=='touch') updateRing();
+  if(!ptr||e.pointerId!==ptr.id) return;
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  for(const ev of (evs.length?evs:[e])){
+    const dt=Math.max(1,ev.timeStamp-ptr.t), sp=Math.hypot(ev.clientX-ptr.c[0],ev.clientY-ptr.c[1])/dt;
+    ptr.t=ev.timeStamp; ptr.c=[ev.clientX,ev.clientY]; const [x,y]=toDoc(ev.clientX,ev.clientY); strokeMove(x,y,ptrPressure(ev,sp));
+  }
+});
+const endPtr=e=>{ if(ptr&&e.pointerId===ptr.id){ ptr=null; strokeEnd(); } };
+padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr);
+padEl.addEventListener('pointerleave',()=>{ hover=null; updateRing(); });
+
+let hover=null; const padCursor={x:300,y:300,show:false,drawing:false};
+function updateRing(){
+  const r=padEl.getBoundingClientRect(); if(!r.width) return; const d=Math.max(5,sizeOf(job.tool)/DOC*r.width);
+  ring.style.width=ring.style.height=d+'px';
+  if(inputMode==='pad'&&current==='tattoo'){ ring.classList.add('padcur'); ring.style.display='block'; ring.style.left=padCursor.x/DOC*100+'%'; ring.style.top=padCursor.y/DOC*100+'%'; return; }
+  ring.classList.remove('padcur');
+  if(!hover||inputMode==='touch'){ ring.style.display='none'; return; }
+  ring.style.display='block'; ring.style.left=(hover[0]-r.left)+'px'; ring.style.top=(hover[1]-r.top)+'px';
+}
+
+/* tools UI */
+function setTool(t){
+  job.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));
+  $('#szVal').textContent=TOOLS[t].sizes[TOOLS[t].i][1]; updateRing();
+}
+function bumpSize(dir){ const T=TOOLS[job.tool]; T.i=Math.max(0,Math.min(T.sizes.length-1,T.i+dir)); setTool(job.tool); blip(dir>0?700:500); }
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+$('#szDown').onclick=()=>bumpSize(-1); $('#szUp').onclick=()=>bumpSize(1);
+function toggleSten(){ job.stenVisible=!job.stenVisible; cSten.style.display=job.stenVisible?'':'none'; $('#tSten').setAttribute('aria-pressed',!job.stenVisible); }
+$('#tSten').onclick=toggleSten;
+
+function renderStencil(){
+  stx.clearRect(0,0,DOC,DOC); cSten.style.opacity=job.stenOp; cSten.style.display=job.stenVisible?'':'none';
+  if(job.design){
+    stx.save(); stx.strokeStyle='#5a33b8'; stx.lineWidth=3.4; stx.lineCap='round'; stx.lineJoin='round';
+    stx.shadowColor='rgba(90,51,184,.55)'; stx.shadowBlur=2.5; stx.stroke(pathOf(job.design)); stx.restore();
+  } else if(job.upload){
+    const img=job.upload, k=Math.min(DOC/img.width,DOC/img.height)*.92, w=img.width*k, h=img.height*k;
+    stx.drawImage(img,(DOC-w)/2,(DOC-h)/2,w,h);
+    const id=stx.getImageData(0,0,DOC,DOC), d=id.data;
+    for(let i=0;i<d.length;i+=4){ const lum=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)/255, a=clamp((1-lum)*1.5-.08)*(d[i+3]/255); d[i]=78; d[i+1]=44; d[i+2]=170; d[i+3]=a*255; }
+    stx.putImageData(id,0,0);
+  }
+}
+const STRIKE_PAD=10;
+function buildMasks(){
+  job.strikeMask=null; wctx.clearRect(0,0,DOC,DOC); if(!job.design||job.mode==='free') return;
+  const tol=DESIGNS[job.design].tol, path=pathOf(job.design), w=2*(tol+STRIKE_PAD);
+  const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d');
+  x.lineCap=x.lineJoin='round'; x.lineWidth=w; x.strokeStyle='#000'; x.stroke(path);
+  const d=x.getImageData(0,0,DOC,DOC).data, m=new Uint8Array(DOC*DOC); for(let i=0;i<m.length;i++) m[i]=d[i*4+3]>40?1:0;
+  job.strikeMask=m;
+  wctx.save(); wctx.lineCap=wctx.lineJoin='round';
+  wctx.strokeStyle='#e8241a'; wctx.lineWidth=w+4; wctx.stroke(path);
+  wctx.globalCompositeOperation='destination-out'; wctx.lineWidth=w-2; wctx.stroke(path);
+  wctx.globalCompositeOperation='source-over'; wctx.strokeStyle='rgba(232,36,26,.13)'; wctx.lineWidth=w-2; wctx.stroke(path); wctx.restore();
+}
+let warnT=null;
+function showWarn(on){ clearTimeout(warnT); if(on){ padEl.classList.add('danger'); warnT=setTimeout(()=>padEl.classList.remove('danger'),1300); } else padEl.classList.remove('danger'); }
+function renderSlips(){
+  const el=$('#tSlips'); if(!job.strikeMask){ el.innerHTML=''; return; }
+  el.innerHTML='Slips '+Array.from({length:job.maxStrikes},(_,i)=>`<i class="${i<job.strikes?'used':''}"></i>`).join('');
+}
+function slip(){
+  if(job.failed) return;
+  job.strikes++; renderSlips(); showWarn(true); blip(160); buzz(false);
+  lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false;
+  if(job.strikes>=job.maxStrikes){ job.failed=true; setTimeout(failRound,60); }
+  else { const left=job.maxStrikes-job.strikes; toast(`Out of the lines! Pad wiped, start from the beginning. ${left} ${left===1?'try':'tries'} left`); }
+}
+function failRound(){
+  ptr=null; padCursor.drawing=false; if(stk) strokeEnd(); buzz(false); showWarn(false);
+  showResults({failed:true});
+}
+function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false; }
+
+function startJob(opts){
+  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,...opts});
+  job.strikes=0; job.failed=false; job.phase='ink'; job.usedShade=false; job.used=null;
+  cDirt.style.display='none'; cWarn.style.display=''; document.querySelector('.ttools').classList.remove('hide'); $('#tDone').textContent='Done';
+  TOOLS.liner.smooth=(save.up&&save.up.rotary&&job.mode!=='practice')?.72:.55;
+  clearWork(); renderStencil(); buildMasks(); renderSlips(); showWarn(false); $('#tSten').setAttribute('aria-pressed',false);
+  padEl.style.background=job.skin;
+  const free=job.mode==='free';
+  $('#freeTools').classList.toggle('hide',!free); $('#wipeBtn').classList.toggle('hide',!free); $('#tSave').classList.toggle('hide',!free||!downloads); $('#tDone').classList.toggle('hide',free);
+  $('#tTimer').classList.toggle('hide',!isClient(job.mode));
+  if(!free){ job.color='#151515'; job.ink=1; }
+  drawPortrait($('#tPortrait'), job.mode==='customer'?CH[job.cust.ch]:CH.dee);
+  if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`; $('#tSub').textContent='Practice. No clock. Scored on your linework.'; }
+  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}. Real skin, scored on linework.`; }
+  else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
+  padCursor.x=300; padCursor.y=300; setTool('liner'); show('tattoo');
+}
+function tickJob(dt){
+  if(job.phase==='clean'){ if(tick%12===0) renderCleanPct(); return; }
+  if(!isClient(job.mode)||modalOpen) return;
+  job.elapsed+=dt; const left=job.limit-job.elapsed, frac=clamp(left/job.limit);
+  const bar=$('#tBar'); bar.style.width=(frac*100)+'%'; bar.style.background=frac>.5?'var(--go)':frac>.2?'var(--warn)':'var(--bad)';
+  const s=Math.abs(Math.ceil(left)); $('#tTime').textContent=left>=0?`${(s/60)|0}:${String(s%60).padStart(2,'0')}`:'Over time';
+}
+
+/* scoring */
+function scoreWork(){
+  const tol=DESIGNS[job.design].tol, path=pathOf(job.design);
+  const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d');
+  x.lineCap='round'; x.lineJoin='round'; x.strokeStyle='#000'; x.lineWidth=2; x.stroke(path);
+  let d=x.getImageData(0,0,DOC,DOC).data; const pts=[];
+  for(let y=0;y<DOC;y+=3) for(let i=0;i<DOC;i+=3) if(d[(y*DOC+i)*4+3]>80) pts.push(i,y);
+  x.clearRect(0,0,DOC,DOC); x.lineWidth=tol*2+5; x.stroke(path); d=x.getImageData(0,0,DOC,DOC).data;
+  const L=lctx.getImageData(0,0,DOC,DOC).data, W1=DOC+1, I=new Int32Array(W1*W1);
+  let ink=0, good=0;
+  for(let y=0;y<DOC;y++){ let rowSum=0; for(let i=0;i<DOC;i++){ const o=(y*DOC+i)*4, v=L[o+3]>60?1:0; if(v){ ink++; if(d[o+3]>20) good++; } rowSum+=v; I[(y+1)*W1+i+1]=I[y*W1+i+1]+rowSum; } }
+  let hit=0, n=pts.length/2;
+  for(let k=0;k<pts.length;k+=2){ const px=pts[k], py=pts[k+1], x0=Math.max(0,px-tol), x1=Math.min(DOC,px+tol+1), y0=Math.max(0,py-tol), y1=Math.min(DOC,py+tol+1);
+    if(I[y1*W1+x1]-I[y0*W1+x1]-I[y1*W1+x0]+I[y0*W1+x0]>0) hit++; }
+  const cov=n?hit/n:0, acc=ink?good/ink:0;
+  const score=ink<80?0:Math.round(100*clamp(.5*cov+.5*acc));
+  const stars=score>=90?3:score>=78?2:1;
+  return {cov,acc,score,stars};
+}
+function composite(includeSten){
+  const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d');
+  x.fillStyle=job.skin; x.fillRect(0,0,DOC,DOC); x.drawImage(cShade,0,0); x.drawImage(cLine,0,0);
+  if(includeSten){ x.globalAlpha=.35; x.globalCompositeOperation='multiply'; x.drawImage(cSten,0,0); }
+  return c;
+}
+
+async function finishJob(){
+  if(job.phase==='clean'){ await wrapUp(); return; }
+  if(!job.dirty){ toast('Put some ink down first'); return; }
+  if(job.failed) return;
+  const pre=scoreWork();
+  if(pre.cov<.7){ await modal(`You've only traced ${Math.round(pre.cov*100)}% of the stencil. Finish the lines first.`,[['Keep working',false,true]]); return; }
+  const ok=await modal(isClient(job.mode)?'Finished inking? Time to clean it up.':'Finished with this pad?',[['Keep working',false],['Done',true,true]]);
+  if(!ok||job.failed) return; strokeEnd();
+  if(isClient(job.mode)) startCleaning(scoreWork()); else showResults(scoreWork());
+}
+$('#tDone').onclick=finishJob;
+$('#tMenu').onclick=async()=>{
+  const opts=[['Resume','resume',true]]; if(job.mode==='practice') opts.push(['Restart pad','restart']); opts.push(['Quit to title','quit']);
+  const v=await modal(isClient(job.mode)?'Paused. Your customer is waiting patiently.':'Paused',opts);
+  if(v==='restart'){ startPractice(job.idx); }
+  if(v==='quit'){ buzz(false); stk=null; if(job.mode==='career'&&F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } persist(); show('title'); }
+};
+
+/* =============== RESULTS =============== */
+const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+const DEE_PRACTICE=["","Sloppy, but it counts. One star. Slow down and stay right on the stencil.","Clean work. Your hand's starting to listen.","Spot on. That's how I want every line to look."];
+function showFail(){
+  const res=$('#res'); const cust=isClient(job.mode), career=job.mode==='career'; let who='dee', quote, btns;
+  if(cust) useSupplies();
+  if(cust){ save.rep-=1; persist(); who=job.cust.ch; quote="Whoa, whoa! Stop! That's going way outside the lines!"; }
+  else quote="Five slips. Wipe it down and start over. Stay right on that purple line.";
+  btns=career?`<button class="gbtn go" id="fFloor">They walked out. Back to the floor</button>`:cust?`<button class="gbtn go" id="fRetry">Calm them down and try again</button>`:`<button class="gbtn" id="fBoard">Back to the pads</button><button class="gbtn go" id="fRetry">Try again</button>`;
+  res.innerHTML=`<h2 class="failtag">Round failed</h2>
+    <canvas id="rThumb" width="600" height="600"></canvas>
+    <div><div class="bigstars" aria-label="No stars">☆☆☆</div>
+      <dl class="stats"><dt>Slips</dt><dd>${job.maxStrikes} of ${job.maxStrikes}</dd>${cust?'<dt>Reputation</dt><dd>-1</dd><dt>Tip</dt><dd>none</dd>':''}</dl>
+      <p style="margin:0">You went too far outside the lines too many times.</p></div>
+    <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[who].name}:</b> ${quote}</span></div>
+    ${cust?`<div class="quote"><canvas id="rPortrait2" width="60" height="60"></canvas><span><b>Dee:</b> I'll smooth it over. Clean your station and do it right this time.</span></div>`:''}
+    <div class="row">${btns}</div>`;
+  const c=composite(false), tx=$('#rThumb').getContext('2d'); tx.drawImage(c,0,0); tx.globalAlpha=.9; tx.drawImage(cWarn,0,0);
+  drawPortrait($('#rPortrait'),CH[who]); if(cust) drawPortrait($('#rPortrait2'),CH.dee);
+  show('results');
+  if(career){ save.rep-=1; persist(); $('#fFloor').onclick=()=>afterCareerJob(); return; }
+  $('#fRetry').onclick=()=>cust?startJob({mode:'customer',cust:job.cust,design:job.design,skin:job.skin,limit:job.limit,stenOp:.75}):startPractice(job.idx);
+  if($('#fBoard')) $('#fBoard').onclick=openBoard;
+}
+function showResults(r){
+  if(r.failed){ showFail(); return; }
+  const res=$('#res'); let quoteWho, quote, extra='', btns='';
+  if(job.mode==='practice'){
+    const i=job.idx; const firstPass=r.stars>0&&!save.stars[i];
+    save.stars[i]=Math.max(save.stars[i],r.stars); save.best[i]=Math.max(save.best[i],r.score); persist();
+    quoteWho='dee'; quote=DEE_PRACTICE[r.stars];
+    if(firstPass&&i<PRACTICE.length-1) extra=`<p style="grid-column:1/-1;margin:0">New pad unlocked: ${DESIGNS[PRACTICE[i+1]].name}</p>`;
+    btns=`<button class="gbtn" id="rRetry">Try again</button><button class="gbtn go" id="rBoard">Back to the pads</button>`;
+  } else if(job.mode==='career'){
+    const c=job.cust, late=job.elapsed>job.limit, h=healInfo(r.clean);
+    const pay=Math.round(c.tip*(.45+.55*r.score/100)*(late?.7:1)*(.75+.4*r.clean));
+    const rep=r.stars-1;
+    save.coins+=pay; save.rep+=rep; F.today.you+=pay; F.today.jobs++;
+    save.reviews.push({name:CH[c.ch].name,design:DESIGNS[job.design].name,due:save.cday+h.days,rep:h.rep+(r.stars===3?1:0),label:h.label});
+    persist();
+    quoteWho=c.ch; quote=c.react[r.stars];
+    extra=`<dl class="stats" style="grid-column:1/-1;margin:0"><dt>Paid</dt><dd><i class="coin"></i> ${pay}${late?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${aftercareRows(r)}<dt>Healed review</dt><dd>in ${h.days} day${h.days>1?'s':''}</dd></dl>`;
+    btns=`<button class="gbtn go" id="rFloor">Back to the shop floor</button>`;
+  } else {
+    const c=job.cust, late=job.elapsed>job.limit, cl=r.clean??1;
+    const tip=Math.round(c.tip*(r.score/100)*(late?.6:1)*(r.stars===3?1.25:1)*(.75+.4*cl));
+    const rep=r.stars+healInfo(cl).rep;
+    save.coins+=tip; save.rep+=rep; save.scores.push(r.score); save.cust++; persist();
+    quoteWho=c.ch; quote=c.react[r.stars];
+    extra=`<dl class="stats" style="grid-column:1/-1;margin:0"><dt>Tip</dt><dd><i class="coin"></i> ${tip}${late?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${r.clean!=null?aftercareRows(r):''}</dl>`;
+    btns=save.cust>=CUSTOMERS.length?`<button class="gbtn go" id="rNext">Close up shop</button>`:`<button class="gbtn go" id="rNext">Next customer</button>`;
+  }
+  if(downloads) btns=`<button class="gbtn" id="rSave">Save PNG</button>`+btns;
+  res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':CH[job.cust.ch].name}</h2>
+    <canvas id="rThumb" width="600" height="600"></canvas>
+    <div><div class="bigstars" aria-label="${r.stars} of 3 stars">${starStr(r.stars)}</div>
+      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd><dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd></dl></div>
+    ${extra}
+    <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[quoteWho].name}:</b> ${quote}</span></div>
+    <div class="row">${btns}</div>`;
+  const thumb=composite(true); $('#rThumb').getContext('2d').drawImage(thumb,0,0); drawPortrait($('#rPortrait'),CH[quoteWho]);
+  blip(r.stars>1?880:600);
+  show('results');
+  const q=id=>res.querySelector(id);
+  if(q('#rRetry')) q('#rRetry').onclick=()=>startPractice(job.idx);
+  if(q('#rBoard')) q('#rBoard').onclick=openBoard;
+  if(q('#rNext')) q('#rNext').onclick=()=>save.cust>=CUSTOMERS.length?ending():nextCustomer();
+  if(q('#rSave')) q('#rSave').onclick=()=>savePng(thumbNoSten());
+  if(q('#rFloor')) q('#rFloor').onclick=()=>afterCareerJob();
+}
+const thumbNoSten=()=>composite(false);
+
+/* =============== SAVE PNG (downloads capability) =============== */
+let downloads=null;
+(async()=>{ try{ if(window.claude&&window.claude.use){ downloads=await window.claude.use('downloads'); if(downloads&&job.mode==='free') $('#tSave').classList.remove('hide'); } }catch(_){} })();
+function savePng(canvas){
+  if(!downloads) return;
+  canvas.toBlob(async b=>{ try{ await downloads.save({filename:'tattoo-madness.png',data:b}); toast('Saved'); }
+    catch(e){ if(e&&e.code==='declined') return; toast(e&&e.code==='rate_limited'?'A save prompt is already open':'Saving is not available here'); } },'image/png');
+}
+$('#tSave').onclick=()=>savePng(composite(false));
+
+/* =============== PRACTICE BOARD =============== */
+function thumbCanvas(cv,key,skin){
+  const x=cv.getContext('2d'); cv.width=cv.height=192; x.fillStyle=skin; x.fillRect(0,0,192,192);
+  x.save(); x.scale(192/DOC,192/DOC); x.strokeStyle='#5a33b8'; x.lineWidth=9; x.lineCap='round'; x.lineJoin='round'; x.stroke(pathOf(key)); x.restore();
+}
+function openBoard(){
+  const g=$('#pads'); g.innerHTML='';
+  PRACTICE.forEach((k,i)=>{
+    const unlocked=i===0||save.stars[i-1]>0;
+    const b=document.createElement('button'); b.className='padcard'; b.disabled=!unlocked;
+    b.innerHTML=`<canvas></canvas><b>${i+1}. ${DESIGNS[k].name}</b><span class="st">${starStr(save.stars[i])}</span>${unlocked?'':'<span class="lock">Locked</span>'}`;
+    thumbCanvas(b.querySelector('canvas'),k,'#f1d2bb');
+    b.onclick=()=>startPractice(i); g.appendChild(b);
+  });
+  $('#bReady').classList.toggle('hide',!(save.stars[5]>0&&!save.graduated));
+  if(save.graduated){ $('#bReady').classList.remove('hide'); $('#bReady').textContent='Back to the shop floor'; }
+  else $('#bReady').textContent="Tell Dee you're ready";
+  show('board');
+}
+function startPractice(i){
+  const k=PRACTICE[i];
+  startJob({mode:'practice',idx:i,design:k,cust:null,skin:'#f1d2bb',stenOp:[.95,.9,.85,.8,.72,.65][i]});
+}
+$('#bBoardMenu').onclick=()=>show('title');
+$('#bReady').onclick=()=>save.graduated?nextCustomer():graduate();
+
+/* =============== STORY =============== */
+let busy=false;
+async function shopScene(list){ show('shop'); renderHud(); setActors(list); hideDlg(); }
+async function intro(){
+  busy=true; save=fresh(); save.started=true; persist();
+  show('shop'); sceneMode='exterior'; setActors([]); $('#hud').innerHTML='';
+  await fade(false);
+  await say(null,"You are starting your apprenticeship.");
+  await say(null,"No one knows how it's going to go... but you.");
+  await say(null,"Try your hardest, and you will become the best artist you can be.");
+  hideDlg(); await fade(true);
+  const {cx,fy}=sceneGeo();
+  sceneMode='interior'; setActors([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-20,y:H+40}]); renderHud();
+  await fade(false);
+  await walk('you',cx-30,fy+16);
+  const a=actors.find(a=>a.ch==='you'); a.flip=true;
+  await say('dee',"There you are. Door sticks, give it a shove next time.");
+  await say('dee',"I'm Dee. Twenty years behind this counter. Rule one: you don't touch real skin until I say so.");
+  await say('dee',"So you start on fake skin. Six pads. Smiley face first, a rose last. No clock, take all the time you need.");
+  await say('dee',"Trace the purple stencil with your liner. Hit every line, and keep ink off the open skin.");
+  await say('dee',controlsLine());
+  await say('dee',"I'm strict, and there's no undo in this trade. Drift too far off the line and you'll see red.");
+  await say('dee',"Go too far and I wipe the pad clean. You start that design over from the very first line. Five wipes and the round's a fail.");
+  await say('dee',"Sloppy gets you one star. Spot on gets you three. Finish a pad to unlock the next one. They're on the back table. Go on.");
+  hideDlg(); busy=false; openBoard();
+}
+async function graduate(){
+  busy=true; const {cx,fy}=sceneGeo();
+  await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-30,y:fy+16,flip:true}]);
+  await say('dee',"That rose... not bad, kid. Not bad at all.");
+  await say('dee',"Tomorrow the doors open. Real people, real skin, no do-overs.");
+  await say('dee',"Customers will wait for good work, but they tip less if you drag your feet past the time on the clock.");
+  await say('dee',"One more thing. Ink, needles and wraps cost money. Here's a starter kit. When it runs low, restock at the supply cabinet.");
+  await say('dee',"And clean every tattoo before you wrap it. Clean work heals faster, and healed work is what brings people back.");
+  hideDlg(); save.graduated=true; save.sup={needles:4,ink:40,wraps:3}; persist();
+  await dayCard('Day 2','The doors open'); busy=false; await nextCustomer(true);
+}
+async function nextCustomer(fromCard){
+  if(save.cust>=CUSTOMERS.length){ ending(); return; }
+  const miss=missingSupplies();
+  if(miss){
+    if(fromCard) await fade(false);
+    if(save.coins<45){ save.sup.needles+=3; save.sup.ink+=30; save.sup.wraps+=2; persist(); await modal('Dee: "Running on empty and short on cash? This kit is on me. Once."',[['Thanks, Dee',true,true]]); }
+    else { await modal(`You're out of ${miss}. Restock at the supply cabinet before the next client.`,[['Open supply cabinet',true,true]]); openStore('supplies',()=>nextCustomer()); return; }
+  }
+  busy=true;
+  if(!fromCard && save.cust===4 && !save.day3Shown){ save.day3Shown=true; persist(); await dayCard('Day 3','Word is getting around'); fromCard=true; }
+  const c=CUSTOMERS[save.cust], {cx,fy}=sceneGeo();
+  await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx+40,y:fy+12,flip:true},{ch:c.ch,x:cx+10,y:H+40}]);
+  if(fromCard) await fade(false);
+  await walk(c.ch,cx+6,fy+14);
+  actors.find(a=>a.ch===c.ch).flip=false;
+  for(const line of c.hi) await say(c.ch,line);
+  await say('dee',c.dee);
+  hideDlg(); busy=false;
+  startJob({mode:'customer',cust:c,design:c.design,skin:c.skin,limit:c.time,stenOp:.75});
+}
+async function ending(){
+  busy=true; const {cx,fy}=sceneGeo();
+  await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-30,y:fy+16,flip:true}]);
+  await say('dee',"Seven clients. Seven people walking around with your work on them.");
+  await say('dee',"You're not an apprentice anymore. I'm stepping back to run the counter. The shop floor is yours: rent, staff, all of it.");
+  await say('dee',"Save up. There are other shops in town that could use a new owner.");
+  hideDlg(); busy=false;
+  const avg=save.scores.length?Math.round(save.scores.reduce((a,b)=>a+b,0)/save.scores.length):0;
+  $('#endStats').innerHTML=`<dt>Customers inked</dt><dd>${save.scores.length}</dd><dt>Average score</dt><dd>${avg}</dd><dt>Tips earned</dt><dd><i class="coin"></i> ${save.coins}</dd><dt>Reputation</dt><dd>${save.rep}</dd>`;
+  show('end');
+}
+
+/* =============== FREE MODE =============== */
+const FREE_INKS=[['Black','#151515',1],['Grey wash','#151515',.4],['Light wash','#151515',.18],['Red','#b3261e',1],['Blue','#1f4fa0',1],['Green','#2e7d4f',1],['Yellow','#e9ba25',1],['White','#fbfaf7',1]];
+FREE_INKS.forEach(([n,c,a],i)=>{ const b=document.createElement('button'); b.className='ink'; b.title=n; b.setAttribute('aria-label',n+' ink');
+  b.style.background=a<1?`rgba(21,21,21,${a})`:c; if(a<1) b.style.backgroundColor='#f1d2bb', b.style.backgroundImage=`linear-gradient(rgba(21,21,21,${a}),rgba(21,21,21,${a}))`;
+  b.onclick=()=>{ job.color=c; job.ink=a; document.querySelectorAll('.ink').forEach(x=>x.setAttribute('aria-pressed',x===b)); };
+  if(!i) b.setAttribute('aria-pressed','true'); $('#inks').appendChild(b); });
+const FREE_DESIGNS=[null,...Object.keys(DESIGNS)];
+$('#tDesign').onclick=()=>{
+  const i=(FREE_DESIGNS.indexOf(job.design)+1)%FREE_DESIGNS.length; job.design=FREE_DESIGNS[i]; job.upload=null; renderStencil();
+  $('#tDesign').textContent='Stencil: '+(job.design?DESIGNS[job.design].name:'Blank');
+};
+$('#tUpload').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=e=>{ const f=e.target.files[0]; e.target.value=''; if(!f||!f.type.startsWith('image/')){ toast('Pick a PNG or JPG image'); return; }
+  const r=new FileReader(); r.onload=()=>{ const img=new Image(); img.onload=()=>{ job.upload=img; job.design=null; renderStencil(); $('#tDesign').textContent='Stencil: Upload'; toast('Stencil applied'); }; img.src=r.result; }; r.readAsDataURL(f); };
+function startFree(){ startJob({mode:'free',design:null,cust:null,skin:'#e8c3a4',stenOp:.8}); job.color='#151515'; job.ink=1; $('#tDesign').textContent='Stencil: Blank';
+  document.querySelectorAll('.ink').forEach((x,i)=>x.setAttribute('aria-pressed',i===0)); }
+
+/* =============== CAREER: SUPPLIES, AFTERCARE, SHOP SIM =============== */
+const isClient=m=>m==='customer'||m==='career';
+function ensureCareerSave(){
+  const d=fresh();
+  save.sup={...d.sup,...(save.sup||{})};
+  save.up={...d.up,...(save.up||{})};
+  ['staff','shops','reviews'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
+  if(save.cday==null) save.cday=1; if(save.clock==null) save.clock=600;
+}
+ensureCareerSave();
+
+/* ---------- supplies ---------- */
+const SUPPLY=[
+  {id:'needles',name:'Needle cartridges',desc:'Box of 10. A tattoo uses one, two if you also shade.',price:20,qty:10,unit:''},
+  {id:'ink',name:'Black ink',desc:'100 ml bottle. A tattoo uses about 3 to 15 ml.',price:25,qty:100,unit:' ml'},
+  {id:'wraps',name:'Aftercare wraps',desc:'Pack of 10. A tattoo without a wrap heals dirty.',price:12,qty:10,unit:''}];
+function missingSupplies(){ const m=[]; if(save.sup.needles<1) m.push('needles'); if(save.sup.ink<5) m.push('ink'); return m.join(' and '); }
+const supLow=()=>save.sup.needles<2||save.sup.ink<10||save.sup.wraps<1;
+const supText=()=>`Needles ${save.sup.needles} · Ink ${save.sup.ink} ml · Wraps ${save.sup.wraps}`;
+function useSupplies(){
+  if(job.used) return;
+  const L=lctx.getImageData(0,0,DOC,DOC).data, S=sctx.getImageData(0,0,DOC,DOC).data; let n=0;
+  for(let i=3;i<L.length;i+=16) if(L[i]>40||S[i]>40) n++;
+  const ml=Math.round(clamp(n*4/4000+2,3,15)), nd=1+(job.usedShade?1:0);
+  save.sup.needles=Math.max(0,save.sup.needles-nd); save.sup.ink=Math.max(0,save.sup.ink-ml); persist();
+  job.used={nd,ml};
+}
+
+/* ---------- aftercare cleaning ---------- */
+const cDirt=$('#cDirt'), dctx=cDirt.getContext('2d');
+TOOLS.cloth={sizes:[[80,'Cloth']],i:0};
+let wipeLast=null;
+function dirtSum(){ const d=dctx.getImageData(0,0,DOC,DOC).data; let s=0; for(let i=3;i<d.length;i+=16) s+=d[i]; return s; }
+function makeDirt(){
+  dctx.clearRect(0,0,DOC,DOC);
+  dctx.save(); dctx.lineCap='round'; dctx.lineJoin='round'; dctx.filter='blur(7px)';
+  dctx.strokeStyle='rgba(25,25,25,.45)'; dctx.lineWidth=30; dctx.stroke(pathOf(job.design)); dctx.restore();
+  const m=job.strikeMask;
+  const pick=()=>{ for(let t=0;t<300;t++){ const i=(Math.random()*DOC*DOC)|0; if(!m||m[i]) return [i%DOC,(i/DOC)|0]; } return [300,300]; };
+  for(let k=0;k<48;k++){
+    const [x,y]=pick(), r=Math.random(); let col,a,rad;
+    if(r<.5){ col='#1a1a1a'; a=.35+Math.random()*.25; rad=12+Math.random()*18; }
+    else if(r<.82){ col='#a31d1d'; a=.3+Math.random()*.25; rad=6+Math.random()*10; }
+    else { col='#e3cf74'; a=.3; rad=8+Math.random()*10; }
+    dctx.globalAlpha=a; dctx.drawImage(dab(col,.35),x-rad+(Math.random()-.5)*20,y-rad+(Math.random()-.5)*20,rad*2,rad*2);
+  }
+  dctx.globalAlpha=1; job.dirt0=dirtSum()||1;
+}
+function wipeAt(x,y){
+  const r=40, im=dab('#000000',.35);
+  const go=(px,py)=>{ dctx.save(); dctx.globalCompositeOperation='destination-out'; dctx.globalAlpha=.14; dctx.drawImage(im,px-r,py-r,r*2,r*2); dctx.restore(); };
+  if(!wipeLast) go(x,y);
+  else { const dx=x-wipeLast[0], dy=y-wipeLast[1], n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/8)); for(let i=1;i<=n;i++) go(wipeLast[0]+dx*i/n,wipeLast[1]+dy*i/n); }
+  wipeLast=[x,y];
+}
+const cleanPct=()=>clamp(1-dirtSum()/job.dirt0);
+function renderCleanPct(){ const p=Math.round(cleanPct()*100); $('#tSlips').innerHTML=`<b style="color:${p>=85?'#3f7a2a':p>=60?'#a8741a':'#b8432f'}">Clean ${p}%</b>`; }
+function healInfo(c){
+  return c>=.85?{label:'Heals fast',days:1,rep:1}:c>=.6?{label:'Heals normally',days:2,rep:0}:{label:'Infection risk',days:3,rep:-1};
+}
+function aftercareRows(r){
+  const h=healInfo(r.clean), u=job.used||{nd:1,ml:5};
+  return `<dt>Aftercare</dt><dd>${Math.round((r.rawClean??r.clean)*100)}% clean · ${h.label}${r.noWrap?' (no wrap!)':''}</dd><dt>Supplies used</dt><dd>${u.nd} needle${u.nd>1?'s':''}, ${u.ml} ml ink, ${r.noWrap?'no':'1'} wrap</dd>`;
+}
+async function startCleaning(r){
+  useSupplies(); job.phase='clean'; job.pending=r; job.wiping=false;
+  makeDirt(); cDirt.style.display='block'; cSten.style.display='none'; cWarn.style.display='none';
+  document.querySelector('.ttools').classList.add('hide'); $('#tDone').textContent='Wrap it'; $('#tTimer').classList.add('hide');
+  $('#tSub').textContent='Aftercare: wipe off the excess ink, blood and plasma, then wrap it.';
+  setTool('cloth'); renderCleanPct(); requestAnimationFrame(layoutPad);
+  if(!save.seenClean){ save.seenClean=true; persist();
+    await modal('Aftercare time. Scrub away the ink smudges, blood and plasma with your cloth, then wrap it. Clean tattoos heal faster and earn better pay and reviews.',[['Got it',true,true]]); }
+}
+async function wrapUp(){
+  const clean=cleanPct();
+  if(clean<.7){ const ok=await modal(`Still messy (${Math.round(clean*100)}% clean). Wrap it anyway?`,[['Keep cleaning',false,true],['Wrap it',true]]); if(!ok) return; }
+  let noWrap=false; if(save.sup.wraps>0) save.sup.wraps--; else noWrap=true; persist();
+  job.phase='ink'; cDirt.style.display='none';
+  showResults({...job.pending,clean:noWrap?clean*.6:clean,rawClean:clean,noWrap});
+}
+
+/* ---------- shop sim data ---------- */
+const OPEN=600, CLOSE=1200, LAST_IN=1140, CLOCK_RATE=4;
+const DES_INFO={smiley:{pay:25,dur:60,time:180,rep:0},heart:{pay:32,dur:75,time:200,rep:0},star:{pay:38,dur:75,time:200,rep:3},
+  anchor:{pay:48,dur:105,time:280,rep:6},dagger:{pay:52,dur:105,time:280,rep:10},moon:{pay:58,dur:120,time:300,rep:14},rose:{pay:80,dur:150,time:400,rep:18}};
+const NAMES=['Ava','Bram','Cass','Dario','Enzo','Faye','Hollis','Ines','Jory','Kit','Lior','Mabel','Nico','Odette','Priya','Quinn','Rafe','Sunny','Tamsin','Uri','Vida','Wren','Xavi','Yara','Zeke','Bea','Cole','Dot','Ezra','Gia'];
+const SPOTS=['forearm','wrist','ankle','calf','shoulder','upper arm','back','thigh','collarbone'];
+const HAIRS=['#1a1414','#3a2a1a','#6b3d1f','#a0522d','#e7c35a','#d8d8d8','#8b2f2f','#9b5de5','#2e6f8e'];
+const SKINS=['#f2c9a5','#eab894','#d9a07a','#c48a62','#93623f','#6a4430','#5e3b26'];
+const SHIRTS=[['#6fb26a','#4f8a4b'],['#d97aa0','#b35a80'],['#4f7cac','#3a5d85'],['#e0a33a','#b57e22'],['#3d2b55','#2a1d3b'],['#b3263e','#861b2e'],['#2a2a2a','#151515'],['#e8e1d0','#b8b0a0']];
+const STYLES=['short','long','bald','mohawk','cap','bun','short','long'];
+const pickR=a=>a[(Math.random()*a.length)|0];
+const STAFF_POOL=[
+  {id:'mika',name:'Mika',skill:.6,wage:15,fee:100,desc:'Fresh out of an apprenticeship. Cheap, slow, a little sloppy.',
+   look:{hair:'#e7c35a',style:'bun',skin:'#f2c9a5',shirt:'#6fb26a',shirtD:'#4f8a4b',pants:'#3b3950',boots:'#2a1a14'}},
+  {id:'bo',name:'Bo',skill:.8,wage:30,fee:250,desc:'Solid journeyman. Steady hands, decent speed.',
+   look:{hair:'#2b1d14',style:'bald',beard:1,skin:'#8a5a3c',shirt:'#2e5866',shirtD:'#1f3f4a',pants:'#30304a',boots:'#151515',tattoos:1}},
+  {id:'sage',name:'Sage',skill:.95,wage:55,fee:500,desc:'A pro with a waiting list. Fast and nearly perfect.',
+   look:{hair:'#9b5de5',style:'long',skin:'#c48a62',shirt:'#1c1c22',shirtD:'#111111',pants:'#2b2b3a',boots:'#111111',tattoos:1,apron:'#7a4a2e'}}];
+STAFF_POOL.forEach(st=>{ CH['st_'+st.id]={name:st.name,...st.look}; });
+const UPGRADES=[
+  {id:'seats',name:'Waiting bench seat',desc:'Room for one more waiting customer.',lvl:()=>save.up.seats-2,max:4,price:l=>60+l*40,buy:()=>save.up.seats++},
+  {id:'chairs',name:'Extra tattoo chair',desc:'Each assistant needs their own chair. Adds a little rent.',lvl:()=>save.up.chairs,max:3,price:l=>220+l*130,buy:()=>save.up.chairs++},
+  {id:'neon',name:'Window neon sign',desc:'People notice the shop. More walk-ins.',lvl:()=>save.up.neon?1:0,max:1,price:()=>150,buy:()=>{ save.up.neon=true; }},
+  {id:'light',name:'Ring light',desc:'Stencils show up clearer at your station.',lvl:()=>save.up.light?1:0,max:1,price:()=>120,buy:()=>{ save.up.light=true; }},
+  {id:'rotary',name:'Rotary machine',desc:'Smoother, steadier lines for your own work.',lvl:()=>save.up.rotary?1:0,max:1,price:()=>300,buy:()=>{ save.up.rotary=true; }}];
+const SHOPS=[
+  {id:'harbor',name:'Harborside Ink',price:800,income:45,x:.2,y:.8,desc:'A small shop by the docks. Sailors love anchors.'},
+  {id:'mill',name:'Old Mill Studio',price:2000,income:110,x:.34,y:.3,desc:'Exposed beams and a loyal crowd.'},
+  {id:'alley',name:'Neon Alley Tattoo',price:4500,income:250,x:.74,y:.66,desc:'Open late and always busy.'},
+  {id:'hill',name:'Hilltop Atelier',price:9000,income:500,x:.86,y:.24,desc:'The fanciest studio in town. Fine-line clients only.'}];
+const HOME={x:.53,y:.56};
+
+/* ---------- floor state ---------- */
+const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:null,targetAct:null,padMove:[0,0],keys:{},
+  today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},busy:false,jobCust:null,talking:null,arrivalAt:OPEN+20,closing:false,nextId:1,hot:null,hotLabel:'',starting:false};
+const KEYMOVE={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+const seatPos=i=>{ const {cx}=sceneGeo(); return {x:Math.max(14,cx-128)+i*16,y:H-12}; };
+const chairBase=k=>{ const {cx,fy}=sceneGeo(); return k===0?{x:cx+72,y:fy-6}:{x:cx+34+(k-1)*44,y:fy+44}; };
+const chairSit=k=>{ const b=chairBase(k); return k===0?{x:b.x-6,y:b.y}:{x:b.x-2,y:b.y-4}; };
+const staffPos=k=>{ const b=chairBase(k); return {x:b.x-24,y:b.y+10}; };
+const artistPos=()=>{ const {cx,fy}=sceneGeo(); return {x:cx+40,y:fy+12}; };
+const doorOut=()=>({x:sceneGeo().cx,y:H+30});
+const clockText=()=>{ const t=save.clock|0, h=(t/60)|0, m=t%60; return `${((h+11)%12)+1}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
+
+function drawFloorFurniture(cx,fy){
+  for(let i=0;i<save.up.seats;i++){ const p=seatPos(i);
+    R(p.x-8,p.y-9,16,4,'#8a5532'); R(p.x-8,p.y-9,16,1,'#c58a52'); R(p.x-7,p.y-5,2,5,'#5a3520'); R(p.x+5,p.y-5,2,5,'#5a3520'); }
+  for(let k=1;k<=save.up.chairs;k++){ const b=chairBase(k);
+    R(b.x-12,b.y+2,24,4,'#2b2b2b'); R(b.x-2,b.y-4,4,6,'#555'); R(b.x-18,b.y-12,36,8,'#a8323c'); R(b.x-18,b.y-12,36,2,'#d0505a'); R(b.x+12,b.y-30,8,20,'#a8323c'); }
+  R(cx-13,H-5,26,5,'#6b3a2a'); R(cx-11,H-4,22,1,'#8a5a3a');
+}
+function drawFloorOverlay(t){
+  F.custs.forEach(c=>{ if(c.state!=='waiting') return; const f=clamp(c.patience/c.patience0);
+    R(c.x-8,c.y-38,16,3,'#2a1a14'); R(c.x-7,c.y-37,Math.max(1,14*f),1,f>.5?'#86c060':f>.25?'#d9a12b':'#c2453a'); });
+  save.staff.forEach(st=>{ const a=F.staffActs[st.id], s=F.sst[st.id]; if(!a||!s) return;
+    if(s.busy){ const f=clamp(1-(s.busy.until-save.clock)/s.busy.len); R(a.x-8,a.y-38,16,3,'#2a1a14'); R(a.x-7,a.y-37,Math.max(1,14*f),1,'#9fe8ff'); }
+    else if(s.noSup){ R(a.x-3,a.y-46,7,10,'#fff'); R(a.x,a.y-44,1,4,'#c2453a'); R(a.x,a.y-39,1,1,'#c2453a'); } });
+  const p=F.player; if(p){ R(p.x-2,p.y-40,5,1,'#ffe36e'); R(p.x-1,p.y-39,3,1,'#ffe36e'); R(p.x,p.y-38,1,1,'#ffe36e'); }
+  if(F.hot&&!F.busy){ const b=((t/260)|0)%2, x=F.hot.ax, y=F.hot.ay-46-b;
+    R(x-3,y,7,2,'#ff6fa8'); R(x-2,y+2,5,1,'#ff6fa8'); R(x-1,y+3,3,1,'#ff6fa8'); R(x,y+4,1,1,'#ff6fa8'); }
+}
+
+function hotspots(){
+  const {cx,fy}=sceneGeo();
+  const hs=[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:'Counter: supplies, upgrades and staff',act:()=>openStore('supplies',enterFloor)},
+            {x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:'Door: town map or close for the day',act:doorMenu}];
+  F.custs.forEach(c=>{ if(c.state==='waiting') hs.push({x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
+  save.staff.forEach(st=>{ const a=F.staffActs[st.id]; if(a) hs.push({x:a.x,y:a.y,r:14,ax:a.x,ay:a.y,label:`${CH['st_'+st.id].name}: ${staffStatus(st)}`,act:()=>toast(`${CH['st_'+st.id].name}: ${staffStatus(st)}`)}); });
+  return hs;
+}
+function staffStatus(st){ const s=F.sst[st.id]; if(!s) return 'ready for a client'; if(s.busy) return `tattooing a ${DESIGNS[s.busy.c.design].name}`; if(s.noSup) return 'out of supplies!'; return 'waiting for a client'; }
+
+function enterFloor(){
+  ensureCareerSave();
+  const {cx,fy}=sceneGeo();
+  if(!F.player){
+    F.player={ch:'you',x:cx,y:H-22,tx:cx,ty:H-22,ctrl:true,flip:false,moving:false};
+    F.dee={ch:'dee',x:cx-90,y:fy-12,tx:cx-90,ty:fy-12,behind:true};
+    F.arrivalAt=Math.max(F.arrivalAt,save.clock+10);
+  }
+  save.staff.forEach(st=>{ if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:true}; } });
+  actors.length=0; actors.push(F.dee,F.player,...Object.values(F.staffActs),...F.custs);
+  F.busy=false; F.target=null; F.targetAct=null; F.hot=null; F.hotLabel='';
+  show('floor'); renderFloorHud(); $('#fPrompt').classList.add('hide');
+  if(save.clock>=CLOSE&&!F.closing){ F.closing=true; setTimeout(endDay,400); }
+}
+function renderFloorHud(){
+  $('#fChips').innerHTML=`<span class="chip wood">Day ${save.cday} · ${clockText()}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
+}
+function clampPlayer(p){
+  const {cx,fy}=sceneGeo();
+  p.x=clamp(p.x,8,W-8); p.y=clamp(p.y,fy+2,H-4);
+  if(p.x<cx-52&&p.y<fy+8) p.y=fy+8;
+}
+function floorTick(dt){
+  const p=F.player; if(!p) return;
+  const pm=F.padMove; F.padMove=[0,0];
+  if(modalOpen){ p.moving=false; return; }
+  let mx=pm[0], my=pm[1]; const k=F.keys;
+  if(k.l) mx=-1; if(k.r) mx=1; if(k.u) my=-1; if(k.d) my=1;
+  const sp=1.3*dt/16.7; let moved=false;
+  if(!F.busy&&(Math.abs(mx)>.05||Math.abs(my)>.05)){
+    const m=Math.hypot(mx,my), s=Math.min(1,m); p.x+=mx/m*s*sp; p.y+=my/m*s*sp; F.target=null; F.targetAct=null; moved=true; if(Math.abs(mx)>.2) p.flip=mx<0;
+  } else if(F.target){
+    const dx=F.target.x-p.x, dy=F.target.y-p.y, d=Math.hypot(dx,dy);
+    if(d>1.2){ p.x+=dx/d*Math.min(d,sp); p.y+=dy/d*Math.min(d,sp); moved=true; if(Math.abs(dx)>.5) p.flip=dx<0; } else F.target=null;
+  }
+  clampPlayer(p); p.moving=moved; p.tx=p.x; p.ty=p.y;
+  if(F.targetAct&&!F.busy){ const h=F.targetAct; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r||!F.target){ F.targetAct=null; F.target=null; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r+6){ h.act(); return; } } }
+  if(!F.busy) advanceTime(dt/1000*CLOCK_RATE);
+  F.custs.slice().forEach(c=>{
+    const arrived=Math.hypot(c.tx-c.x,c.ty-c.y)<.8;
+    if(c.state==='arriving'&&arrived) c.state='waiting';
+    else if(c.state==='toChair'&&arrived){ c.state='inChair'; c.flip=false; if(c.by==='you'&&!F.starting){ F.starting=true; setTimeout(()=>{ F.starting=false; startCareerJob(c); },350); } }
+    else if(c.state==='leaving'&&arrived) removeCust(c);
+  });
+  // nearest interaction
+  let best=null, bd=1e9;
+  if(!F.busy) hotspots().forEach(h=>{ const d=Math.hypot(h.x-p.x,h.y-p.y); if(d<=h.r&&d<bd){ bd=d; best=h; } });
+  F.hot=best; const lbl=best?best.label:'';
+  if(lbl!==F.hotLabel){ F.hotLabel=lbl; const b=$('#fPrompt'); b.classList.toggle('hide',!best);
+    b.textContent=best?`${inputMode==='pad'?'A':inputMode==='touch'?'Tap':'E'}: ${lbl}`:''; }
+  if(tick%20===0) renderFloorHud();
+  if(save.clock>=CLOSE&&!F.busy&&!F.closing&&!F.jobCust){ F.closing=true; toast('Closing time!'); setTimeout(endDay,700); }
+}
+function floorInteract(){ if(F.hot&&!F.busy) F.hot.act(); }
+$('#fPrompt').onclick=floorInteract;
+$('#fMenuBtn').onclick=()=>floorMenu();
+$('#scr-floor').addEventListener('pointerdown',e=>{
+  if(e.target.closest('button')||modalOpen||F.busy||!F.player) return;
+  const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2;
+  const x=(e.clientX-r.left-ox)/s, y=(e.clientY-r.top-oy)/s;
+  let hit=null, hd=22; hotspots().forEach(h=>{ const d=Math.min(Math.hypot(h.x-x,h.y-y),Math.hypot(h.ax-x,(h.ay-14)-y)); if(d<hd){ hd=d; hit=h; } });
+  if(hit){ F.targetAct=hit; F.target={x:hit.x,y:hit.y+6}; } else { F.targetAct=null; F.target={x,y}; }
+});
+
+function freeSeat(){ for(let i=0;i<save.up.seats;i++) if(!F.custs.some(c=>c.seat===i)) return i; return -1; }
+function arrivalGap(){ const base=58*(save.up.neon?.75:1)*Math.max(.45,1-Math.max(0,save.rep)/70); return base*(.6+Math.random()*.8); }
+function spawnCustomer(){
+  const seat=freeSeat(); if(seat<0) return;
+  const id='cu'+(F.nextId++), sh=pickR(SHIRTS);
+  CH[id]={name:pickR(NAMES),hair:pickR(HAIRS),style:pickR(STYLES),beard:Math.random()<.2?1:0,hat:pickR(['#2c3e66','#7a2f4f','#3f6b33']),
+    skin:pickR(SKINS),shirt:sh[0],shirtD:sh[1],pants:pickR(['#3b3950','#2b2b3a','#4a5b8c','#3b4a5c']),boots:'#2a1a14',tattoos:Math.random()<.3?1:0};
+  const pool=Object.keys(DES_INFO).filter(k=>save.rep>=DES_INFO[k].rep);
+  const design=Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
+  const info=DES_INFO[design], sp=seatPos(seat), pat=150+Math.random()*110;
+  const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,
+    spot:pickR(SPOTS),pay:Math.round(info.pay*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur,time:info.time,
+    patience:pat,patience0:pat,arrived:save.clock,skin:CH[id].skin};
+  F.custs.push(c); actors.push(c);
+}
+function custLeave(c){ c.state='leaving'; c.seat=null; const d=doorOut(); c.tx=d.x; c.ty=d.y; }
+function removeCust(c){ F.custs=F.custs.filter(x=>x!==c); const i=actors.indexOf(c); if(i>=0) actors.splice(i,1); if(F.jobCust!==c) delete CH[c.ch]; }
+function advanceTime(mins){
+  save.clock+=mins;
+  F.custs.forEach(c=>{ if(c.state==='waiting'&&c!==F.talking){ c.patience-=mins; if(c.patience<=0){ custLeave(c); save.rep-=1; F.today.lost++; if(current==='floor') toast(`${CH[c.ch].name} got tired of waiting and left (−1 rep)`); } } });
+  while(F.arrivalAt<=save.clock&&F.arrivalAt<LAST_IN){ spawnCustomer(); F.arrivalAt+=arrivalGap(); }
+  save.staff.forEach(staffTick);
+}
+function staffTick(st){
+  const s=F.sst[st.id]||(F.sst[st.id]={busy:null,noSup:false}), def=STAFF_POOL.find(x=>x.id===st.id);
+  if(s.busy){
+    if(save.clock>=s.busy.until){
+      const c=s.busy.c, pay=Math.round(c.pay*(.5+.5*def.skill));
+      save.coins+=pay; F.today.staff+=pay; F.today.sjobs++; if(Math.random()<def.skill-.55) save.rep++;
+      custLeave(c); s.busy=null; if(current==='floor') toast(`${def.name} finished a ${DESIGNS[c.design].name}: +${pay} coins`);
+    }
+    return;
+  }
+  if(save.clock>=CLOSE) return;
+  const c=F.custs.filter(c=>c.state==='waiting'&&c!==F.talking).sort((a,b)=>a.arrived-b.arrived)[0]; if(!c) return;
+  if(save.sup.needles<1||save.sup.ink<5){ s.noSup=true; return; } s.noSup=false;
+  save.sup.needles--; save.sup.ink=Math.max(0,save.sup.ink-6); if(save.sup.wraps>0) save.sup.wraps--;
+  c.state='toChair'; c.by=st.id; c.seat=null; const sp=chairSit(st.chair); c.tx=sp.x; c.ty=sp.y;
+  const len=Math.round(DES_INFO[c.design].dur*(1.7-def.skill)); s.busy={c,until:save.clock+len,len};
+}
+async function talkCustomer(c){
+  if(F.busy) return; F.talking=c;
+  const hrs=c.dur/60, ht=Number.isInteger(hrs)?hrs:hrs.toFixed(1);
+  const v=await modal(`${CH[c.ch].name} wants ${/^[aeiou]/i.test(DESIGNS[c.design].name)?'an':'a'} ${DESIGNS[c.design].name.toLowerCase()} on the ${c.spot}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
+    [['Not now','later'],['Send away','away'],['Start tattoo','go',true]]);
+  F.talking=null;
+  if(!F.custs.includes(c)||c.state!=='waiting') return;
+  if(v==='away'){ custLeave(c); return; }
+  if(v!=='go') return;
+  const miss=missingSupplies();
+  if(miss){ const g=await modal(`You're out of ${miss}. Restock at the counter first.`,[['Not now',false],['Go to counter',true,true]]); if(g) openStore('supplies',enterFloor); return; }
+  if(!save.sup.wraps) toast('No aftercare wraps left. This one will heal dirty.');
+  F.busy=true; c.state='toChair'; c.by='you'; c.seat=null; const s=chairSit(0); c.tx=s.x; c.ty=s.y;
+  const a=artistPos(); F.target={x:a.x,y:a.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
+}
+function startCareerJob(c){
+  F.busy=false; F.jobCust=c;
+  startJob({mode:'career',cust:{ch:c.ch,spot:c.spot,tip:c.pay,react:['',"It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']},
+    design:c.design,skin:c.skin,limit:c.time,stenOp:Math.min(.95,.75+(save.up.light?.15:0))});
+}
+function afterCareerJob(){
+  const c=F.jobCust; F.jobCust=null;
+  if(c){ const s=chairSit(0); c.x=s.x; c.y=s.y; custLeave(c); }
+  advanceTime(c?c.dur:90); persist(); enterFloor();
+}
+async function doorMenu(){
+  const v=await modal('Step outside?',[['Stay in','stay'],['Close up for today','close'],['Town map','map',true]]);
+  if(v==='map') openMap(enterFloor);
+  if(v==='close') closeEarly();
+}
+async function closeEarly(){
+  const ok=save.clock<CLOSE-60?await modal('Close early? Anyone still waiting goes home.',[['Keep working',false],['Close up',true,true]]):true;
+  if(ok) endDay();
+}
+async function floorMenu(){
+  const v=await modal(`Day ${save.cday}, ${clockText()}`,[['Counter','store'],['Town map','map'],['Close for today','close'],['Save & quit','quit'],['Resume','resume',true]]);
+  if(v==='store') openStore('supplies',enterFloor);
+  if(v==='map') openMap(enterFloor);
+  if(v==='close') closeEarly();
+  if(v==='quit'){ persist(); show('title'); }
+}
+function endDay(){
+  F.closing=true;
+  save.staff.forEach(st=>{ const s=F.sst[st.id]; if(s&&s.busy){ s.busy.until=0; staffTick(st); } });
+  F.custs.slice().forEach(removeCust);
+  const rent=20+(save.up.seats-2)*5+save.up.chairs*15;
+  const wages=save.staff.reduce((a,st)=>a+STAFF_POOL.find(x=>x.id===st.id).wage,0);
+  const income=save.shops.reduce((a,id)=>a+SHOPS.find(x=>x.id===id).income,0);
+  const due=save.reviews.filter(r=>r.due<=save.cday); save.reviews=save.reviews.filter(r=>r.due>save.cday);
+  const repR=due.reduce((a,r)=>a+r.rep,0);
+  save.coins+=income-rent-wages; save.rep+=repR; persist();
+  const T=F.today, sg=n=>(n>=0?'+':'−')+Math.abs(n);
+  $('#deTitle').textContent=`Day ${save.cday} complete`;
+  $('#deStats').innerHTML=`<dt>Your tattoos (${T.jobs})</dt><dd>${sg(T.you)}</dd><dt>Staff tattoos (${T.sjobs})</dt><dd>${sg(T.staff)}</dd>`+
+    (save.shops.length?`<dt>Other shops you own</dt><dd>${sg(income)}</dd>`:'')+`<dt>Rent</dt><dd>${sg(-rent)}</dd>`+(wages?`<dt>Staff wages</dt><dd>${sg(-wages)}</dd>`:'')+
+    `<dt>Customers who walked out</dt><dd>${T.lost}</dd><dt>Coins now</dt><dd><i class="coin"></i> ${save.coins}</dd><dt>Reputation</dt><dd>${save.rep}${repR?` (${sg(repR)} from healed reviews)`:''}</dd>`;
+  $('#deReviews').innerHTML=due.length?`<b>Healed reviews</b><ul class="revs">${due.map(r=>`<li>${r.name}'s ${r.design}: ${r.label} (${sg(r.rep)} rep)</li>`).join('')}</ul>`:'';
+  show('dayend');
+}
+$('#bNextDay').onclick=async()=>{
+  save.cday++; save.clock=OPEN; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+20; F.sst={}; F.player=null; persist();
+  await dayCard(`Day ${save.cday}`,save.coins<0?'Money is tight. Get to work.':'Doors open at 10'); F.closing=false; enterFloor(); await fade(false);
+};
+async function startCareer(){
+  save.career=true; ensureCareerSave(); save.cday=1; save.clock=OPEN;
+  save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5);
+  F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+15; persist();
+  await dayCard('Your shop','Day 1 on your own'); enterFloor(); await fade(false);
+  const how=inputMode==='pad'?'Move with the left stick or D-pad. Walk up to someone and press A to talk. Start opens the menu.'
+    :inputMode==='touch'?'Tap the floor to walk. Tap a customer, the counter or the door to walk over and use it.'
+    :'Move with WASD or the arrow keys, or click the floor. Walk up to someone and press E to talk. Esc opens the menu.';
+  await modal(`${how} Customers wait on the bench, and their bar drains while they wait. The counter sells supplies, upgrades and staff. The door opens the town map.`,[["Let's go",true,true]]);
+}
+
+/* ---------- counter store ---------- */
+let storeTab='supplies', storeBack=null;
+function openStore(tab,back){ storeTab=tab||'supplies'; storeBack=back||null; renderStore(); show('store'); }
+function itemRow(name,desc,price,key,doneLabel){
+  return `<div class="item"><div class="grow"><div class="nm">${name}</div><div class="ds">${desc}</div></div>`+
+    (doneLabel?`<span class="pr">${doneLabel}</span>`:`<span class="pr"><i class="coin"></i>${price}</span><button class="gbtn small go" data-buy="${key}" ${save.coins<price?'disabled':''}>Buy</button>`)+`</div>`;
+}
+function renderStore(focusKey){
+  const tabs=save.career?['supplies','upgrades','staff']:['supplies'];
+  $('#stTabs').innerHTML=tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{supplies:'Supplies',upgrades:'Upgrades',staff:'Staff'}[t]}</button>`).join('');
+  $('#stCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
+  let rows='';
+  if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id)).join('');
+  if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(); return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):null); }).join('');
+  if(storeTab==='staff') rows=STAFF_POOL.map(st=>{ const hired=save.staff.some(x=>x.id===st.id);
+      return itemRow(`${st.name} · skill ${Math.round(st.skill*100)}`,`${st.desc} Wage ${st.wage} coins a day.`,st.fee,'hire:'+st.id,hired?'On your team':null); }).join('')
+    +`<p class="hint">Free chairs for staff: ${save.up.chairs-save.staff.length}. Buy extra chairs under Upgrades.</p>`;
+  $('#stItems').innerHTML=rows;
+  document.querySelectorAll('#stTabs [data-tab]').forEach(b=>b.onclick=()=>{ storeTab=b.dataset.tab; renderStore('tab:'+storeTab); });
+  document.querySelectorAll('#stItems [data-buy]').forEach(b=>b.onclick=()=>buyItem(b.dataset.buy));
+  if(inputMode==='pad'&&focusKey){ const [kind,id]=focusKey.split(':');
+    setPadFocus((kind==='tab'?document.querySelector(`#stTabs [data-tab="${id}"]`):document.querySelector(`[data-buy="${focusKey}"]`))||focusables()[0]); }
+}
+function buyItem(key){
+  const [kind,id]=key.split(':');
+  if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; toast(`Bought ${it.name.toLowerCase()}`); }
+  if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy(); toast(`${u.name} installed`); }
+  if(kind==='hire'){ const st=STAFF_POOL.find(x=>x.id===id);
+    if(save.staff.length>=save.up.chairs){ toast('Buy an extra tattoo chair first (Upgrades)'); return; }
+    if(save.coins<st.fee) return; save.coins-=st.fee; save.staff.push({id,chair:save.staff.length+1}); toast(`${st.name} joined the shop!`); }
+  persist(); blip(880); renderStore(key);
+}
+$('#stBack').onclick=()=>{ if(storeBack) storeBack(); else show('title'); };
+
+/* ---------- town map ---------- */
+let mapSel=null, mapBack=null;
+function drawTownMap(){
+  const c=$('#mapC'), x=c.getContext('2d'); x.imageSmoothingEnabled=false;
+  const Rm=(a,b,w,h,col)=>{ x.fillStyle=col; x.fillRect(Math.round(a),Math.round(b),Math.round(w),Math.round(h)); };
+  Rm(0,0,320,180,'#5d9a4a');
+  for(let i=0;i<260;i++) Rm((i*73)%320,(i*41)%180,1,1,'#6fae58');
+  for(let px=0;px<320;px++){ const y=30+px*.36+8*Math.sin(px/22); Rm(px,y-6,1,13,'#4a8fc2'); if(px%9===0) Rm(px,y-2,3,1,'#9fd3f2'); }
+  Rm(0,96,320,6,'#c9b48a'); Rm(108,0,6,180,'#c9b48a'); Rm(232,0,6,180,'#c9b48a'); Rm(0,150,140,5,'#c9b48a');
+  [[108,66],[232,110]].forEach(([bx])=>{ const y=30+bx*.36+8*Math.sin(bx/22); Rm(bx-2,y-8,10,17,'#8a5532'); for(let k=0;k<17;k+=3) Rm(bx-2,y-8+k,10,1,'#6b3a1f'); });
+  for(let i=0;i<70;i++){ const tx=(i*97+13)%320, ty=(i*53+7)%180; if(Math.abs(ty-99)<8||Math.abs(tx-111)<8||Math.abs(tx-235)<8) continue;
+    const ry=30+tx*.36+8*Math.sin(tx/22); if(Math.abs(ty-ry)<10) continue; Rm(tx,ty,5,5,'#3f7a35'); Rm(tx+1,ty-1,3,1,'#4f8a40'); Rm(tx+2,ty+5,1,2,'#5a3520'); }
+  [[60,80],[150,120],[180,80],[270,140],[40,130],[200,40],[290,60],[140,40]].forEach(([hx,hy])=>{ Rm(hx,hy,12,8,'#e8d8b8'); Rm(hx-1,hy-4,14,4,'#a8323c'); Rm(hx+5,hy+4,3,4,'#5a3520'); });
+}
+function renderMap(){
+  $('#mapCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
+  const box=$('#mapBox'); box.querySelectorAll('.pin').forEach(p=>p.remove());
+  const mk=(label,cls,x,y,id)=>{ const b=document.createElement('button'); b.className='gbtn small pin '+cls; b.textContent=label;
+    b.style.left=x*100+'%'; b.style.top=y*100+'%'; b.setAttribute('aria-pressed',mapSel===id); b.onclick=()=>{ mapSel=id; renderMap(); if(inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); }; b.dataset.id=id; box.appendChild(b); };
+  mk('Your shop','home',HOME.x,HOME.y,'home');
+  SHOPS.forEach(sh=>mk(sh.name+(save.shops.includes(sh.id)?' (owned)':''),save.shops.includes(sh.id)?'owned':'',sh.x,sh.y,sh.id));
+  const info=$('#mapInfo');
+  if(mapSel==='home'||!mapSel){ const inc=save.shops.reduce((a,id)=>a+SHOPS.find(x=>x.id===id).income,0);
+    info.innerHTML=`<div class="grow"><b>Your shop</b><br>Day ${save.cday} · Rep ${save.rep}${inc?` · Other shops earn you ${inc} coins a day`:''}. Pick a shop on the map to see if it's for sale.</div>`; return; }
+  const sh=SHOPS.find(x=>x.id===mapSel), owned=save.shops.includes(sh.id);
+  info.innerHTML=`<div class="grow"><b>${sh.name}</b><br>${sh.desc} Earns ${sh.income} coins a day once it's yours.</div>`+
+    (owned?`<span class="chip">Owned</span>`:`<span class="pr"><i class="coin"></i> ${sh.price}</span><button class="gbtn go" id="mapBuy" ${save.coins<sh.price?'disabled':''}>${save.coins<sh.price?`Need ${sh.price-save.coins} more`:'Buy this shop'}</button>`);
+  const bb=$('#mapBuy'); if(bb) bb.onclick=async()=>{ const ok=await modal(`Buy ${sh.name} for ${sh.price} coins?`,[['Not yet',false],['Buy it',true,true]]);
+    if(ok&&save.coins>=sh.price){ save.coins-=sh.price; save.shops.push(sh.id); persist(); blip(990); toast(`${sh.name} is yours!`); } renderMap(); };
+}
+function openMap(back){ mapBack=back||null; mapSel=null; drawTownMap(); renderMap(); show('map'); }
+$('#mapBack').onclick=()=>{ if(mapBack) mapBack(); else show('title'); };
+
+/* =============== TITLE =============== */
+function refreshTitle(){ $('#bCont').disabled=!save.started; $('#bCont').classList.toggle('go',!!save.started); $('#bNew').classList.toggle('go',!save.started); $('#bSound').textContent=save.sound?'Sound: on':'Sound: off'; }
+$('#bNew').onclick=async()=>{ if(save.started){ const ok=await modal('Start over? Your current apprenticeship will be erased.',[['Cancel',false],['Start over',true,true]]); if(!ok) return; } await fade(true); intro(); };
+$('#bCont').onclick=()=>{ if(save.career){ enterFloor(); return; } if(!save.graduated) openBoard(); else if(save.cust>=CUSTOMERS.length) ending(); else nextCustomer(); };
+$('#bFree').onclick=startFree;
+$('#bCtl').onclick=()=>show('controls'); $('#bCtlBack').onclick=()=>show('title');
+$('#bSound').onclick=()=>{ save.sound=!save.sound; persist(); refreshTitle(); };
+$('#bEndFree').onclick=startFree; $('#bEndCareer').onclick=startCareer; $('#bEndTitle').onclick=()=>show('title');
+
+/* =============== KEYBOARD =============== */
+window.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(dlg.active&&(e.code==='Space'||k==='enter')){ e.preventDefault(); advance(); return; }
+  if(current==='floor'&&!modalOpen){
+    const m=KEYMOVE[k]; if(m){ e.preventDefault(); F.keys[m]=true; return; }
+    if(k==='e'||k==='enter'||e.code==='Space'){ e.preventDefault(); floorInteract(); return; }
+    if(k==='escape'){ floorMenu(); return; }
+    if(k==='m'){ openMap(enterFloor); return; }
+    return;
+  }
+  if(current!=='tattoo'||modalOpen){
+    const dir={arrowup:'u',arrowdown:'d',arrowleft:'l',arrowright:'r'}[k];
+    if(dir){ e.preventDefault(); moveFocus(dir); return; }
+    if((k==='enter'||e.code==='Space')&&padFocusEl){ e.preventDefault(); padFocusEl.click(); }
+    return;
+  }
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(k==='l') setTool('liner'); else if(k==='s') setTool('shade'); else if(k==='e'&&job.mode==='free') setTool('erase');
+  else if(k==='[') bumpSize(-1); else if(k===']') bumpSize(1); else if(k==='t') toggleSten();
+  else if(k==='escape') $('#tMenu').click();
+  else if(k==='f') setFull(!save.fullView);
+});
+
+window.addEventListener('keyup',e=>{ const m=KEYMOVE[e.key.toLowerCase()]; if(m) F.keys[m]=false; });
+
+/* =============== GAMEPAD =============== */
+const gp={prev:[],nav:0,stickHeld:false,id:null,blocked:false,rest:null,seen:false};
+function readPads(){
+  if(!navigator.getGamepads||gp.blocked) return [];
+  try{ const l=[...navigator.getGamepads()].filter(x=>x&&x.connected); return l.length?l:(gp.ev&&gp.ev.connected?[gp.ev]:[]); }
+  catch(_){ gp.blocked=true; padStatus('blocked'); return []; }
+}
+function padStatus(st,name){
+  const el=$('#padStat'); if(!el) return;
+  el.textContent = st==='on' ? 'Controller ready'+(name!=null?` (button ${name})`:'')+' — D-pad to move, any face button to select' : st==='blocked' ? 'Controllers are blocked in this view. Open the game in its own browser tab.' : 'Using a controller? Click the game once, then press any button.';
+  el.classList.toggle('ok',st==='on'); el.classList.remove('warn');
+}
+// Read one button reliably: some browsers report pressed=true with value 0
+const btnVal=(x,i)=>{ if(!x) return 0; const v=x.value||0; return (i===6||i===7)?Math.max(v,x.pressed?.6:0):(x.pressed?1:v); };
+// D-pad as a single "hat" axis (common on non-standard pads in Firefox / generic controllers)
+function hatDirs(v){
+  if(v==null||Math.abs(v)>1.05) return null;
+  const pos=[-1,-.714,-.428,-.142,.142,.428,.714,1], dirs=['u','ur','r','dr','d','dl','l','ul'];
+  let bi=0; pos.forEach((p,i)=>{ if(Math.abs(v-p)<Math.abs(v-pos[bi])) bi=i; }); return dirs[bi];
+}
+function pollPad(dt){
+  const list=readPads();
+  const dbg=current==='title'&&tick%8===0?$('#padDbg'):null;
+  if(!list.length){ gp.prev=[]; if(dbg) dbg.textContent=gp.blocked?'':'No controller seen yet. Press any button on it.'; return; }
+  if(!gp.seen){ gp.seen=true; padStatus('on'); }
+  if(current==='title'&&tick%8===0){
+    const st=$('#padStat');
+    if(!document.hasFocus()){ st.textContent='Click or tap anywhere on the game once. The browser only sends controller input to the part of the page you clicked.'; st.className='foot padstat warn'; }
+    else if(st.classList.contains('warn')) padStatus('on');
+  }
+  // follow whichever pad was pressed most recently (ignores idle virtual devices)
+  let g=list.find(x=>x.index===gp.id)||list[0];
+  for(const x of list){ if(x.buttons.some(bb=>bb.pressed)){ g=x; break; } }
+  if(gp.id!==g.index){ gp.id=g.index; gp.prev=[]; gp.rest=null; }
+  const b=g.buttons.map(btnVal), ax=[...g.axes];
+  if(g.mapping!=='standard'){
+    let h=null;
+    for(const i of [9,7,6]){ const d=hatDirs(ax[i]); if(i===9&&ax.length>9&&d){ h=d; break; } }
+    if(h){ b[12]=h.includes('u')?1:0; b[13]=h.includes('d')?1:0; b[14]=h.includes('l')?1:0; b[15]=h.includes('r')?1:0; }
+    else if(ax.length>=8){ b[12]=b[12]||(ax[7]<-.5?1:0); b[13]=b[13]||(ax[7]>.5?1:0); b[14]=b[14]||(ax[6]<-.5?1:0); b[15]=b[15]||(ax[6]>.5?1:0); }
+  }
+  if(!gp.rest) gp.rest=[ax[0]||0,ax[1]||0];
+  const rx=(ax[0]||0)-(Math.abs(gp.rest[0])<.3?gp.rest[0]:0), ry=(ax[1]||0)-(Math.abs(gp.rest[1])<.3?gp.rest[1]:0);
+  const mag=Math.hypot(rx,ry), DZ=.25;
+  let lx=0, ly=0; if(mag>DZ){ const k=(mag-DZ)/(1-DZ)/mag; lx=clamp(rx*k,-1,1); ly=clamp(ry*k,-1,1); }
+  const prev=gp.prev; // snapshot BEFORE gp.prev is overwritten below, or no press ever counts as new
+  const on=i=>(b[i]||0)>.5, was=i=>(prev[i]||0)>.5, down=i=>on(i)&&!was(i);
+  const rt=b[7]||0, lt=b[6]||0;
+  const anyDown=b.some((v,i)=>v>.5&&!was(i))||mag>.6;
+  if(dbg){ const held=b.map((v,i)=>v>.5?i:-1).filter(i=>i>=0);
+    dbg.textContent=`${g.id.slice(0,48)} · ${g.mapping||'non-standard'} · buttons held: ${held.length?held.join(','):'none'} · stick ${(ax[0]||0).toFixed(2)}, ${(ax[1]||0).toFixed(2)} · page focused: ${document.hasFocus()?'yes':'no'}${gp.err?' · error: '+gp.err:''}`; }
+  gp.prev=b;
+  if(b.some((v,i)=>v>.5&&!was(i))) gp.lastPress=Date.now();
+  const woke=anyDown&&inputMode!=='pad';
+  if(woke){ setInput('pad'); ensureAudio(); } // switch over, but still act on this press
+  if(inputMode!=='pad') return;
+
+  // Controllers disagree on which face button is "A" (Nintendo and PlayStation layouts often report it as button 1 or 2),
+  // so in menus ANY face button or Start selects. Back/Select (or the on-screen Back buttons) go back.
+  const pressedIdx=b.findIndex((v,i)=>v>.5&&!was(i)); if(pressedIdx>=0) padStatus('on',pressedIdx);
+  const confirm=down(0)||down(1)||down(2)||down(3), back=down(8);
+  if(current==='floor'&&!modalOpen){
+    let mx=lx,my=ly; if(on(12))my=-1; if(on(13))my=1; if(on(14))mx=-1; if(on(15))mx=1;
+    F.padMove=[mx,my];
+    if(confirm&&!woke) floorInteract();
+    if(down(9)||down(8)) floorMenu();
+    return;
+  }
+  if(modalOpen||current!=='tattoo'){
+    // dialogue: any face button or Start moves the conversation along
+    if(dlg.active&&!modalOpen){ if(down(0)||down(1)||down(2)||down(3)||down(9)) advance(); return; }
+    let dir=null; if(down(12))dir='u'; else if(down(13))dir='d'; else if(down(14))dir='l'; else if(down(15))dir='r';
+    if(!dir){
+      if(mag>.6){ if(!gp.stickHeld||gp.nav<=0){ dir=Math.abs(rx)>Math.abs(ry)?(rx>0?'r':'l'):(ry>0?'d':'u'); gp.nav=gp.stickHeld?10:22; gp.stickHeld=true; } else gp.nav--; }
+      else if(mag<.35){ gp.stickHeld=false; gp.nav=0; }
+    }
+    if(dir) moveFocus(dir);
+    if((confirm||down(9))&&!woke){
+      const f=focusables();
+      if(!padFocusEl||!f.includes(padFocusEl)) setPadFocus(f.find(e=>e.classList.contains('go'))||f[0]);
+      else padFocusEl.click();
+    }
+    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board') show('title'); }
+    return;
+  }
+  // tattoo station: D-pad walks every button on screen, A presses the highlighted one
+  let sdir=null; if(down(12))sdir='u'; else if(down(13))sdir='d'; else if(down(14))sdir='l'; else if(down(15))sdir='r';
+  if(sdir){ if(!padFocusEl){ const f=focusables(); setPadFocus(f.find(e=>e.dataset.tool===job.tool)||f[0]); } else moveFocus(sdir); }
+  if(padFocusEl&&(mag>.5||rt>.08)) clearPadFocus();
+  if(padFocusEl){ if(down(0)||down(1)||down(2)||down(3)||down(9)) padFocusEl.click(); updateRing(); return; }
+  const sp=7*(lt>.3?.3:1);
+  const vis=job.vis||{x0:0,y0:0,x1:DOC,y1:DOC}, zf=Math.min(1,(vis.x1-vis.x0)/DOC*1.4);
+  padCursor.x=clamp(padCursor.x+Math.sign(lx)*lx*lx*sp*zf*(dt/16.7),vis.x0,vis.x1);
+  padCursor.y=clamp(padCursor.y+Math.sign(ly)*ly*ly*sp*zf*(dt/16.7),vis.y0,vis.y1);
+  const inking=rt>.08||on(0), p=rt>.08?clamp(.35+.65*rt):1;
+  if(inking&&!padCursor.drawing){ padCursor.drawing=true; strokeBegin(padCursor.x,padCursor.y,p); }
+  else if(inking&&padCursor.drawing) strokeMove(padCursor.x,padCursor.y,p);
+  else if(!inking&&padCursor.drawing){ padCursor.drawing=false; strokeEnd(); }
+  if(down(2)) setTool(job.mode==='free'?{liner:'shade',shade:'erase',erase:'liner'}[job.tool]:(job.tool==='liner'?'shade':'liner'));
+  if(down(4)) bumpSize(-1); if(down(5)) bumpSize(1);
+  if(down(1)) $('#tMenu').click(); if(down(3)) toggleSten();
+  if(down(9)) { if(job.mode==='free') $('#tMenu').click(); else finishJob(); }
+  if(down(10)||down(11)) setFull(!save.fullView);
+  if(down(8)) $('#tMenu').click();
+  updateRing();
+}
+window.addEventListener('gamepadconnected',e=>{ gp.ev=e.gamepad; gp.seen=true; padStatus('on'); toast('Controller connected'); });
+window.addEventListener('gamepaddisconnected',()=>{ gp.seen=false; padStatus('idle'); toast('Controller disconnected'); });
+
+
+/* =============== ANDROID BACK BUTTON =============== */
+// MainActivity calls this on back. Return true if the game handled it; false lets the app close (title screen only).
+window.__tmBack=function(){
+  if(inputMode==='pad'&&Date.now()-(gp.lastPress||0)<400) return true; // controller B was already handled in pollPad
+  if(modalOpen){ const bs=focusables(); if(bs[0]) bs[0].click(); return true; }
+  if(dlg.active){ advance(); return true; }
+  switch(current){
+    case 'title': return false;
+    case 'tattoo': $('#tMenu').click(); return true;
+    case 'floor': floorMenu(); return true;
+    case 'store': $('#stBack').click(); return true;
+    case 'map': $('#mapBack').click(); return true;
+    case 'controls': case 'board': show('title'); return true;
+    default: return true;
+  }
+};
+/* =============== FIT TO SCREEN =============== */
+// Shrinks any panel that would need scrolling so every option is visible on any screen size.
+function setCompact(){ document.documentElement.classList.toggle('compact',innerHeight<600&&innerWidth>innerHeight*1.15); }
+function fitEl(el,maxW,maxH){
+  if(!el||!el.offsetParent&&el.style.position!=='fixed'){ if(el) el.style.zoom=''; return; }
+  el.style.zoom='';
+  const r=el.getBoundingClientRect();
+  const h=Math.max(r.height,el.scrollHeight+8), w=Math.max(r.width,el.scrollWidth+8);
+  const k=Math.min(1,maxH/h,maxW/w);
+  if(k<.995) el.style.zoom=Math.max(.5,k).toFixed(3);
+}
+function fitAll(){
+  setCompact();
+  const scr=document.querySelector('.screen.active');
+  if(scr){
+    scr.querySelectorAll('.dim > .wood').forEach(el=>{ const d=el.parentElement; fitEl(el,d.clientWidth-20,d.clientHeight-20); });
+    if(scr.id==='scr-title') fitEl($('#tfit'),scr.clientWidth-16,scr.clientHeight-16);
+    if(scr.id==='scr-tattoo'&&document.documentElement.classList.contains('compact')){
+      fitEl(scr.querySelector('.thud'),9999,scr.clientHeight-12); fitEl(scr.querySelector('.ttools'),9999,scr.clientHeight-12);
+    } else if(scr.id==='scr-tattoo'){ scr.querySelector('.thud').style.zoom=''; scr.querySelector('.ttools').style.zoom=''; }
+  }
+  if(modalOpen) fitEl($('#modal .wood'),innerWidth-24,innerHeight-24);
+  if(current==='tattoo') layoutPad();
+}
+let fitQueued=false;
+function queueFit(){ if(fitQueued) return; fitQueued=true; requestAnimationFrame(()=>requestAnimationFrame(()=>{ fitQueued=false; fitAll(); })); }
+addEventListener('resize',queueFit);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(queueFit);
+new MutationObserver(queueFit).observe(document.getElementById('game'),{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+setCompact();
+
+// Full view: hide the side panels so the skin fills the screen. ☰ Tools (or F, or L3/R3 on a controller) brings them back.
+function setFull(on){
+  save.fullView=!!on; persist();
+  $('#scr-tattoo').classList.toggle('full',save.fullView); updateMini(); queueFit();
+  if(inputMode==='pad'&&padFocusEl&&!padFocusEl.offsetParent) clearPadFocus();
+}
+function updateMini(){
+  if(!save.fullView) return;
+  const bits=[];
+  if(job.phase==='clean') bits.push('Clean '+Math.round(cleanPct()*100)+'%');
+  else { if(job.strikeMask) bits.push(`Slips ${job.strikes}/${job.maxStrikes}`); if(isClient(job.mode)) bits.push($('#tTime').textContent); }
+  $('#tMini').textContent=bits.join(' · '); $('#tMini').classList.toggle('hide',!bits.length);
+}
+$('#tFull').onclick=()=>setFull(true);
+$('#tShow').onclick=()=>setFull(false);
+$('#scr-tattoo').classList.toggle('full',!!save.fullView);
+
+/* =============== LOOP =============== */
+let lastT=performance.now();
+function loop(t){
+  const dt=Math.min(50,t-lastT); lastT=t; tick++;
+  try{ pollPad(dt); }catch(err){ gp.err=String(err&&err.message||err).slice(0,80); }
+  if(current==='floor') floorTick(dt);
+  if(sceneMode&&current!=='tattoo'){ updateActors(); sceneMode==='exterior'?drawExterior(t):drawInterior(t); }
+  tickDialogue();
+  if(current==='tattoo'){ tickJob(dt/1000); if(save.fullView&&tick%15===0) updateMini(); }
+  requestAnimationFrame(loop);
+}
+addEventListener('resize',resizeScene); resizeScene();
+show('title'); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
