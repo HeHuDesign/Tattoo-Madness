@@ -127,6 +127,13 @@ button{font:inherit;color:inherit}
 .pad canvas.warn{opacity:0;transition:opacity .2s}
 .pad.danger{box-shadow:0 0 0 6px #ff5a4a,0 0 0 9px #7a1010,0 0 28px 12px rgba(255,60,40,.55)}
 .pad.danger canvas.warn{opacity:1}
+/* real customers: the skin is a drawn body part (bigger than the pad so limbs run off screen), not a framed pad */
+.pad canvas.body{inset:-50%;width:200%;height:200%;display:none}
+.pad.body{border-radius:0;box-shadow:none;overflow:visible}
+.pad.body::after{display:none}
+.pad.body canvas.body{display:block}
+.pad.body.danger{box-shadow:none}
+.pad.body.danger canvas.body{filter:drop-shadow(0 0 12px rgba(255,60,40,.9))}
 .slips{display:flex;gap:4px;align-items:center;font-size:16px}
 #cDirt{display:none}
 .fhud{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -285,6 +292,7 @@ button{font:inherit;color:inherit}
 .compact .ttools{flex-direction:column;flex-wrap:nowrap;align-self:center;width:150px;gap:6px;margin:6px 6px 6px 0;padding:8px}
 .compact .ttools .sep{width:100%;height:3px;margin:0}
 .compact .toolrow,.compact .szrow{gap:5px}
+.compact .szrow{flex-direction:column;flex-wrap:nowrap}
 .compact .ttools .inks{flex-wrap:wrap;justify-content:center;gap:4px}
 .compact .ttools .ink{width:22px;height:22px;border-width:2px}
 .compact .twork{min-width:0}
@@ -350,6 +358,7 @@ button{font:inherit;color:inherit}
     </div>
     <div class="twork" id="twork">
       <div class="pad" id="pad">
+        <canvas id="cBody" class="body" width="1200" height="1200"></canvas>
         <canvas id="cShade" width="600" height="600"></canvas>
         <canvas id="cLine" width="600" height="600"></canvas>
         <canvas id="cDirt" width="600" height="600"></canvas>
@@ -950,6 +959,55 @@ function renderStencil(){
     stx.putImageData(id,0,0);
   }
 }
+/* body parts for real customers. cBody covers skin coords -300..900 so limbs run past the edges of the pad */
+const cBody=$('#cBody'), bodyX=cBody.getContext('2d');
+function tone(hex,k){ const f=v=>Math.round(clamp(k<0?v*(1+k):v+(255-v)*k,0,255)); return `rgb(${hexRgb(hex).map(f).join(',')})`; }
+// smooth outline from a left edge (top to bottom) and a right edge (top to bottom)
+function limbPath(L,Rt){
+  const pts=[...L,...Rt.slice().reverse()], p=new Path2D(); p.moveTo(pts[0][0],pts[0][1]);
+  for(let i=1;i<pts.length-1;i++) p.quadraticCurveTo(pts[i][0],pts[i][1],(pts[i][0]+pts[i+1][0])/2,(pts[i][1]+pts[i+1][1])/2);
+  p.lineTo(...pts[pts.length-1]); p.closePath(); return p;
+}
+// Every shape keeps x 55..545 (the widest designs) on skin. lines = soft creases, hi = highlight ridge, bump = bony knob
+const SCAPULA=['M30,-300 Q20,300 30,900','M90,40 Q40,300 110,540','M90,40 Q260,10 470,70'];
+const BODY={
+  forearm:{L:[[16,-300],[18,150],[34,420],[56,900]],R:[[584,-300],[582,150],[566,420],[546,900]]},
+  wrist:{L:[[18,-300],[30,300],[48,520],[44,600],[20,900]],R:[[582,-300],[570,300],[552,520],[592,600],[700,900]],
+    lines:['M60,540 Q300,566 540,540','M70,560 Q300,586 530,560']},
+  ankle:{L:[[34,-300],[40,250],[26,450],[52,560],[90,900]],R:[[566,-300],[560,250],[556,390],[630,500],[900,600]],
+    bump:[62,440,48],lines:['M560,420 Q610,480 720,520']},
+  calf:{L:[[44,-300],[14,170],[22,380],[60,900]],R:[[556,-300],[588,190],[578,390],[544,900]],lines:['M480,110 Q545,260 522,440']},
+  'upper arm':{L:[[12,-300],[14,300],[30,900]],R:[[588,-300],[586,300],[570,900]],lines:['M40,36 Q300,-12 560,26','M110,612 Q300,634 490,612']},
+  shoulder:{path:'M-300,900 L-300,250 Q-60,70 300,22 Q560,20 690,140 Q760,240 780,900 Z',lines:['M70,160 Q300,96 530,166']},
+  back:{full:1,lines:SCAPULA},
+  'shoulder blade':{full:1,lines:SCAPULA},
+  thigh:{L:[[-70,-300],[-60,300],[-20,900]],R:[[670,-300],[680,300],[640,900]]},
+  collarbone:{full:1,lines:['M-300,76 Q100,26 900,66'],hi:'M-300,60 Q100,10 900,50'}
+};
+function drawBody(spot,skin){
+  const x=bodyX, b=BODY[spot]||BODY.forearm;
+  x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,1200,1200); x.setTransform(1,0,0,1,300,300);
+  let path; if(b.full){ path=new Path2D(); path.rect(-300,-300,1200,1200); } else path=b.path?new Path2D(b.path):limbPath(b.L,b.R);
+  x.save(); x.shadowColor='rgba(20,8,4,.45)'; x.shadowBlur=18; x.shadowOffsetX=10; x.shadowOffsetY=14; x.fillStyle=skin; x.fill(path); x.restore();
+  x.save(); x.clip(path);
+  const g=x.createLinearGradient(-60,0,660,0); // light from the upper left, so limbs read as round
+  g.addColorStop(0,'rgba(0,0,0,.18)'); g.addColorStop(.38,'rgba(255,255,255,.08)'); g.addColorStop(.62,'rgba(255,255,255,.04)'); g.addColorStop(1,'rgba(0,0,0,.2)');
+  x.fillStyle=g; x.fillRect(-300,-300,1200,1200);
+  if(!b.full){ x.filter='blur(16px)'; x.globalAlpha=.6; x.strokeStyle=tone(skin,-.35); x.lineWidth=70; x.stroke(path); x.filter='none'; x.globalAlpha=1; }
+  if(b.bump){ const [bx,by,br]=b.bump; // soft shadow under the knob, then a soft highlight on top
+    x.filter='blur(12px)'; x.fillStyle='rgba(40,15,5,.16)'; x.beginPath(); x.ellipse(bx+8,by+18,br*.9,br*.7,0,0,7); x.fill(); x.filter='none';
+    const rg=x.createRadialGradient(bx-8,by-10,2,bx,by,br); rg.addColorStop(0,'rgba(255,255,255,.24)'); rg.addColorStop(.6,'rgba(255,255,255,.07)'); rg.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=rg; x.beginPath(); x.arc(bx,by,br,0,7); x.fill(); }
+  x.lineCap='round'; x.filter='blur(2px)';
+  (b.lines||[]).forEach(d=>{ x.strokeStyle=tone(skin,-.4); x.globalAlpha=.32; x.lineWidth=5; x.stroke(new Path2D(d)); });
+  if(b.hi){ x.strokeStyle=tone(skin,.35); x.globalAlpha=.4; x.lineWidth=8; x.stroke(new Path2D(b.hi)); }
+  x.filter='none';
+  let s=7; const rnd=()=>(s=s*16807%2147483647)/2147483647; // same pores every time
+  x.fillStyle=tone(skin,-.3); for(let i=0;i<2500;i++){ x.globalAlpha=.05+rnd()*.08; x.fillRect(-300+rnd()*1200,-300+rnd()*1200,2,2); }
+  x.restore();
+  if(!b.full){ x.strokeStyle=tone(skin,-.45); x.lineWidth=3; x.globalAlpha=.7; x.stroke(path); x.globalAlpha=1; }
+}
+
 const STRIKE_PAD=10;
 function buildMasks(){
   job.strikeMask=null; wctx.clearRect(0,0,DOC,DOC); if(!job.design||job.mode==='free') return;
@@ -967,14 +1025,19 @@ let warnT=null;
 function showWarn(on){ clearTimeout(warnT); if(on){ padEl.classList.add('danger'); warnT=setTimeout(()=>padEl.classList.remove('danger'),1300); } else padEl.classList.remove('danger'); }
 function renderSlips(){
   const el=$('#tSlips'); if(!job.strikeMask){ el.innerHTML=''; return; }
+  el.title=isClient(job.mode)?'Slips outside the lines. Three and the customer walks out.':'Slips outside the lines. Five and the round fails.';
   el.innerHTML='Slips '+Array.from({length:job.maxStrikes},(_,i)=>`<i class="${i<job.strikes?'used':''}"></i>`).join('');
 }
 function slip(){
   if(job.failed) return;
   job.strikes++; renderSlips(); showWarn(true); blip(160); buzz(false);
-  lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false;
+  const real=isClient(job.mode), left=job.maxStrikes-job.strikes;
+  // fake skin wipes clean; real skin keeps the bad ink (the stroke so far is committed and cut off)
+  if(real){ lctx.globalAlpha=job.ink; lctx.drawImage(cBuf,0,0); lctx.globalAlpha=1; bctx.clearRect(0,0,DOC,DOC); }
+  else { lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false; }
   if(job.strikes>=job.maxStrikes){ job.failed=true; setTimeout(failRound,60); }
-  else { const left=job.maxStrikes-job.strikes; toast(`Out of the lines! Pad wiped, start from the beginning. ${left} ${left===1?'try':'tries'} left`); }
+  else if(real) toast(`Out of the lines! That ink won't come off. ${left} more ${left===1?'slip':'slips'} and they walk out`);
+  else toast(`Out of the lines! Pad wiped, start from the beginning. ${left} ${left===1?'try':'tries'} left`);
 }
 function failRound(){
   ptr=null; padCursor.drawing=false; if(stk) strokeEnd(); buzz(false); showWarn(false);
@@ -984,18 +1047,21 @@ function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); 
 
 function startJob(opts){
   Object.assign(job,{elapsed:0,stenVisible:true,upload:null,...opts});
+  job.maxStrikes=isClient(job.mode)?3:5; job.body=isClient(job.mode)?job.cust.spot:null;
   job.strikes=0; job.failed=false; job.phase='ink'; job.usedShade=false; job.used=null;
   cDirt.style.display='none'; cWarn.style.display=''; document.querySelector('.ttools').classList.remove('hide'); $('#tDone').textContent='Done';
   TOOLS.liner.smooth=(save.up&&save.up.rotary&&job.mode!=='practice')?.72:.55;
   clearWork(); renderStencil(); buildMasks(); renderSlips(); showWarn(false); $('#tSten').setAttribute('aria-pressed',false);
-  padEl.style.background=job.skin;
+  padEl.classList.toggle('body',!!job.body); padEl.style.background=job.body?'transparent':job.skin;
+  if(job.body) drawBody(job.body,job.skin);
   const free=job.mode==='free';
   $('#freeTools').classList.toggle('hide',!free); $('#wipeBtn').classList.toggle('hide',!free); $('#tSave').classList.toggle('hide',!free||!downloads); $('#tDone').classList.toggle('hide',free);
   $('#tTimer').classList.toggle('hide',!isClient(job.mode));
   if(!free){ job.color='#151515'; job.ink=1; }
   drawPortrait($('#tPortrait'), isClient(job.mode)?CH[job.cust.ch]:CH.dee);
   if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`; $('#tSub').textContent='Practice. No clock. Scored on your linework.'; }
-  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}. Real skin, scored on linework.`; }
+  else if(job.mode==='warmup'){ $('#tTitle').textContent=`Warm-up: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`Fake skin, for ${CH[job.cust.ch].name}. No clock, no supplies used.`; }
+  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
   padCursor.x=300; padCursor.y=300; setTool('liner'); show('tattoo');
 }
@@ -1028,7 +1094,9 @@ function scoreWork(){
 }
 function composite(includeSten){
   const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d');
-  x.fillStyle=job.skin; x.fillRect(0,0,DOC,DOC); x.drawImage(cShade,0,0); x.drawImage(cLine,0,0);
+  if(job.body){ x.fillStyle='#5b3a26'; x.fillRect(0,0,DOC,DOC); x.drawImage(cBody,300,300,DOC,DOC,0,0,DOC,DOC); }
+  else { x.fillStyle=job.skin; x.fillRect(0,0,DOC,DOC); }
+  x.drawImage(cShade,0,0); x.drawImage(cLine,0,0);
   if(includeSten){ x.globalAlpha=.35; x.globalCompositeOperation='multiply'; x.drawImage(cSten,0,0); }
   return c;
 }
@@ -1045,35 +1113,50 @@ async function finishJob(){
 }
 $('#tDone').onclick=finishJob;
 $('#tMenu').onclick=async()=>{
-  const opts=[['Resume','resume',true]]; if(job.mode==='practice') opts.push(['Restart pad','restart']); opts.push(['Quit to title','quit']);
-  const v=await modal(isClient(job.mode)?'Paused. Your customer is waiting patiently.':'Paused',opts);
-  if(v==='restart'){ startPractice(job.idx); }
-  if(v==='quit'){ buzz(false); stk=null; if(job.mode==='career'&&F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } persist(); show('title'); }
+  const warmup=job.mode==='warmup', opts=[['Resume','resume',true]];
+  if(job.mode==='practice'||warmup) opts.push(['Restart pad','restart']);
+  if(warmup) opts.push([`Start on ${CH[job.cust.ch].name}`,'real']);
+  opts.push(['Quit to title','quit']);
+  const v=await modal(isClient(job.mode)||warmup?'Paused. Your customer is waiting patiently.':'Paused',opts);
+  if(v==='restart'){ if(warmup) startWarmup(); else startPractice(job.idx); }
+  if(v==='real') warm.start();
+  if(v==='quit'){ buzz(false); stk=null; if((job.mode==='career'||warmup)&&F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } persist(); show('title'); }
 };
 
 /* =============== RESULTS =============== */
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 const DEE_PRACTICE=["","Sloppy, but it counts. One star. Slow down and stay right on the stencil.","Clean work. Your hand's starting to listen.","Spot on. That's how I want every line to look."];
+// Share of the price a finished real tattoo earns, from its line score. Under 70 pays nothing.
+const payRate=s=>s<70?0:s<78?.1+.4*(s-70)/8:s<90?.5+.35*(s-78)/12:Math.min(1,.85+.15*(s-90)/10);
+const lineRow=pr=>`<dt>Line quality</dt><dd>${pr?Math.round(pr*100)+'% of the price':'Too sloppy to charge for'}</dd>`;
 function showFail(){
-  const res=$('#res'); const cust=isClient(job.mode), career=job.mode==='career'; let who='dee', quote, btns;
-  if(cust) useSupplies();
-  if(cust){ save.rep-=1; persist(); who=job.cust.ch; quote="Whoa, whoa! Stop! That's going way outside the lines!"; }
+  const res=$('#res'); const cust=isClient(job.mode), career=job.mode==='career', warmup=job.mode==='warmup'; let who='dee', quote, btns;
+  // real skin is one shot: the customer walks out and there's no retry
+  if(cust){ useSupplies(); save.rep-=2; who=job.cust.ch; quote="Whoa, whoa! Stop! That's going way outside the lines! I'm out of here.";
+    if(career) F.today.lost++; else save.cust++;
+    persist(); }
   else quote="Five slips. Wipe it down and start over. Stay right on that purple line.";
-  btns=career?`<button class="gbtn go" id="fFloor">They walked out. Back to the floor</button>`:cust?`<button class="gbtn go" id="fRetry">Calm them down and try again</button>`:`<button class="gbtn" id="fBoard">Back to the pads</button><button class="gbtn go" id="fRetry">Try again</button>`;
-  res.innerHTML=`<h2 class="failtag">Round failed</h2>
+  const lastCust=!career&&save.cust>=CUSTOMERS.length;
+  btns=career?`<button class="gbtn go" id="fFloor">They walked out. Back to the floor</button>`
+    :cust?`<button class="gbtn go" id="fNext">They walked out. ${lastCust?'Close up shop':'Next customer'}</button>`
+    :warmup?`<button class="gbtn" id="fReal">Start on ${CH[job.cust.ch].name} anyway</button><button class="gbtn go" id="fRetry">Practice again</button>`
+    :`<button class="gbtn" id="fBoard">Back to the pads</button><button class="gbtn go" id="fRetry">Try again</button>`;
+  res.innerHTML=`<h2 class="failtag">${cust?'They walked out':'Round failed'}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="No stars">☆☆☆</div>
-      <dl class="stats"><dt>Slips</dt><dd>${job.maxStrikes} of ${job.maxStrikes}</dd>${cust?'<dt>Reputation</dt><dd>-1</dd><dt>Tip</dt><dd>none</dd>':''}</dl>
-      <p style="margin:0">You went too far outside the lines too many times.</p></div>
+      <dl class="stats"><dt>Slips</dt><dd>${job.maxStrikes} of ${job.maxStrikes}</dd>${cust?'<dt>Reputation</dt><dd>-2</dd><dt>Pay</dt><dd>none</dd>':''}</dl>
+      <p style="margin:0">${cust?'Too many slips on real skin. There are no second tries on a customer.':'You went too far outside the lines too many times.'}</p></div>
     <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[who].name}:</b> ${quote}</span></div>
-    ${cust?`<div class="quote"><canvas id="rPortrait2" width="60" height="60"></canvas><span><b>Dee:</b> I'll smooth it over. Clean your station and do it right this time.</span></div>`:''}
+    ${cust?`<div class="quote"><canvas id="rPortrait2" width="60" height="60"></canvas><span><b>Dee:</b> Real skin doesn't wipe clean. Warm up on the pads before the next one.</span></div>`:''}
     <div class="row">${btns}</div>`;
   const c=composite(false), tx=$('#rThumb').getContext('2d'); tx.drawImage(c,0,0); tx.globalAlpha=.9; tx.drawImage(cWarn,0,0);
   drawPortrait($('#rPortrait'),CH[who]); if(cust) drawPortrait($('#rPortrait2'),CH.dee);
   show('results');
-  if(career){ save.rep-=1; persist(); $('#fFloor').onclick=()=>afterCareerJob(); return; }
-  $('#fRetry').onclick=()=>cust?startJob({mode:'customer',cust:job.cust,design:job.design,skin:job.skin,limit:job.limit,stenOp:.75}):startPractice(job.idx);
-  if($('#fBoard')) $('#fBoard').onclick=openBoard;
+  if(career){ $('#fFloor').onclick=()=>afterCareerJob(); return; }
+  if(cust){ $('#fNext').onclick=()=>lastCust?ending():nextCustomer(); return; }
+  if(warmup){ $('#fRetry').onclick=startWarmup; $('#fReal').onclick=()=>warm.start(); return; }
+  $('#fRetry').onclick=()=>startPractice(job.idx);
+  $('#fBoard').onclick=openBoard;
 }
 function showResults(r){
   if(r.failed){ showFail(); return; }
@@ -1084,27 +1167,32 @@ function showResults(r){
     quoteWho='dee'; quote=DEE_PRACTICE[r.stars];
     if(firstPass&&i<PRACTICE.length-1) extra=`<p style="grid-column:1/-1;margin:0">New pad unlocked: ${DESIGNS[PRACTICE[i+1]].name}</p>`;
     btns=`<button class="gbtn" id="rRetry">Try again</button><button class="gbtn go" id="rBoard">Back to the pads</button>`;
+  } else if(job.mode==='warmup'){
+    const nm=CH[job.cust.ch].name, pr=payRate(r.score);
+    quoteWho='dee'; quote=pr?DEE_PRACTICE[r.stars]:"On real skin that would earn you nothing. Go again.";
+    extra=`<p style="grid-column:1/-1;margin:0">On ${nm}'s ${job.cust.spot}, this would earn ${pr?`about ${Math.round(pr*100)}% of the price`:'nothing (score under 70)'}.</p>`;
+    btns=`<button class="gbtn" id="rRetry">Practice again</button><button class="gbtn go" id="rReal">Start on ${nm}</button>`;
   } else if(job.mode==='career'){
-    const c=job.cust, late=job.elapsed>job.limit, h=healInfo(r.clean);
-    const pay=Math.round(c.tip*(.45+.55*r.score/100)*(late?.7:1)*(.75+.4*r.clean));
-    const rep=r.stars-1;
+    const c=job.cust, late=job.elapsed>job.limit, h=healInfo(r.clean), pr=payRate(r.score);
+    const pay=Math.round(c.tip*pr*(late?.7:1)*(.75+.4*r.clean));
+    const rep=pr?r.stars-1:-1;
     save.coins+=pay; save.rep+=rep; F.today.you+=pay; F.today.jobs++;
     save.reviews.push({name:CH[c.ch].name,design:DESIGNS[job.design].name,due:save.cday+h.days,rep:h.rep+(r.stars===3?1:0),label:h.label});
     persist();
-    quoteWho=c.ch; quote=c.react[r.stars];
-    extra=`<dl class="stats" style="grid-column:1/-1;margin:0"><dt>Paid</dt><dd><i class="coin"></i> ${pay}${late?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${aftercareRows(r)}<dt>Healed review</dt><dd>in ${h.days} day${h.days>1?'s':''}</dd></dl>`;
+    quoteWho=c.ch; quote=c.react[pr?r.stars:0];
+    extra=`<dl class="stats" style="grid-column:1/-1;margin:0">${lineRow(pr)}<dt>Paid</dt><dd><i class="coin"></i> ${pay}${late&&pay?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${aftercareRows(r)}<dt>Healed review</dt><dd>in ${h.days} day${h.days>1?'s':''}</dd></dl>`;
     btns=`<button class="gbtn go" id="rFloor">Back to the shop floor</button>`;
   } else {
-    const c=job.cust, late=job.elapsed>job.limit, cl=r.clean??1;
-    const tip=Math.round(c.tip*(r.score/100)*(late?.6:1)*(r.stars===3?1.25:1)*(.75+.4*cl));
-    const rep=r.stars+healInfo(cl).rep;
+    const c=job.cust, late=job.elapsed>job.limit, cl=r.clean??1, pr=payRate(r.score);
+    const tip=Math.round(c.tip*pr*(late?.6:1)*(r.stars===3?1.25:1)*(.75+.4*cl));
+    const rep=(pr?r.stars:-1)+healInfo(cl).rep;
     save.coins+=tip; save.rep+=rep; save.scores.push(r.score); save.cust++; persist();
-    quoteWho=c.ch; quote=c.react[r.stars];
-    extra=`<dl class="stats" style="grid-column:1/-1;margin:0"><dt>Tip</dt><dd><i class="coin"></i> ${tip}${late?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${r.clean!=null?aftercareRows(r):''}</dl>`;
+    quoteWho=c.ch; quote=c.react[pr?r.stars:0];
+    extra=`<dl class="stats" style="grid-column:1/-1;margin:0">${lineRow(pr)}<dt>Tip</dt><dd><i class="coin"></i> ${tip}${late&&tip?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${r.clean!=null?aftercareRows(r):''}</dl>`;
     btns=save.cust>=CUSTOMERS.length?`<button class="gbtn go" id="rNext">Close up shop</button>`:`<button class="gbtn go" id="rNext">Next customer</button>`;
   }
   if(downloads) btns=`<button class="gbtn" id="rSave">Save PNG</button>`+btns;
-  res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':CH[job.cust.ch].name}</h2>
+  res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':job.mode==='warmup'?'Warm-up: '+DESIGNS[job.design].name:CH[job.cust.ch].name}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="${r.stars} of 3 stars">${starStr(r.stars)}</div>
       <dl class="stats"><dt>Score</dt><dd>${r.score}</dd><dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd></dl></div>
@@ -1115,7 +1203,8 @@ function showResults(r){
   blip(r.stars>1?880:600);
   show('results');
   const q=id=>res.querySelector(id);
-  if(q('#rRetry')) q('#rRetry').onclick=()=>startPractice(job.idx);
+  if(q('#rRetry')) q('#rRetry').onclick=()=>job.mode==='warmup'?startWarmup():startPractice(job.idx);
+  if(q('#rReal')) q('#rReal').onclick=()=>warm.start();
   if(q('#rBoard')) q('#rBoard').onclick=openBoard;
   if(q('#rNext')) q('#rNext').onclick=()=>save.cust>=CUSTOMERS.length?ending():nextCustomer();
   if(q('#rSave')) q('#rSave').onclick=()=>savePng(thumbNoSten());
@@ -1156,6 +1245,20 @@ function startPractice(i){
   const k=PRACTICE[i];
   startJob({mode:'practice',idx:i,design:k,cust:null,skin:'#f1d2bb',stenOp:[.95,.9,.85,.8,.72,.65][i]});
 }
+/* warm-up: practice a customer's design on fake skin before the one real shot */
+let warm=null; // {cust, design, start: begins the real tattoo, career}
+const aOrAn=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
+async function offerWarmup(cust,design,start,career){
+  warm={cust,design,start,career};
+  const v=await modal(`${CH[cust.ch].name} wants ${aOrAn(DESIGNS[design].name.toLowerCase())} on the ${cust.spot}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
+    [['Practice on fake skin','practice'],['Start the tattoo','go',true]]);
+  if(v==='practice') startWarmup(); else start();
+}
+function startWarmup(){
+  if(warm.career) advanceTime(15);
+  startJob({mode:'warmup',cust:warm.cust,design:warm.design,skin:'#f1d2bb',stenOp:.85});
+}
+
 $('#bBoardMenu').onclick=()=>show('title');
 $('#bReady').onclick=()=>save.graduated?nextCustomer():graduate();
 
@@ -1190,6 +1293,8 @@ async function graduate(){
   await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-30,y:fy+16,flip:true}]);
   await say('dee',"That rose... not bad, kid. Not bad at all.");
   await say('dee',"Tomorrow the doors open. Real people, real skin, no do-overs.");
+  await say('dee',"Real skin doesn't wipe clean. Every slip stays on them, and three slips outside the lines means they walk out.");
+  await say('dee',"Sloppy work earns you nothing. Before each client you can warm up on fake skin first. Use it.");
   await say('dee',"Customers will wait for good work, but they tip less if you drag your feet past the time on the clock.");
   await say('dee',"One more thing. Ink, needles and wraps cost money. Here's a starter kit. When it runs low, restock at the supply cabinet.");
   await say('dee',"And clean every tattoo before you wrap it. Clean work heals faster, and healed work is what brings people back.");
@@ -1214,7 +1319,7 @@ async function nextCustomer(fromCard){
   for(const line of c.hi) await say(c.ch,line);
   await say('dee',c.dee);
   hideDlg(); busy=false;
-  startJob({mode:'customer',cust:c,design:c.design,skin:c.skin,limit:c.time,stenOp:.75});
+  offerWarmup(c,c.design,()=>startJob({mode:'customer',cust:c,design:c.design,skin:c.skin,limit:c.time,stenOp:.75}),false);
 }
 async function ending(){
   busy=true; const {cx,fy}=sceneGeo();
@@ -1518,9 +1623,10 @@ async function talkCustomer(c){
   const a=artistPos(); F.target={x:a.x,y:a.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
 }
 function startCareerJob(c){
-  F.busy=false; F.jobCust=c;
-  startJob({mode:'career',cust:{ch:c.ch,spot:c.spot,tip:c.pay,react:['',"It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']},
-    design:c.design,skin:c.skin,limit:c.time,stenOp:Math.min(.95,.75+(save.up.light?.15:0))});
+  F.jobCust=c;
+  const cust={ch:c.ch,spot:c.spot,tip:c.pay,react:["This is a mess. I'm not paying for that.","It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']};
+  offerWarmup(cust,c.design,()=>{ F.busy=false;
+    startJob({mode:'career',cust,design:c.design,skin:c.skin,limit:c.time,stenOp:Math.min(.95,.75+(save.up.light?.15:0))}); },true);
 }
 function afterCareerJob(){
   const c=F.jobCust; F.jobCust=null;
