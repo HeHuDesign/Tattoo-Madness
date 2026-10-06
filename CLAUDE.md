@@ -62,7 +62,10 @@ Everything is plain JavaScript inside one IIFE, no build step, no frameworks, no
 | TATTOO ENGINE | The drawing station. Canvases inside `#pad`: `cShade` (shading layer), `cLine` (linework, used for scoring), `cBuf` (stroke buffer for the liner), `cDirt` (aftercare grime), `cWarn` (red boundary), `cSten` (purple stencil, multiply blend). Tools in `TOOLS` (liner, shade, erase, cloth) with needle sizes like 3RL–14RL and 7M1–31RM. Strokes: `strokeBegin/Move/End` → `interp()` → `stamp()` with smoothing, tapering and pressure (pen pressure, mouse speed, or controller RT). `layoutPad()` sizes and zooms the skin |
 | Boundary / slips | `buildMasks()` makes `job.strikeMask` (the allowed zone = stencil line widened by `tol + STRIKE_PAD`) and draws the red boundary on `cWarn`. Ink outside it → red warning, then a **slip**. On fake skin the pad is wiped and the player restarts; 5 slips fail the round. On a real customer (`isClient`) the bad ink stays, and 3 slips (`job.maxStrikes`) = they walk out with no retry (`failRound()` → `showFail()`) |
 | Body parts | Real customers are inked on a drawn body part, not the pad: `BODY[spot]` shapes, `drawBody()` paints `cBody` (1200×1200 covering skin coords −300..900 so limbs run off screen), `.pad.body` CSS drops the pad frame. `job.body` = the spot. Every shape must keep x 55..545 on skin |
-| Warm-up | `offerWarmup()` asks before every client; `startWarmup()` runs mode `'warmup'` (fake skin, customer's design, no clock/supplies; 15 game minutes per try in career). `warm.start()` begins the real tattoo |
+| Warm-up | `offerWarmup()` asks before every client (also has a Supply counter button); `startWarmup()` runs mode `'warmup'` (fake skin, customer's design, no clock/supplies; 15 game minutes per try in career). `warm.start()` begins the real tattoo |
+| Ink meter | `job.inkAcc` adds up skin area inked in `stamp()`; `inkUsed()` = 2 ml + 1 ml per 1000 px² (max 25), `inkLeft()` = bottle minus that. `renderInk()` draws the meter; at 0 `outOfInk()` stops the machine and offers the counter. `backToStation()` returns from the counter to the same tattoo (clock paused meanwhile) |
+| Smudges | On real skin, `smudgeTravel()` drops a smudge (ink + blood blobs on `cDirt`) every ~220–340 px of needle travel, max 6. `tickSmudges()`: "Clean up!!" at 2.5 s, at 6 s it sets in for −3 points (max −30, `job.smudgePen`). Wiped with the `towel` tool (W key, X cycles to it) → "Stay clean!!". `withSmudges()` applies the penalty to the score |
+| Aftercare | `job.phase`: `'ink'` → `'wash'` (cover choice modal) → `'care'`. `startAftercare()` auto-washes, then the player picks ointment + plastic wrap or second-skin film and rubs/smooths it over `careMask()`; `carePct()` = coverage. `wrapUp()` turns coverage into healing (`healInfo`): film ×1.1, no ointment ×0.75, no wrap ×0.6, −5% per late smudge |
 | Scoring | `scoreWork()` returns coverage (how much of the stencil got traced), accuracy (how much ink is on the line), score 0–100 and stars: 90+ = 3, 78+ = 2, otherwise 1. A finished round is never 0 stars; only a failed round is. `finishJob()` blocks submitting below 70% coverage. `payRate(score)` sets a real customer's pay: under 70 = nothing (and −1 rep), 70–77 = 10–50%, 78–89 = 50–85%, 90+ = 85–100% |
 | RESULTS | `showResults(r)` handles practice, apprenticeship customer and career results (tips, reputation, aftercare rows, buttons). `showFail()` handles failed rounds |
 | PRACTICE BOARD / STORY / FREE MODE | `openBoard()`, the intro and graduation cutscenes (`intro()`, `graduate()`, `nextCustomer()`, `ending()`), and the sandbox |
@@ -76,8 +79,8 @@ Everything is plain JavaScript inside one IIFE, no build step, no frameworks, no
 
 - Design coordinate space `DOC = 600`. Tolerances: smiley 7, heart and star 6, the rest 5.
 - Practice pads unlock one at a time; any finished round (1+ star) unlocks the next. Stencil opacity drops as pads get harder.
-- Aftercare: after inking a real customer, the player scrubs grime off with a cloth, then wraps. 85%+ clean = heals fast (+rep, best pay), 60–85% = normal, under 60% = infection risk (−rep). No wraps left = heals dirty.
-- Supplies per tattoo: 1 needle (2 if the shader was used), 3–15 ml ink depending on how much was inked, 1 wrap.
+- Aftercare: after inking a real customer, a final wash, then ointment + plastic wrap or a second-skin film rubbed over the whole tattoo. Healing 85%+ = heals fast (+rep, best pay), 60–85% = normal, under 60% = infection risk (−rep).
+- Supplies per tattoo: 1 needle (2 if the shader was used), 3–25 ml ink depending on how much was inked, then 1 ointment + 1 plastic wrap, or 1 film. Assistants use ointment + wrap. Dee's starter kit: 4 needles, 40 ml, 3 wraps, 4 ointment, 1 film.
 - Career day runs 10:00 to 20:00 game time, 4 game minutes per real second on the shop floor. Your own tattoo jobs jump the clock forward by the design's duration. Customers arrive faster with more reputation and the neon upgrade; harder designs (and better pay) unlock with reputation (`DES_INFO[design].rep`).
 - End of day: rent `20 + 5 per extra bench seat + 15 per extra chair`, staff wages, income from owned shops, healed reviews (due 1–3 days after the tattoo depending on cleanliness).
 - Assistants: Mika (skill 60), Bo (80), Sage (95). Each needs an extra tattoo chair. They auto-take waiting customers and use your supplies; a red "!" over them means out of supplies.
@@ -85,7 +88,11 @@ Everything is plain JavaScript inside one IIFE, no build step, no frameworks, no
 
 ### Save data
 
-`save` (localStorage key `tattooMadness.v1`): `started, stars[6], best[6], graduated, cust, coins, rep, scores[], sound, sup{needles,ink,wraps}, up{seats,chairs,neon,rotary,light}, staff[{id,chair}], shops[], reviews[], career, cday, clock, seenClean, fullView`.
+`save` (localStorage key `tattooMadness.v1`): `started, stars[6], best[6], graduated, cust, coins, rep, scores[], sound, sup{needles,ink,wraps,ointment,film}, up{seats,chairs,neon,rotary,light}, staff[{id,chair}], shops[], reviews[], career, cday, clock, seenClean (no longer used, kept), seenCare, seenWipe, fullView`. Old saves without `sup.ointment` get 5 tubes in `ensureCareerSave()` if graduated.
+
+**Save slots:** 3 slots. `SLOT_KEYS` = `tattooMadness.v1` (slot 1, the original key, so old saves became slot 1), `tattooMadness.v1.slot2`, `tattooMadness.v1.slot3`. `tattooMadness.slot` remembers the last slot played. `persist()` writes the current `slot`; `useSlot(i)` loads a slot and resets the shop floor state `F`. Title: Continue (last slot), New apprenticeship and Load game open `openSlots('new'|'load')` (`scr-slots`) with Play / Start here / Erase per slot.
+
+**Developer mode:** `dev`, stored device-wide in `tattooMadness.dev`. Toggled by tapping a Menu button (station `#tMenu` or floor `#fMenuBtn`) 10 times with under 3 s between taps (`devTap()`). Turns on: the station's **Dev skip** button (`#tSkip`: pick Fail / 65 / 84 / 97 and the round finishes; in aftercare it covers everything), instant dialogue text, all practice pads unlocked, and floor-menu "+500 coins" / "restock supplies".
 
 Rule: **players already have saves on their phone.** When adding a field, add it to `fresh()` and make sure old saves still load (`ensureCareerSave()` shows the pattern: merge defaults into what's loaded). Never rename or remove existing fields without a migration, and never change `SAVE_KEY`.
 
@@ -117,9 +124,12 @@ The Android app runs fullscreen in landscape. Typical phone viewports are about 
 7. **Phone layout.** Compact layout for short landscape screens, auto-fit so menus never scroll, side-panel tattoo station, zoom-to-design skin, and Full view.
 8. **Set up the dev machine.** Moved the project out of OneDrive to `C:\dev\tattoo-madness`, set the Gradle JDK to jbr-21, got the phone detected, installed Claude Code and the Android Studio plugin, and made the first git commit `4602ec3 Working Android version` on `main`.
 9. **Real skin is one shot.** Optional fake-skin warm-up before each client, customers inked on a drawn body part for their spot, bad ink stays, 3 slips and they walk out, sloppy work (score under 70) pays nothing.
+10. **Realistic shop work.** Warmer skin tones on body parts, a Supply counter button before each customer and in the station menu, a live ink meter, smudges to wipe with a paper towel while inking, and aftercare with ointment + plastic wrap or second-skin film instead of the old scrub-down round.
+11. **Save slots and developer mode.** Three save slots with Load game / Erase, and a hidden developer mode (tap Menu 10 times) with a Dev skip button for testing.
 
 ## Lessons learned (don't repeat these)
 
+- **Pixelify Sans joins "fi" into a broken letter** ("film" showed as "Alm"). `body` has `font-variant-ligatures:none`; keep it.
 - **Gamepad edge detection:** `pollPad()` snapshots the previous button state into `prev` *before* overwriting `gp.prev`. A past bug overwrote it first, so no press ever registered as new: tracing worked (held buttons) but menus didn't.
 - **Face buttons differ between controllers.** PlayStation, Nintendo and generic pads report "A" as button 0, 1 or 2. That's why any face button selects in menus.
 - **Android turns a controller's B button into the system back key.** MainActivity routes back to `__tmBack()`, which ignores it if a controller button was pressed in the last 400 ms (`gp.lastPress`) so B isn't handled twice.

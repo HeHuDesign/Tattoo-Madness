@@ -26,7 +26,7 @@
 *,*::before,*::after{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;
-  font-family:"Pixelify Sans","Courier New",ui-monospace,monospace;font-size:18px;line-height:1.3;-webkit-user-select:none;user-select:none}
+  font-family:"Pixelify Sans","Courier New",ui-monospace,monospace;font-size:18px;line-height:1.3;font-variant-ligatures:none;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit}
 #game{position:relative;width:100%;height:100%;overflow:hidden}
 #scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
@@ -117,6 +117,9 @@ button{font:inherit;color:inherit}
 .bar{width:150px;height:16px;border:3px solid var(--wood-d);background:#4a2c1d;border-radius:3px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--go);width:100%}
 #tTime{min-width:64px;font-variant-numeric:tabular-nums}
+.inkm{display:flex;align-items:center;gap:8px;font-size:16px}
+.inkm .bar{width:90px}
+#tInkMl{min-width:48px;font-variant-numeric:tabular-nums}
 .inputchip{font-size:15px;padding:2px 8px;border:2px solid var(--wood-d);border-radius:3px;background:var(--parch-2)}
 .twork{flex:1;min-height:0;display:grid;place-items:center;position:relative;overflow:hidden}
 .pad{position:relative;border-radius:22px;box-shadow:0 0 0 6px #e9d7c4,0 0 0 9px var(--wood-d),8px 10px 0 9px rgba(0,0,0,.3);touch-action:none;cursor:crosshair;overflow:hidden}
@@ -152,6 +155,9 @@ button{font:inherit;color:inherit}
 .item .ds{color:var(--ink-soft);font-size:15px}
 .item .pr{white-space:nowrap;display:inline-flex;gap:5px;align-items:center}
 .hint{color:var(--ink-soft);margin:8px 0 0;font-size:16px}
+.slotlist{display:flex;flex-direction:column;gap:8px}
+.slotlist .item.empty .ds{font-style:italic}
+#tSkip{background:#c9b8ff}
 .mapwrap{display:flex;flex-direction:column;gap:10px;width:min(980px,100%);padding:14px;max-height:100%;overflow:auto}
 .mapbox{position:relative;width:min(100%,calc((100vh - 270px)*16/9));min-width:260px;aspect-ratio:16/9;margin:0 auto;border:3px solid var(--wood-d);border-radius:4px;overflow:visible}
 .mapbox canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
@@ -201,7 +207,7 @@ button{font:inherit;color:inherit}
 /* --- overlays --- */
 #modal{position:fixed;inset:0;background:rgba(20,10,25,.6);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
 #modal .wood{padding:18px 22px;max-width:440px;text-align:center}
-#modal p{margin:0 0 14px;font-size:21px}
+#modal p{margin:0 0 14px;font-size:21px;white-space:pre-line}
 #modal .row{justify-content:center}
 #fade{position:fixed;inset:0;background:var(--night);opacity:0;pointer-events:none;transition:opacity .45s steps(6);z-index:30;display:grid;place-items:center;color:#ffe08a;text-align:center}
 #fade.on{opacity:1;pointer-events:auto}
@@ -288,6 +294,9 @@ button{font:inherit;color:inherit}
 .compact .timer{flex-direction:column;gap:2px;font-size:14px}
 .compact .bar{width:100%}
 .compact .slips{justify-content:center;flex-wrap:wrap}
+.compact .inkm{justify-content:center;gap:5px;font-size:13px}
+.compact .inkm .bar{width:auto;flex:1;height:12px}
+.compact #tInkMl{min-width:0}
 .compact .inputchip{display:none}
 .compact .ttools{flex-direction:column;flex-wrap:nowrap;align-self:center;width:150px;gap:6px;margin:6px 6px 6px 0;padding:8px}
 .compact .ttools .sep{width:100%;height:3px;margin:0}
@@ -309,6 +318,7 @@ button{font:inherit;color:inherit}
     <div class="menu wood">
       <button class="gbtn go" id="bNew">New apprenticeship</button>
       <button class="gbtn" id="bCont">Continue</button>
+      <button class="gbtn" id="bLoad">Load game</button>
       <button class="gbtn" id="bFree">Free tattoo</button>
       <button class="gbtn" id="bCtl">Controls</button>
       <button class="gbtn" id="bSound">Sound: on</button>
@@ -316,6 +326,7 @@ button{font:inherit;color:inherit}
     <div class="foot">Play with a mouse, your finger, or a controller</div>
     <div class="foot padstat" id="padStat">Using a controller? Click the game once, then press any button.</div>
     <div class="foot padstat hide" id="padDbg"></div>
+    <div class="foot padstat warn hide" id="devTag">Developer mode is on (tap Menu 10 times in a row to turn it off)</div>
     </div>
   </section>
 
@@ -346,10 +357,12 @@ button{font:inherit;color:inherit}
       <div class="tinfo"><b id="tTitle"></b><span id="tSub"></span></div>
       <div class="timer" id="tTimer"><div class="bar"><i id="tBar"></i></div><span id="tTime"></span></div>
       <span class="slips" id="tSlips" title="Slips outside the lines. Five and the round fails."></span>
+      <div class="inkm hide" id="tInk" title="Ink left in your bottle"><span>Ink</span><div class="bar"><i id="tInkBar"></i></div><span id="tInkMl"></span></div>
       <span class="inputchip" id="inputChip">Mouse</span>
       <button class="gbtn small" id="tFull" title="Hide the panels and make the skin as big as possible (F)">Full view</button>
       <button class="gbtn small" id="tMenu">Menu</button>
       <button class="gbtn small go" id="tDone">Done</button>
+      <button class="gbtn small hide" id="tSkip" title="Developer mode: finish this round instantly">Dev skip</button>
       <button class="gbtn small go hide" id="tSave">Save PNG</button>
     </div>
     <div class="tfloat" id="tFloat">
@@ -373,6 +386,7 @@ button{font:inherit;color:inherit}
       <button class="gbtn small" data-tool="liner" title="Liner (L)">Liner</button>
       <button class="gbtn small" data-tool="shade" title="Shader (S)">Shader</button>
       <button class="gbtn small" data-tool="erase" id="wipeBtn" title="Wipe / erase (E)">Wipe</button>
+      <button class="gbtn small hide" data-tool="towel" id="towelBtn" title="Paper towel: wipe away smudges (W)">Towel</button>
       </span>
       <span class="sep"></span>
       <span class="szrow">
@@ -396,20 +410,29 @@ button{font:inherit;color:inherit}
     <div class="res wood" id="res"></div>
   </div></section>
 
+  <section class="screen" id="scr-slots"><div class="dim">
+    <div class="board wood">
+      <h2 id="slTitle">Save slots</h2>
+      <p class="sub" id="slSub"></p>
+      <div class="slotlist" id="slList"></div>
+      <div class="row"><button class="gbtn" id="slBack">Back</button></div>
+    </div>
+  </div></section>
+
   <section class="screen" id="scr-controls"><div class="dim">
     <div class="ctl wood">
       <h2>Controls</h2>
       <div class="cgrid">
         <div><h3>Mouse or touchpad</h3><dl>
           <dt>Hold + drag</dt><dd>Ink</dd><dt>Slow / fast</dt><dd>Heavier / lighter line</dd>
-          <dt>L S E</dt><dd>Liner, shader, wipe</dd><dt>[ ]</dt><dd>Needle size</dd>
+          <dt>L S</dt><dd>Liner, shader</dd><dt>W</dt><dd>Paper towel (customers)</dd><dt>E</dt><dd>Wipe (Free mode)</dd><dt>[ ]</dt><dd>Needle size</dd>
           <dt>Arrows + Enter</dt><dd>Menus</dd><dt>T</dt><dd>Stencil on / off</dd><dt>F</dt><dd>Full view (hide panels)</dd><dt>Esc</dt><dd>Pause</dd><dt>Space</dt><dd>Next line of dialogue</dd></dl></div>
         <div><h3>Touch</h3><dl>
           <dt>Finger drag</dt><dd>Ink</dd><dt>Lift</dt><dd>Stop</dd><dt>Stylus</dt><dd>Real pressure</dd>
           <dt>Buttons</dt><dd>Tools and needle size along the bottom</dd><dt>Tap</dt><dd>Next line of dialogue</dd></dl></div>
         <div><h3>Controller</h3><dl>
           <dt>Left stick</dt><dd>Move machine</dd><dt>RT</dt><dd>Ink (squeeze = pressure)</dd>
-          <dt>LT</dt><dd>Slow, precise movement</dd><dt>X</dt><dd>Swap tool</dd><dt>LB / RB</dt><dd>Needle size</dd>
+          <dt>LT</dt><dd>Slow, precise movement</dd><dt>X</dt><dd>Swap tool (liner, shader, towel)</dd><dt>LB / RB</dt><dd>Needle size</dd>
           <dt>D-pad</dt><dd>Move between any buttons, menus and the station</dd><dt>A / any face button</dt><dd>Select, next line</dd><dt>B</dt><dd>Pause (at the station)</dd><dt>Select / Back</dt><dd>Go back in menus</dd><dt>Y</dt><dd>Stencil on / off</dd><dt>Start</dt><dd>Finish tattoo</dd><dt>L3 / R3</dt><dd>Full view (hide panels)</dd></dl></div>
       </div>
       <div class="row"><button class="gbtn" id="bCtlBack">Back</button></div>
@@ -527,9 +550,16 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false});
-let save = (()=>{ try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)); return s?{...fresh(),...s}:fresh(); }catch(_){ return fresh(); } })();
-function persist(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(save)); }catch(_){} }
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false});
+// Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
+const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
+const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
+const loadSlot=i=>{ const s=readSlot(i); return s?{...fresh(),...s}:fresh(); };
+let slot=(()=>{ try{ const n=+localStorage.getItem(SLOT_PICK); return n>=0&&n<3?n:0; }catch(_){ return 0; } })();
+let save=loadSlot(slot);
+function persist(){ try{ localStorage.setItem(SLOT_KEYS[slot],JSON.stringify(save)); }catch(_){} }
+// developer mode is a device setting, shared by all slots
+let dev=(()=>{ try{ return localStorage.getItem(DEV_KEY)==='1'; }catch(_){ return false; } })();
 const dayNum = () => 1 + (save.graduated?1:0) + (save.cust>=4?1:0);
 
 /* =============== AUDIO =============== */
@@ -698,7 +728,7 @@ function walk(id,tx,ty){ const a=actors.find(a=>a.ch===id); if(!a) return Promis
 
 /* =============== SCREENS / UI =============== */
 let current='title', modalOpen=false;
-const SCENE_FOR={title:'exterior',controls:'exterior',shop:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
+const SCENE_FOR={title:'exterior',controls:'exterior',slots:'exterior',shop:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+id));
   current=id; sceneMode=SCENE_FOR[id]||(id==='tattoo'?null:sceneMode);
@@ -730,6 +760,7 @@ function say(who,text){
     const box=$('#dlg'); box.classList.remove('hide'); box.classList.toggle('narrator',!who);
     if(who){ const c=CH[who]; $('#dlgWho').textContent=c.name; drawPortrait($('#dlgPortrait'),c); }
     dlg.active=true; dlg.full=text; dlg.shown=0; dlg.resolve=res; $('#dlgTxt').textContent=''; $('#dlgMore').style.visibility='hidden';
+    if(dev){ dlg.shown=text.length; $('#dlgTxt').textContent=text; $('#dlgMore').style.visibility='visible'; } // developer mode: no typewriter
   });
 }
 function tickDialogue(){
@@ -847,9 +878,14 @@ function spacing(p){
   const s=sizeOf(stk.tool);
   return stk.tool==='liner'?Math.max(.35,s*(.45+.55*p)*.12):Math.max(1,s*.09);
 }
+// The towel (while inking) and the aftercare step drag a cloth instead of a needle
+const wipeMode=()=>job.phase==='care'||(job.phase==='ink'&&job.tool==='towel');
+const wipeStep=(x,y)=>job.phase==='care'?careAt(x,y):wipeAt(x,y,35);
 function strokeBegin(x,y,p){
-  if(job.phase==='clean'){ wipeLast=null; job.wiping=true; wipeAt(x,y); return; }
+  if(job.phase==='wash') return;
+  if(wipeMode()){ wipeLast=null; job.wiping=true; wipeStep(x,y); return; }
   if(job.failed) return;
+  if(isClient(job.mode)&&inkLeft()<=0){ outOfInk(); return; }
   if(job.tool==='shade') job.usedShade=true;
   job.dirty=true;
   stk={out:0,slipped:false,tool:job.tool,cfg:TOOLS[job.tool],lazy:{x,y},raw:{x,y},last:null,gap:0,dist:0,pts:[],total:null,pressure:p};
@@ -857,12 +893,14 @@ function strokeBegin(x,y,p){
   addPt(x,y,p); buzz(true);
 }
 function strokeMove(x,y,p){
-  if(job.phase==='clean'){ if(job.wiping) wipeAt(x,y); return; }
-  if(!stk||job.failed||stk.slipped) return; stk.raw={x,y}; const k=1-stk.cfg.smooth;
+  if(job.wiping){ wipeStep(x,y); return; }
+  if(!stk||job.failed||stk.slipped) return;
+  if(isClient(job.mode)&&inkLeft()<=0){ outOfInk(); return; }
+  stk.raw={x,y}; const k=1-stk.cfg.smooth;
   stk.lazy.x+=(x-stk.lazy.x)*k; stk.lazy.y+=(y-stk.lazy.y)*k; addPt(stk.lazy.x,stk.lazy.y,p);
 }
 function strokeEnd(){
-  if(job.phase==='clean'){ job.wiping=false; wipeLast=null; return; }
+  if(job.wiping){ job.wiping=false; wipeLast=null; return; }
   if(!stk) return;
   if(stk.slipped){ bctx.clearRect(0,0,DOC,DOC); stk=null; buzz(false); return; }
   for(let i=0;i<25&&Math.hypot(stk.raw.x-stk.lazy.x,stk.raw.y-stk.lazy.y)>.5;i++){
@@ -881,6 +919,7 @@ function interp(x,y,p){
   let pos=stk.gap;
   while(pos<=seg){ const k=pos/seg, pp=stk.last.p+(p-stk.last.p)*k; stamp(stk.last.x+dx*k,stk.last.y+dy*k,pp,stk.dist+pos); pos+=spacing(pp); }
   stk.gap=pos-seg; stk.dist+=seg; stk.last={x,y,p};
+  if(job.smudges&&stk.total==null&&!stk.slipped) smudgeTravel(seg,x,y);
 }
 function stamp(x,y,p,d){
   if(stk.slipped) return;
@@ -892,7 +931,9 @@ function stamp(x,y,p,d){
       if(!job.strikeMask[yi*DOC+xi]){ stk.out++; showWarn(true); if(stk.out>=3){ stk.slipped=true; slip(); return; } }
     }
     const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.color; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
+    if(stk.total==null) job.inkAcc+=2*r*spacing(p); // each dab covers about (width × step) of skin
   } else if(stk.tool==='shade'){
+    job.inkAcc+=size*spacing(p)*.25; // shading lays down thinner ink
     const r=size/2; sctx.globalAlpha=clamp(t.strength*job.ink*p); sctx.drawImage(dab(job.color,1-t.soft),x-r,y-r,r*2,r*2); sctx.globalAlpha=1;
   } else {
     const r=size/2, im=dab('#000000',1-t.soft);
@@ -990,8 +1031,11 @@ function drawBody(spot,skin){
   let path; if(b.full){ path=new Path2D(); path.rect(-300,-300,1200,1200); } else path=b.path?new Path2D(b.path):limbPath(b.L,b.R);
   x.save(); x.shadowColor='rgba(20,8,4,.45)'; x.shadowBlur=18; x.shadowOffsetX=10; x.shadowOffsetY=14; x.fillStyle=skin; x.fill(path); x.restore();
   x.save(); x.clip(path);
+  // warm the skin a little (multiply keeps light tones from looking washed out on phone screens)
+  x.globalCompositeOperation='multiply'; x.globalAlpha=.55; x.fillStyle='#f0cfb8'; x.fillRect(-300,-300,1200,1200);
+  x.globalCompositeOperation='source-over'; x.globalAlpha=1;
   const g=x.createLinearGradient(-60,0,660,0); // light from the upper left, so limbs read as round
-  g.addColorStop(0,'rgba(0,0,0,.18)'); g.addColorStop(.38,'rgba(255,255,255,.08)'); g.addColorStop(.62,'rgba(255,255,255,.04)'); g.addColorStop(1,'rgba(0,0,0,.2)');
+  g.addColorStop(0,'rgba(60,25,10,.2)'); g.addColorStop(.4,'rgba(255,226,200,.05)'); g.addColorStop(.6,'rgba(255,226,200,.02)'); g.addColorStop(1,'rgba(60,25,10,.22)');
   x.fillStyle=g; x.fillRect(-300,-300,1200,1200);
   if(!b.full){ x.filter='blur(16px)'; x.globalAlpha=.6; x.strokeStyle=tone(skin,-.35); x.lineWidth=70; x.stroke(path); x.filter='none'; x.globalAlpha=1; }
   if(b.bump){ const [bx,by,br]=b.bump; // soft shadow under the knob, then a soft highlight on top
@@ -1048,8 +1092,13 @@ function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); 
 function startJob(opts){
   Object.assign(job,{elapsed:0,stenVisible:true,upload:null,...opts});
   job.maxStrikes=isClient(job.mode)?3:5; job.body=isClient(job.mode)?job.cust.spot:null;
-  job.strikes=0; job.failed=false; job.phase='ink'; job.usedShade=false; job.used=null;
-  cDirt.style.display='none'; cWarn.style.display=''; document.querySelector('.ttools').classList.remove('hide'); $('#tDone').textContent='Done';
+  job.strikes=0; job.failed=false; job.phase='ink'; job.usedShade=false; job.used=null; job.wiping=false;
+  const real=isClient(job.mode);
+  job.inkAcc=0; job.smudges=real?[]:null; job.smudgePen=0; job.lateSmudges=0; job.smudgeNext=160+Math.random()*80; job.cover=null;
+  dctx.clearRect(0,0,DOC,DOC); cDirt.style.display=real?'block':'none'; cDirt.style.opacity='';
+  cWarn.style.display=''; document.querySelector('.ttools').classList.remove('hide'); $('#tDone').textContent='Done';
+  $('#towelBtn').classList.toggle('hide',!real); $('#tInk').classList.toggle('hide',!real); if(real) renderInk();
+  $('#tSkip').classList.toggle('hide',!dev||job.mode==='free');
   TOOLS.liner.smooth=(save.up&&save.up.rotary&&job.mode!=='practice')?.72:.55;
   clearWork(); renderStencil(); buildMasks(); renderSlips(); showWarn(false); $('#tSten').setAttribute('aria-pressed',false);
   padEl.classList.toggle('body',!!job.body); padEl.style.background=job.body?'transparent':job.skin;
@@ -1064,10 +1113,13 @@ function startJob(opts){
   else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
   padCursor.x=300; padCursor.y=300; setTool('liner'); show('tattoo');
+  if(real&&!save.seenWipe){ save.seenWipe=true; persist();
+    modal(`Real skin gets messy. Smudges of extra ink and blood build up while you work. Wipe them with the paper towel (Towel button, W key${inputMode==='pad'?', or X on your controller':''}) before they set, or they cost you points. Keep an eye on your ink too.`,[['Got it',true,true]]); }
 }
 function tickJob(dt){
-  if(job.phase==='clean'){ if(tick%12===0) renderCleanPct(); return; }
-  if(!isClient(job.mode)||modalOpen) return;
+  if(job.phase==='care'){ if(tick%12===0) renderCarePct(); return; }
+  if(job.phase!=='ink'||!isClient(job.mode)||modalOpen) return;
+  tickSmudges(dt); if(tick%6===0) renderInk();
   job.elapsed+=dt; const left=job.limit-job.elapsed, frac=clamp(left/job.limit);
   const bar=$('#tBar'); bar.style.width=(frac*100)+'%'; bar.style.background=frac>.5?'var(--go)':frac>.2?'var(--warn)':'var(--bad)';
   const s=Math.abs(Math.ceil(left)); $('#tTime').textContent=left>=0?`${(s/60)|0}:${String(s%60).padStart(2,'0')}`:'Over time';
@@ -1102,23 +1154,52 @@ function composite(includeSten){
 }
 
 async function finishJob(){
-  if(job.phase==='clean'){ await wrapUp(); return; }
+  if(job.phase==='care'){ await wrapUp(); return; }
+  if(job.phase!=='ink') return;
   if(!job.dirty){ toast('Put some ink down first'); return; }
   if(job.failed) return;
   const pre=scoreWork();
   if(pre.cov<.7){ await modal(`You've only traced ${Math.round(pre.cov*100)}% of the stencil. Finish the lines first.`,[['Keep working',false,true]]); return; }
-  const ok=await modal(isClient(job.mode)?'Finished inking? Time to clean it up.':'Finished with this pad?',[['Keep working',false],['Done',true,true]]);
+  const ok=await modal(isClient(job.mode)?'Finished inking? Time for aftercare.':'Finished with this pad?',[['Keep working',false],['Done',true,true]]);
   if(!ok||job.failed) return; strokeEnd();
-  if(isClient(job.mode)) startCleaning(scoreWork()); else showResults(scoreWork());
+  if(isClient(job.mode)) startAftercare(withSmudges(scoreWork())); else showResults(scoreWork());
 }
+// smudges left to set in come off the line score
+function withSmudges(r){ r.smudgePen=job.smudgePen; r.score=Math.max(0,r.score-job.smudgePen); r.stars=r.score>=90?3:r.score>=78?2:1; return r; }
 $('#tDone').onclick=finishJob;
+/* developer mode: tap a Menu button 10 times in a row (each within 3 s) to switch it on or off */
+let devTaps=0, devLast=0;
+function devTap(){
+  const now=Date.now(); devTaps=now-devLast<3000?devTaps+1:1; devLast=now;
+  if(devTaps<10) return false;
+  devTaps=0; dev=!dev; try{ localStorage.setItem(DEV_KEY,dev?'1':'0'); }catch(_){}
+  toast(dev?'Developer mode ON':'Developer mode OFF'); blip(dev?990:300);
+  if(current==='tattoo') $('#tSkip').classList.toggle('hide',!dev||job.mode==='free');
+  return true;
+}
+// Developer mode: finish the current round instantly with a chosen result
+$('#tSkip').onclick=async()=>{
+  if(job.phase==='care'){ dctx.globalAlpha=.6; dctx.fillStyle=job.cover==='film'?'#e4f2ff':'#fff3d6'; dctx.fillRect(0,0,DOC,DOC); dctx.globalAlpha=1; wrapUp(); return; }
+  if(job.phase!=='ink'||job.failed) return;
+  const v=await modal('Developer skip: how did it go?',[['Cancel',null],['Fail','fail'],['Sloppy (65)',65],['Good (84)',84],['Perfect (97)',97,true]]);
+  if(v==null||job.phase!=='ink'||job.failed) return;
+  ptr=null; padCursor.drawing=false; if(stk) strokeEnd(); buzz(false);
+  if(v==='fail'){ job.strikes=job.maxStrikes; job.failed=true; renderSlips(); failRound(); return; }
+  lctx.save(); lctx.lineCap=lctx.lineJoin='round'; lctx.lineWidth=7; lctx.strokeStyle=job.color; lctx.stroke(pathOf(job.design)); lctx.restore(); // so the results picture shows a tattoo
+  job.dirty=true; job.inkAcc=Math.max(job.inkAcc,9000);
+  const r={cov:v/100,acc:v/100,score:v,stars:v>=90?3:v>=78?2:1};
+  if(isClient(job.mode)) startAftercare(withSmudges(r)); else showResults(r);
+};
 $('#tMenu').onclick=async()=>{
+  if(devTap()) return;
   const warmup=job.mode==='warmup', opts=[['Resume','resume',true]];
   if(job.mode==='practice'||warmup) opts.push(['Restart pad','restart']);
   if(warmup) opts.push([`Start on ${CH[job.cust.ch].name}`,'real']);
+  if(isClient(job.mode)&&job.phase!=='wash') opts.push(['Supply counter','store']);
   opts.push(['Quit to title','quit']);
   const v=await modal(isClient(job.mode)||warmup?'Paused. Your customer is waiting patiently.':'Paused',opts);
   if(v==='restart'){ if(warmup) startWarmup(); else startPractice(job.idx); }
+  if(v==='store') openStore('supplies',backToStation);
   if(v==='real') warm.start();
   if(v==='quit'){ buzz(false); stk=null; if((job.mode==='career'||warmup)&&F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } persist(); show('title'); }
 };
@@ -1195,7 +1276,7 @@ function showResults(r){
   res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':job.mode==='warmup'?'Warm-up: '+DESIGNS[job.design].name:CH[job.cust.ch].name}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="${r.stars} of 3 stars">${starStr(r.stars)}</div>
-      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd><dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd></dl></div>
+      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd><dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
     ${extra}
     <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[quoteWho].name}:</b> ${quote}</span></div>
     <div class="row">${btns}</div>`;
@@ -1230,7 +1311,7 @@ function thumbCanvas(cv,key,skin){
 function openBoard(){
   const g=$('#pads'); g.innerHTML='';
   PRACTICE.forEach((k,i)=>{
-    const unlocked=i===0||save.stars[i-1]>0;
+    const unlocked=i===0||save.stars[i-1]>0||dev;
     const b=document.createElement('button'); b.className='padcard'; b.disabled=!unlocked;
     b.innerHTML=`<canvas></canvas><b>${i+1}. ${DESIGNS[k].name}</b><span class="st">${starStr(save.stars[i])}</span>${unlocked?'':'<span class="lock">Locked</span>'}`;
     thumbCanvas(b.querySelector('canvas'),k,'#f1d2bb');
@@ -1251,7 +1332,8 @@ const aOrAn=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
 async function offerWarmup(cust,design,start,career){
   warm={cust,design,start,career};
   const v=await modal(`${CH[cust.ch].name} wants ${aOrAn(DESIGNS[design].name.toLowerCase())} on the ${cust.spot}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
-    [['Practice on fake skin','practice'],['Start the tattoo','go',true]]);
+    [['Practice on fake skin','practice'],['Supply counter','store'],['Start the tattoo','go',true]]);
+  if(v==='store'){ openStore('supplies',()=>{ if(career) show('floor'); else { show('shop'); renderHud(); } offerWarmup(cust,design,start,career); }); return; }
   if(v==='practice') startWarmup(); else start();
 }
 function startWarmup(){
@@ -1296,9 +1378,10 @@ async function graduate(){
   await say('dee',"Real skin doesn't wipe clean. Every slip stays on them, and three slips outside the lines means they walk out.");
   await say('dee',"Sloppy work earns you nothing. Before each client you can warm up on fake skin first. Use it.");
   await say('dee',"Customers will wait for good work, but they tip less if you drag your feet past the time on the clock.");
-  await say('dee',"One more thing. Ink, needles and wraps cost money. Here's a starter kit. When it runs low, restock at the supply cabinet.");
-  await say('dee',"And clean every tattoo before you wrap it. Clean work heals faster, and healed work is what brings people back.");
-  hideDlg(); save.graduated=true; save.sup={needles:4,ink:40,wraps:3}; persist();
+  await say('dee',"One more thing. Ink, needles, ointment and wraps cost money. Here's a starter kit. When it runs low, restock at the supply counter.");
+  await say('dee',"Keep a paper towel in your other hand. Wipe the smudges as you go, before they set.");
+  await say('dee',"When you're done, ointment and plastic wrap, or a sheet of healing film. Covered right, it heals right, and healed work is what brings people back.");
+  hideDlg(); save.graduated=true; save.sup={needles:4,ink:40,wraps:3,ointment:4,film:1}; persist();
   await dayCard('Day 2','The doors open'); busy=false; await nextCustomer(true);
 }
 async function nextCustomer(fromCard){
@@ -1306,7 +1389,7 @@ async function nextCustomer(fromCard){
   const miss=missingSupplies();
   if(miss){
     if(fromCard) await fade(false);
-    if(save.coins<45){ save.sup.needles+=3; save.sup.ink+=30; save.sup.wraps+=2; persist(); await modal('Dee: "Running on empty and short on cash? This kit is on me. Once."',[['Thanks, Dee',true,true]]); }
+    if(save.coins<45){ save.sup.needles+=3; save.sup.ink+=30; save.sup.wraps+=2; save.sup.ointment+=2; persist(); await modal('Dee: "Running on empty and short on cash? This kit is on me. Once."',[['Thanks, Dee',true,true]]); }
     else { await modal(`You're out of ${miss}. Restock at the supply cabinet before the next client.`,[['Open supply cabinet',true,true]]); openStore('supplies',()=>nextCustomer()); return; }
   }
   busy=true;
@@ -1354,6 +1437,8 @@ function startFree(){ startJob({mode:'free',design:null,cust:null,skin:'#e8c3a4'
 const isClient=m=>m==='customer'||m==='career';
 function ensureCareerSave(){
   const d=fresh();
+  // saves from before ointment existed: give graduated players a few tubes so their next tattoo isn't stuck
+  if(save.sup&&save.sup.ointment==null&&save.graduated) save.sup.ointment=5;
   save.sup={...d.sup,...(save.sup||{})};
   save.up={...d.up,...(save.up||{})};
   ['staff','shops','reviews'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
@@ -1365,70 +1450,140 @@ ensureCareerSave();
 const SUPPLY=[
   {id:'needles',name:'Needle cartridges',desc:'Box of 10. A tattoo uses one, two if you also shade.',price:20,qty:10,unit:''},
   {id:'ink',name:'Black ink',desc:'100 ml bottle. A tattoo uses about 3 to 15 ml.',price:25,qty:100,unit:' ml'},
-  {id:'wraps',name:'Aftercare wraps',desc:'Pack of 10. A tattoo without a wrap heals dirty.',price:12,qty:10,unit:''}];
+  {id:'wraps',name:'Plastic wrap',desc:'Pack of 10. Goes over the ointment for the first few hours.',price:12,qty:10,unit:''},
+  {id:'ointment',name:'Healing ointment',desc:'Tube for 10 tattoos. Without it the tattoo dries out and heals worse.',price:15,qty:10,unit:''},
+  {id:'film',name:'Second-skin film',desc:'Pack of 5 clear healing sheets. Pricier than wrap, heals cleaner, no ointment needed.',price:30,qty:5,unit:''}];
 function missingSupplies(){ const m=[]; if(save.sup.needles<1) m.push('needles'); if(save.sup.ink<5) m.push('ink'); return m.join(' and '); }
-const supLow=()=>save.sup.needles<2||save.sup.ink<10||save.sup.wraps<1;
-const supText=()=>`Needles ${save.sup.needles} · Ink ${save.sup.ink} ml · Wraps ${save.sup.wraps}`;
+const supLow=()=>save.sup.needles<2||save.sup.ink<10||save.sup.ointment<1||(save.sup.wraps<1&&save.sup.film<1);
+const supText=()=>`Needles ${save.sup.needles} · Ink ${save.sup.ink} ml · Ointment ${save.sup.ointment} · Wrap ${save.sup.wraps} · Film ${save.sup.film}`;
+// ink used so far on this tattoo: 2 ml to prime the machine, then about 1 ml per 1000 px² of skin inked (job.inkAcc, added up in stamp())
+const inkUsed=()=>Math.min(25,2+job.inkAcc/1000);
+const inkLeft=()=>save.sup.ink-inkUsed();
 function useSupplies(){
   if(job.used) return;
-  const L=lctx.getImageData(0,0,DOC,DOC).data, S=sctx.getImageData(0,0,DOC,DOC).data; let n=0;
-  for(let i=3;i<L.length;i+=16) if(L[i]>40||S[i]>40) n++;
-  const ml=Math.round(clamp(n*4/4000+2,3,15)), nd=1+(job.usedShade?1:0);
+  const ml=Math.round(clamp(inkUsed(),3,25)), nd=1+(job.usedShade?1:0);
   save.sup.needles=Math.max(0,save.sup.needles-nd); save.sup.ink=Math.max(0,save.sup.ink-ml); persist();
   job.used={nd,ml};
 }
-
-/* ---------- aftercare cleaning ---------- */
-const cDirt=$('#cDirt'), dctx=cDirt.getContext('2d');
-TOOLS.cloth={sizes:[[80,'Cloth']],i:0};
-let wipeLast=null;
-function dirtSum(){ const d=dctx.getImageData(0,0,DOC,DOC).data; let s=0; for(let i=3;i<d.length;i+=16) s+=d[i]; return s; }
-function makeDirt(){
-  dctx.clearRect(0,0,DOC,DOC);
-  dctx.save(); dctx.lineCap='round'; dctx.lineJoin='round'; dctx.filter='blur(7px)';
-  dctx.strokeStyle='rgba(25,25,25,.45)'; dctx.lineWidth=30; dctx.stroke(pathOf(job.design)); dctx.restore();
-  const m=job.strikeMask;
-  const pick=()=>{ for(let t=0;t<300;t++){ const i=(Math.random()*DOC*DOC)|0; if(!m||m[i]) return [i%DOC,(i/DOC)|0]; } return [300,300]; };
-  for(let k=0;k<48;k++){
-    const [x,y]=pick(), r=Math.random(); let col,a,rad;
-    if(r<.5){ col='#1a1a1a'; a=.35+Math.random()*.25; rad=12+Math.random()*18; }
-    else if(r<.82){ col='#a31d1d'; a=.3+Math.random()*.25; rad=6+Math.random()*10; }
-    else { col='#e3cf74'; a=.3; rad=8+Math.random()*10; }
-    dctx.globalAlpha=a; dctx.drawImage(dab(col,.35),x-rad+(Math.random()-.5)*20,y-rad+(Math.random()-.5)*20,rad*2,rad*2);
-  }
-  dctx.globalAlpha=1; job.dirt0=dirtSum()||1;
+function renderInk(){
+  const left=Math.max(0,Math.floor(inkLeft())), f=clamp(left/100);
+  $('#tInkBar').style.width=(f*100)+'%'; $('#tInkBar').style.background=left<5?'var(--bad)':left<12?'var(--warn)':'#3a3a4a';
+  $('#tInkMl').textContent=left+' ml';
 }
-function wipeAt(x,y){
-  const r=40, im=dab('#000000',.35);
+async function outOfInk(){
+  ptr=null; padCursor.drawing=false; if(stk) strokeEnd(); buzz(false);
+  if(modalOpen) return;
+  const go=await modal('Out of ink! Restock at the supply counter to keep going. Your customer will wait.',[['Not now',false],['Supply counter',true,true]]);
+  if(go) openStore('supplies',backToStation);
+}
+function backToStation(){ show('tattoo'); renderInk(); }
+
+/* ---------- keeping it clean while you ink: smudges of excess ink and blood build up and must be wiped ---------- */
+const cDirt=$('#cDirt'), dctx=cDirt.getContext('2d');
+TOOLS.towel={sizes:[[70,'Towel']],i:0};
+TOOLS.cloth={sizes:[[80,'Rub']],i:0};
+const SMUDGE_WARN=2.5, SMUDGE_LATE=6, SMUDGE_PEN=3, SMUDGE_MAX_PEN=30;
+let wipeLast=null, cleanToastAt=0;
+function alphaIn(x0,y0,w,h){ const d=dctx.getImageData(Math.max(0,x0|0),Math.max(0,y0|0),w,h).data; let s=0; for(let i=3;i<d.length;i+=8) s+=d[i]; return s; }
+function addSmudge(x,y){
+  if(job.smudges.length>=6) return;
+  const a=Math.random()*Math.PI*2, d=12+Math.random()*18, sx=clamp(x+Math.cos(a)*d,30,DOC-30), sy=clamp(y+Math.sin(a)*d,30,DOC-30), R=34;
+  for(let k=0;k<5;k++){ const blood=Math.random()<.35, rad=blood?5+Math.random()*7:12+Math.random()*12;
+    dctx.globalAlpha=blood?.45:.4+Math.random()*.2; dctx.drawImage(dab(blood?'#a31d1d':'#1a1a1a',.35),sx-rad+(Math.random()-.5)*26,sy-rad+(Math.random()-.5)*26,rad*2,rad*2); }
+  dctx.globalAlpha=1;
+  job.smudges.push({x:sx,y:sy,R,age:0,warned:false,late:false,a0:alphaIn(sx-R,sy-R,R*2,R*2)||1});
+}
+function smudgeTravel(dist,x,y){ // called as the needle moves on real skin
+  job.smudgeNext-=dist; if(job.smudgeNext>0) return;
+  job.smudgeNext=220+Math.random()*120; addSmudge(x,y);
+}
+function tickSmudges(dt){
+  const now=performance.now(), check=tick%10===0;
+  job.smudges=job.smudges.filter(s=>{
+    s.age+=dt;
+    if(check&&alphaIn(s.x-s.R,s.y-s.R,s.R*2,s.R*2)<s.a0*.2){
+      if(!s.late&&now-cleanToastAt>1500){ toast('Stay clean!!'); cleanToastAt=now; } return false; }
+    if(!s.warned&&s.age>SMUDGE_WARN){ s.warned=true; if(now-cleanToastAt>1500){ toast('Clean up!! Wipe the smudges with your towel'); cleanToastAt=now; blip(300); } }
+    if(!s.late&&s.age>SMUDGE_LATE){ s.late=true; job.lateSmudges++;
+      const pen=Math.min(SMUDGE_PEN,SMUDGE_MAX_PEN-job.smudgePen); job.smudgePen+=pen;
+      if(pen>0){ toast(`Too slow! That smudge set in: −${pen} points`); cleanToastAt=now; blip(180); } }
+    return true; });
+}
+function wipeAt(x,y,r=40){
+  const im=dab('#000000',.35);
   const go=(px,py)=>{ dctx.save(); dctx.globalCompositeOperation='destination-out'; dctx.globalAlpha=.14; dctx.drawImage(im,px-r,py-r,r*2,r*2); dctx.restore(); };
   if(!wipeLast) go(x,y);
   else { const dx=x-wipeLast[0], dy=y-wipeLast[1], n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/8)); for(let i=1;i<=n;i++) go(wipeLast[0]+dx*i/n,wipeLast[1]+dy*i/n); }
   wipeLast=[x,y];
 }
-const cleanPct=()=>clamp(1-dirtSum()/job.dirt0);
-function renderCleanPct(){ const p=Math.round(cleanPct()*100); $('#tSlips').innerHTML=`<b style="color:${p>=85?'#3f7a2a':p>=60?'#a8741a':'#b8432f'}">Clean ${p}%</b>`; }
+
+/* ---------- aftercare: final wash, then ointment + plastic wrap, or a second-skin film ---------- */
 function healInfo(c){
   return c>=.85?{label:'Heals fast',days:1,rep:1}:c>=.6?{label:'Heals normally',days:2,rep:0}:{label:'Infection risk',days:3,rep:-1};
 }
+// the area that has to be covered: the stencil lines plus a margin
+function careMask(){
+  const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d');
+  x.lineCap=x.lineJoin='round'; x.lineWidth=2*(DESIGNS[job.design].tol+STRIKE_PAD)+20; x.stroke(pathOf(job.design));
+  const d=x.getImageData(0,0,DOC,DOC).data, pts=[];
+  for(let y=0;y<DOC;y+=4) for(let i=0;i<DOC;i+=4) if(d[(y*DOC+i)*4+3]>40) pts.push(y*DOC+i);
+  return pts;
+}
+function carePct(){ const d=dctx.getImageData(0,0,DOC,DOC).data, m=job.careMask; let n=0; for(const p of m) if(d[p*4+3]>60) n++; return m.length?n/m.length:1; }
+function careAt(x,y){
+  const film=job.cover==='film', im=dab(film?'#e4f2ff':'#fff3d6',.3), r=34;
+  const go=(px,py)=>{ dctx.globalAlpha=film?.2:.16; dctx.drawImage(im,px-r,py-r,r*2,r*2); dctx.globalAlpha=1; };
+  if(!wipeLast) go(x,y);
+  else { const dx=x-wipeLast[0], dy=y-wipeLast[1], n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/8)); for(let i=1;i<=n;i++) go(wipeLast[0]+dx*i/n,wipeLast[1]+dy*i/n); }
+  wipeLast=[x,y];
+}
+function renderCarePct(){ const p=Math.round(carePct()*100); $('#tSlips').innerHTML=`<b style="color:${p>=85?'#3f7a2a':p>=60?'#a8741a':'#b8432f'}">Covered ${p}%</b>`; }
+const COVER_NAME={wrap:'Ointment + plastic wrap',film:'Second-skin film'};
 function aftercareRows(r){
   const h=healInfo(r.clean), u=job.used||{nd:1,ml:5};
-  return `<dt>Aftercare</dt><dd>${Math.round((r.rawClean??r.clean)*100)}% clean · ${h.label}${r.noWrap?' (no wrap!)':''}</dd><dt>Supplies used</dt><dd>${u.nd} needle${u.nd>1?'s':''}, ${u.ml} ml ink, ${r.noWrap?'no':'1'} wrap</dd>`;
+  const miss=r.cover==='film'?'':[r.noOint&&'no ointment!',r.noWrap&&'no wrap!'].filter(Boolean).join(', ');
+  const used=r.cover==='film'?'1 film':`${r.noOint?'no':'1 dab of'} ointment, ${r.noWrap?'no':'1'} wrap`;
+  return `<dt>Aftercare</dt><dd>${COVER_NAME[r.cover]} · ${Math.round(r.rawClean*100)}% covered · ${h.label}${miss?` (${miss})`:''}</dd>`+
+    (r.lateSmudges?`<dt>Smudges left too long</dt><dd>${r.lateSmudges}</dd>`:'')+
+    `<dt>Supplies used</dt><dd>${u.nd} needle${u.nd>1?'s':''}, ${u.ml} ml ink, ${used}</dd>`;
 }
-async function startCleaning(r){
-  useSupplies(); job.phase='clean'; job.pending=r; job.wiping=false;
-  makeDirt(); cDirt.style.display='block'; cSten.style.display='none'; cWarn.style.display='none';
-  document.querySelector('.ttools').classList.add('hide'); $('#tDone').textContent='Wrap it'; $('#tTimer').classList.add('hide');
-  $('#tSub').textContent='Aftercare: wipe off the excess ink, blood and plasma, then wrap it.';
-  setTool('cloth'); renderCleanPct(); requestAnimationFrame(layoutPad);
-  if(!save.seenClean){ save.seenClean=true; persist();
-    await modal('Aftercare time. Scrub away the ink smudges, blood and plasma with your cloth, then wrap it. Clean tattoos heal faster and earn better pay and reviews.',[['Got it',true,true]]); }
+async function startAftercare(r){
+  useSupplies(); job.pending=r; job.phase='wash'; job.wiping=false; stk=null; buzz(false);
+  dctx.clearRect(0,0,DOC,DOC); job.smudges=[]; cSten.style.display='none'; cWarn.style.display='none';
+  document.querySelector('.ttools').classList.add('hide'); $('#tTimer').classList.add('hide'); $('#tInk').classList.add('hide');
+  toast('Final wash with green soap. All clean.'); blip(700);
+  let cover=null;
+  while(!cover){
+    const opts=[]; if(save.sup.film>0) opts.push(['Second-skin film','film']);
+    opts.push(['Supply counter','store'],['Ointment + wrap','wrap',true]);
+    const v=await modal(`How do you want to cover it?\nOintment ${save.sup.ointment} · Plastic wrap ${save.sup.wraps} · Film ${save.sup.film}`,opts);
+    if(v==='store'){ await new Promise(res=>openStore('supplies',()=>{ show('tattoo'); res(); })); continue; }
+    cover=v;
+  }
+  job.cover=cover; job.phase='care'; job.careMask=careMask(); wipeLast=null;
+  cDirt.style.display='block'; cDirt.style.opacity='.6'; // a glossy layer, not paint
+  TOOLS.cloth.sizes=[[80,cover==='film'?'Smooth':'Rub']];
+  $('#tDone').textContent=cover==='film'?'Seal it':'Wrap it';
+  $('#tSub').textContent=cover==='film'?'Lay the film on and smooth it down over the whole tattoo.':'Rub a thin, even layer of ointment over the whole tattoo, then wrap it.';
+  setTool('cloth'); renderCarePct(); requestAnimationFrame(layoutPad);
+  if(cover==='wrap'&&save.sup.ointment<1) toast('Out of ointment! It will dry out and heal worse.');
+  if(cover==='wrap'&&save.sup.wraps<1) toast('Out of plastic wrap! It will heal dirty.');
+  if(!save.seenCare){ save.seenCare=true; persist();
+    await modal(cover==='film'?'Aftercare: drag over the tattoo to smooth the film down. Cover every line so no air or dirt gets in. Better covered = faster healing, better pay and reviews.'
+      :'Aftercare: drag over the tattoo to rub in a thin layer of ointment. Cover every line, then wrap it. Better covered = faster healing, better pay and reviews.',[['Got it',true,true]]); }
 }
 async function wrapUp(){
-  const clean=cleanPct();
-  if(clean<.7){ const ok=await modal(`Still messy (${Math.round(clean*100)}% clean). Wrap it anyway?`,[['Keep cleaning',false,true],['Wrap it',true]]); if(!ok) return; }
-  let noWrap=false; if(save.sup.wraps>0) save.sup.wraps--; else noWrap=true; persist();
-  job.phase='ink'; cDirt.style.display='none';
-  showResults({...job.pending,clean:noWrap?clean*.6:clean,rawClean:clean,noWrap});
+  const cov=carePct();
+  if(cov<.7){ const ok=await modal(`Only ${Math.round(cov*100)}% covered. ${job.cover==='film'?'Seal':'Wrap'} it anyway?`,[['Keep going',false,true],[job.cover==='film'?'Seal it':'Wrap it',true]]); if(!ok) return; }
+  let heal=cov, noOint=false, noWrap=false;
+  if(job.cover==='film'){ save.sup.film=Math.max(0,save.sup.film-1); heal=Math.min(1,cov*1.1); }
+  else {
+    if(save.sup.ointment>0) save.sup.ointment--; else { noOint=true; heal*=.75; }
+    if(save.sup.wraps>0) save.sup.wraps--; else { noWrap=true; heal*=.6; }
+  }
+  heal=clamp(heal-.05*Math.min(6,job.lateSmudges)); // smudges left to set in make it heal worse too
+  persist(); job.phase='ink'; cDirt.style.display='none';
+  showResults({...job.pending,clean:heal,rawClean:cov,cover:job.cover,noOint,noWrap,lateSmudges:job.lateSmudges});
 }
 
 /* ---------- shop sim data ---------- */
@@ -1558,7 +1713,7 @@ function floorTick(dt){
 }
 function floorInteract(){ if(F.hot&&!F.busy) F.hot.act(); }
 $('#fPrompt').onclick=floorInteract;
-$('#fMenuBtn').onclick=()=>floorMenu();
+$('#fMenuBtn').onclick=()=>{ if(!devTap()) floorMenu(); };
 $('#scr-floor').addEventListener('pointerdown',e=>{
   if(e.target.closest('button')||modalOpen||F.busy||!F.player) return;
   const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2;
@@ -1603,7 +1758,7 @@ function staffTick(st){
   if(save.clock>=CLOSE) return;
   const c=F.custs.filter(c=>c.state==='waiting'&&c!==F.talking).sort((a,b)=>a.arrived-b.arrived)[0]; if(!c) return;
   if(save.sup.needles<1||save.sup.ink<5){ s.noSup=true; return; } s.noSup=false;
-  save.sup.needles--; save.sup.ink=Math.max(0,save.sup.ink-6); if(save.sup.wraps>0) save.sup.wraps--;
+  save.sup.needles--; save.sup.ink=Math.max(0,save.sup.ink-6); if(save.sup.ointment>0) save.sup.ointment--; if(save.sup.wraps>0) save.sup.wraps--;
   c.state='toChair'; c.by=st.id; c.seat=null; const sp=chairSit(st.chair); c.tx=sp.x; c.ty=sp.y;
   const len=Math.round(DES_INFO[c.design].dur*(1.7-def.skill)); s.busy={c,until:save.clock+len,len};
 }
@@ -1618,7 +1773,7 @@ async function talkCustomer(c){
   if(v!=='go') return;
   const miss=missingSupplies();
   if(miss){ const g=await modal(`You're out of ${miss}. Restock at the counter first.`,[['Not now',false],['Go to counter',true,true]]); if(g) openStore('supplies',enterFloor); return; }
-  if(!save.sup.wraps) toast('No aftercare wraps left. This one will heal dirty.');
+  if(!save.sup.wraps&&!save.sup.film) toast('No plastic wrap or film left. This one will heal dirty.');
   F.busy=true; c.state='toChair'; c.by='you'; c.seat=null; const s=chairSit(0); c.tx=s.x; c.ty=s.y;
   const a=artistPos(); F.target={x:a.x,y:a.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
 }
@@ -1643,7 +1798,12 @@ async function closeEarly(){
   if(ok) endDay();
 }
 async function floorMenu(){
-  const v=await modal(`Day ${save.cday}, ${clockText()}`,[['Counter','store'],['Town map','map'],['Close for today','close'],['Save & quit','quit'],['Resume','resume',true]]);
+  const opts=[['Counter','store'],['Town map','map'],['Close for today','close'],['Save & quit','quit']];
+  if(dev) opts.push(['Dev: +500 coins','coins'],['Dev: restock supplies','sup']);
+  opts.push(['Resume','resume',true]);
+  const v=await modal(`Day ${save.cday}, ${clockText()}`,opts);
+  if(v==='coins'){ save.coins+=500; persist(); renderFloorHud(); toast('+500 coins (developer mode)'); }
+  if(v==='sup'){ Object.assign(save.sup,{needles:Math.max(save.sup.needles,20),ink:Math.max(save.sup.ink,200),wraps:Math.max(save.sup.wraps,20),ointment:Math.max(save.sup.ointment,20),film:Math.max(save.sup.film,10)}); persist(); renderFloorHud(); toast('Supplies restocked (developer mode)'); }
   if(v==='store') openStore('supplies',enterFloor);
   if(v==='map') openMap(enterFloor);
   if(v==='close') closeEarly();
@@ -1673,7 +1833,7 @@ $('#bNextDay').onclick=async()=>{
 };
 async function startCareer(){
   save.career=true; ensureCareerSave(); save.cday=1; save.clock=OPEN;
-  save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5);
+  save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5); save.sup.ointment=Math.max(save.sup.ointment,5);
   F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+15; persist();
   await dayCard('Your shop','Day 1 on your own'); enterFloor(); await fade(false);
   const how=inputMode==='pad'?'Move with the left stick or D-pad. Walk up to someone and press A to talk. Start opens the menu.'
@@ -1750,9 +1910,55 @@ function openMap(back){ mapBack=back||null; mapSel=null; drawTownMap(); renderMa
 $('#mapBack').onclick=()=>{ if(mapBack) mapBack(); else show('title'); };
 
 /* =============== TITLE =============== */
-function refreshTitle(){ $('#bCont').disabled=!save.started; $('#bCont').classList.toggle('go',!!save.started); $('#bNew').classList.toggle('go',!save.started); $('#bSound').textContent=save.sound?'Sound: on':'Sound: off'; }
-$('#bNew').onclick=async()=>{ if(save.started){ const ok=await modal('Start over? Your current apprenticeship will be erased.',[['Cancel',false],['Start over',true,true]]); if(!ok) return; } await fade(true); intro(); };
-$('#bCont').onclick=()=>{ if(save.career){ enterFloor(); return; } if(!save.graduated) openBoard(); else if(save.cust>=CUSTOMERS.length) ending(); else nextCustomer(); };
+function refreshTitle(){
+  $('#bCont').disabled=!save.started; $('#bCont').classList.toggle('go',!!save.started); $('#bNew').classList.toggle('go',!save.started);
+  $('#bCont').textContent=`Continue (Slot ${slot+1})`; $('#bLoad').disabled=![0,1,2].some(slotSummary);
+  $('#bSound').textContent=save.sound?'Sound: on':'Sound: off'; $('#devTag').classList.toggle('hide',!dev);
+}
+function continueGame(){ if(save.career){ enterFloor(); return; } if(!save.graduated) openBoard(); else if(save.cust>=CUSTOMERS.length) ending(); else nextCustomer(); }
+$('#bNew').onclick=()=>openSlots('new');
+$('#bLoad').onclick=()=>openSlots('load');
+$('#bCont').onclick=continueGame;
+
+/* ---------- save slots ---------- */
+function slotSummary(i){
+  const s=readSlot(i); if(!s||!s.started) return null;
+  const stage=s.career?`Your own shop, day ${s.cday||1}`:s.graduated?`First customers: ${Math.min(s.cust||0,CUSTOMERS.length)} of ${CUSTOMERS.length} done`:`Apprentice: ${(s.stars||[]).filter(x=>x>0).length} of 6 pads passed`;
+  return `${stage} · ${s.coins||0} coins · Rep ${s.rep||0}`;
+}
+function useSlot(i){
+  slot=i; try{ localStorage.setItem(SLOT_PICK,String(i)); }catch(_){}
+  save=loadSlot(i); ensureCareerSave();
+  // forget the previous run's shop floor
+  Object.assign(F,{player:null,dee:null,custs:[],sst:{},staffActs:{},today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},busy:false,jobCust:null,talking:null,arrivalAt:OPEN+20,closing:false,hot:null,hotLabel:'',starting:false});
+  actors.length=0;
+}
+let slotMode='load';
+function openSlots(mode){
+  slotMode=mode;
+  $('#slTitle').textContent=mode==='new'?'New apprenticeship':'Load game';
+  $('#slSub').textContent=mode==='new'?'Pick a slot for the new run. Each slot is its own separate game.':'Pick a run to keep playing.';
+  $('#slList').innerHTML=[0,1,2].map(i=>{ const sum=slotSummary(i);
+    return `<div class="item${sum?'':' empty'}"><div class="grow"><div class="nm">Slot ${i+1}${i===slot&&sum?' (last played)':''}</div><div class="ds">${sum||'Empty'}</div></div>`+
+      (mode==='new'?`<button class="gbtn small ${sum?'':'go'}" data-slot="${i}">${sum?'Start over here':'Start here'}</button>`
+        :`${sum?`<button class="gbtn small" data-erase="${i}">Erase</button>`:''}<button class="gbtn small go" data-slot="${i}" ${sum?'':'disabled'}>Play</button>`)+`</div>`; }).join('');
+  document.querySelectorAll('#slList [data-slot]').forEach(b=>b.onclick=()=>pickSlot(+b.dataset.slot));
+  document.querySelectorAll('#slList [data-erase]').forEach(b=>b.onclick=()=>eraseSlot(+b.dataset.erase));
+  show('slots');
+}
+async function pickSlot(i){
+  if(slotMode==='load'){ useSlot(i); continueGame(); return; }
+  if(slotSummary(i)){ const ok=await modal(`Slot ${i+1} already has a run in it. Erase it and start over?`,[['Cancel',false],['Erase and start',true,true]]); if(!ok) return; }
+  useSlot(i); await fade(true); intro();
+}
+async function eraseSlot(i){
+  const ok=await modal(`Erase Slot ${i+1}? This run is gone for good.`,[['Cancel',false],['Erase it',true]]); if(!ok) return;
+  try{ localStorage.removeItem(SLOT_KEYS[i]); }catch(_){}
+  if(i===slot) useSlot(i);
+  toast(`Slot ${i+1} erased`);
+  if([0,1,2].some(slotSummary)) openSlots('load'); else show('title');
+}
+$('#slBack').onclick=()=>show('title');
 $('#bFree').onclick=startFree;
 $('#bCtl').onclick=()=>show('controls'); $('#bCtlBack').onclick=()=>show('title');
 $('#bSound').onclick=()=>{ save.sound=!save.sound; persist(); refreshTitle(); };
@@ -1776,7 +1982,9 @@ window.addEventListener('keydown',e=>{
     return;
   }
   if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(job.phase!=='ink'){ if(k==='escape') $('#tMenu').click(); else if(k==='f') setFull(!save.fullView); return; }
   if(k==='l') setTool('liner'); else if(k==='s') setTool('shade'); else if(k==='e'&&job.mode==='free') setTool('erase');
+  else if(k==='w'&&isClient(job.mode)) setTool('towel');
   else if(k==='[') bumpSize(-1); else if(k===']') bumpSize(1); else if(k==='t') toggleSten();
   else if(k==='escape') $('#tMenu').click();
   else if(k==='f') setFull(!save.fullView);
@@ -1866,7 +2074,7 @@ function pollPad(dt){
       if(!padFocusEl||!f.includes(padFocusEl)) setPadFocus(f.find(e=>e.classList.contains('go'))||f[0]);
       else padFocusEl.click();
     }
-    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board') show('title'); }
+    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board'||current==='slots') show('title'); }
     return;
   }
   // tattoo station: D-pad walks every button on screen, A presses the highlighted one
@@ -1882,9 +2090,10 @@ function pollPad(dt){
   if(inking&&!padCursor.drawing){ padCursor.drawing=true; strokeBegin(padCursor.x,padCursor.y,p); }
   else if(inking&&padCursor.drawing) strokeMove(padCursor.x,padCursor.y,p);
   else if(!inking&&padCursor.drawing){ padCursor.drawing=false; strokeEnd(); }
-  if(down(2)) setTool(job.mode==='free'?{liner:'shade',shade:'erase',erase:'liner'}[job.tool]:(job.tool==='liner'?'shade':'liner'));
-  if(down(4)) bumpSize(-1); if(down(5)) bumpSize(1);
-  if(down(1)) $('#tMenu').click(); if(down(3)) toggleSten();
+  if(down(2)&&job.phase==='ink') setTool(job.mode==='free'?{liner:'shade',shade:'erase',erase:'liner'}[job.tool]
+    :isClient(job.mode)?{liner:'shade',shade:'towel',towel:'liner'}[job.tool]:(job.tool==='liner'?'shade':'liner'));
+  if(job.phase==='ink'){ if(down(4)) bumpSize(-1); if(down(5)) bumpSize(1); }
+  if(down(1)) $('#tMenu').click(); if(down(3)&&job.phase==='ink') toggleSten();
   if(down(9)) { if(job.mode==='free') $('#tMenu').click(); else finishJob(); }
   if(down(10)||down(11)) setFull(!save.fullView);
   if(down(8)) $('#tMenu').click();
@@ -1906,7 +2115,7 @@ window.__tmBack=function(){
     case 'floor': floorMenu(); return true;
     case 'store': $('#stBack').click(); return true;
     case 'map': $('#mapBack').click(); return true;
-    case 'controls': case 'board': show('title'); return true;
+    case 'controls': case 'board': case 'slots': show('title'); return true;
     default: return true;
   }
 };
@@ -1950,8 +2159,8 @@ function setFull(on){
 function updateMini(){
   if(!save.fullView) return;
   const bits=[];
-  if(job.phase==='clean') bits.push('Clean '+Math.round(cleanPct()*100)+'%');
-  else { if(job.strikeMask) bits.push(`Slips ${job.strikes}/${job.maxStrikes}`); if(isClient(job.mode)) bits.push($('#tTime').textContent); }
+  if(job.phase==='care') bits.push('Covered '+Math.round(carePct()*100)+'%');
+  else { if(job.strikeMask) bits.push(`Slips ${job.strikes}/${job.maxStrikes}`); if(isClient(job.mode)) bits.push($('#tTime').textContent,'Ink '+$('#tInkMl').textContent); }
   $('#tMini').textContent=bits.join(' · '); $('#tMini').classList.toggle('hide',!bits.length);
 }
 $('#tFull').onclick=()=>setFull(true);
