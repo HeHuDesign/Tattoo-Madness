@@ -78,7 +78,7 @@ button{font:inherit;color:inherit}
 .hud{position:absolute;top:10px;left:10px;display:flex;gap:8px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:17px}
 .coin{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:inset -2px -2px 0 #a86b16,0 0 0 2px #6b3a10}
-#dlg{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(860px,calc(100% - 20px));
+#dlg{position:absolute;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(860px,calc(100% - 20px));
   display:flex;gap:14px;padding:14px 16px;min-height:120px;cursor:pointer}
 #dlgPortrait{width:84px;height:84px;flex:none;image-rendering:pixelated;border:3px solid var(--wood-d);border-radius:4px;background:#e8c59a}
 #dlg .who{font-weight:700;font-size:20px;color:var(--wood)}
@@ -144,6 +144,17 @@ button{font:inherit;color:inherit}
 .chip.low{color:var(--bad);font-weight:700}
 #fPrompt{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));font-size:18px;max-width:92vw;white-space:normal;text-align:center}
 #fPrompt.pad-focus{transform:translateX(-50%) scale(1.08)}
+#scr-fight{cursor:crosshair;touch-action:none}
+.fihint{position:absolute;right:8px;top:calc(8px + env(safe-area-inset-top,0px));padding:4px 12px;font-size:15px;max-width:60vw;text-align:center;pointer-events:none;transition:opacity .6s}
+.fihint.gone{opacity:0}
+.hpbar{display:inline-block;width:80px;height:12px;border:2px solid var(--wood-d);background:#4a2c1d;border-radius:3px;overflow:hidden;vertical-align:middle}
+.hpbar i{display:block;height:100%;transition:width .2s}
+.compact .fihint{font-size:13px;padding:3px 9px}
+.joy{position:absolute;z-index:4;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;
+  background:rgba(255,255,255,.1);border:3px solid rgba(255,255,255,.3);touch-action:none}
+.joy i{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:rgba(255,255,255,.3);border:2px solid rgba(255,255,255,.55);pointer-events:none}
+.compact .joy{width:96px;height:96px;left:12px;bottom:12px}
+.compact .joy i{width:40px;height:40px;margin:-20px}
 .store{width:min(780px,100%);padding:18px 20px;max-height:100%;overflow:auto}
 .sthead{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sthead h2{margin:0;font-size:30px}
@@ -332,11 +343,11 @@ button{font:inherit;color:inherit}
 
   <section class="screen" id="scr-shop">
     <div class="hud" id="hud"></div>
-    <div id="dlg" class="wood hide" role="button" tabindex="0" aria-live="polite">
-      <canvas id="dlgPortrait" width="60" height="60"></canvas>
-      <div><div class="who" id="dlgWho"></div><div class="txt" id="dlgTxt"></div></div>
-      <span class="more" id="dlgMore">▼</span>
-    </div>
+  </section>
+
+  <section class="screen" id="scr-fight">
+    <div class="fhud"><span class="fchips" id="fiChips"></span></div>
+    <div class="fihint wood" id="fiHint"></div>
   </section>
 
   <section class="screen" id="scr-board"><div class="dim">
@@ -396,6 +407,7 @@ button{font:inherit;color:inherit}
       </span>
       <span class="sep"></span>
       <button class="gbtn small" id="tSten" title="Show or hide stencil (T)">Stencil</button>
+      <span class="free-only hide" id="shadeInks"><span class="sep"></span><span class="inks" id="sInks"></span></span>
       <span class="free-only hide" id="freeTools">
         <span class="sep"></span>
         <span class="inks" id="inks"></span>
@@ -478,6 +490,14 @@ button{font:inherit;color:inherit}
     <div class="row"><button class="gbtn go" id="bNextDay">Start the next day</button></div>
   </div></div></section>
 
+  <!-- see-through joystick (bottom left) for walking the floor and moving in fights -->
+  <div id="joy" class="joy hide" aria-hidden="true"><i></i></div>
+  <!-- dialogue box: shared by cutscenes, the walkable shop floor and the robbery -->
+  <div id="dlg" class="wood hide" role="button" tabindex="0" aria-live="polite">
+    <canvas id="dlgPortrait" width="60" height="60"></canvas>
+    <div><div class="who" id="dlgWho"></div><div class="txt" id="dlgTxt"></div></div>
+    <span class="more" id="dlgMore">▼</span>
+  </div>
   <div id="modal" class="hide"><div class="wood"><p id="mText"></p><div class="row" id="mBtns"></div></div></div>
   <div id="fade"><div><h2 id="fadeH"></h2><p id="fadeP"></p></div></div>
   <div id="toast" class="wood"></div>
@@ -494,16 +514,31 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const circ = (cx,cy,r) => `M${cx-r},${cy} A${r},${r} 0 1 0 ${cx+r},${cy} A${r},${r} 0 1 0 ${cx-r},${cy}`;
 function starP(cx,cy,R,r){ let s=''; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r:R; s+=(i?'L':'M')+(cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1); } return s+'Z'; }
 const DESIGNS = {
-  smiley:{name:'Smiley',tol:7,d: circ(300,300,200)+circ(230,240,18)+circ(370,240,18)+'M407,364 A120,120 0 0 1 193,364'},
-  heart:{name:'Heart',tol:6,d:'M300,520 C120,390 90,260 170,190 C230,140 290,180 300,230 C310,180 370,140 430,190 C510,260 480,390 300,520 Z'},
-  star:{name:'Star',tol:6,d: starP(300,315,215,88)},
+  smiley:{name:'Smiley',tol:7,d: circ(300,300,200)+circ(230,240,18)+circ(370,240,18)+'M407,364 A120,120 0 0 1 193,364',shade:circ(300,300,200),shadeName:'the face'},
+  heart:{name:'Heart',tol:6,d:'M300,520 C120,390 90,260 170,190 C230,140 290,180 300,230 C310,180 370,140 430,190 C510,260 480,390 300,520 Z',
+    shade:'M300,520 C120,390 90,260 170,190 C230,140 290,180 300,230 C310,180 370,140 430,190 C510,260 480,390 300,520 Z',shadeName:'the heart'},
+  star:{name:'Star',tol:6,d: starP(300,315,215,88),shade:starP(300,315,215,88),shadeName:'the star'},
   anchor:{name:'Anchor',tol:5,d: circ(300,110,28)+'M300,138 L300,470 M230,190 L370,190 M170,380 C190,470 410,470 430,380 M150,402 L170,380 L195,398 M405,398 L430,380 L452,402'},
-  dagger:{name:'Dagger',tol:5,d:'M300,80 L326,140 L326,355 L274,355 L274,140 Z M300,118 L300,345 M218,355 L382,355 L382,382 L218,382 Z M284,382 L284,478 L316,478 L316,382 M284,410 L316,402 M284,440 L316,432 '+circ(300,500,22)},
-  rose:{name:'Rose',tol:5,d:'M300,200 C280,200 275,225 295,232 C320,240 332,210 312,197 C294,185 266,199 266,222 M250,240 C265,268 335,268 350,240 M220,232 C215,302 385,302 380,232 M220,232 C200,180 250,150 278,172 M380,232 C400,180 350,150 322,172 M262,178 C272,138 330,138 340,178 M300,292 C294,360 312,420 300,525 M302,382 C340,352 390,357 412,340 C396,382 350,400 302,388 M299,452 C260,427 215,432 194,416 C210,456 256,471 299,458 M301,330 L320,320 L304,342'},
-  moon:{name:'Crescent moon',tol:5,d:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9)}
+  dagger:{name:'Dagger',tol:5,d:'M300,80 L326,140 L326,355 L274,355 L274,140 Z M300,118 L300,345 M218,355 L382,355 L382,382 L218,382 Z M284,382 L284,478 L316,478 L316,382 M284,410 L316,402 M284,440 L316,432 '+circ(300,500,22),shade:'M300,80 L326,140 L326,355 L274,355 L274,140 Z',shadeName:'the blade'},
+  rose:{name:'Rose',tol:5,d:'M300,200 C280,200 275,225 295,232 C320,240 332,210 312,197 C294,185 266,199 266,222 M250,240 C265,268 335,268 350,240 M220,232 C215,302 385,302 380,232 M220,232 C200,180 250,150 278,172 M380,232 C400,180 350,150 322,172 M262,178 C272,138 330,138 340,178 M300,292 C294,360 312,420 300,525 M302,382 C340,352 390,357 412,340 C396,382 350,400 302,388 M299,452 C260,427 215,432 194,416 C210,456 256,471 299,458 M301,330 L320,320 L304,342',
+    shade:'M222,235 A78,55 0 1 0 378,235 A78,55 0 1 0 222,235 Z',shadeName:'the bloom'},
+  moon:{name:'Crescent moon',tol:5,d:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9),
+    shade:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9),shadeName:'the moon and stars'}
 };
 const PRACTICE = ['smiley','heart','star','anchor','dagger','rose'];
 const pathCache = {}; const pathOf = k => pathCache[k] || (pathCache[k] = new Path2D(DESIGNS[k].d));
+const shadeCache = {}; const shadePath = k => shadeCache[k] || (shadeCache[k] = new Path2D(DESIGNS[k].shade));
+// Shading colors (simple palette for now). A shade spec is a list of parts: [{part:'all'|'left'|'right'|'top'|'bottom', color}]
+const PALETTE={black:'#151515',red:'#b3261e',blue:'#1f4fa0',green:'#2e7d4f',yellow:'#e9ba25',purple:'#6a3fa0'};
+const PART_NAME={all:'',left:'left half',right:'right half',top:'top half',bottom:'bottom half'};
+const shadeText=spec=>spec.length===1?spec[0].color:spec.map(p=>`${PART_NAME[p.part]} ${p.color}`).join(', ');
+// random shading wish for a career customer: one color, or two colors split down the middle
+function randomShade(){
+  const names=Object.keys(PALETTE), a=pickR(names);
+  if(Math.random()<.7) return [{part:'all',color:a}];
+  let b=pickR(names); while(b===a) b=pickR(names);
+  return Math.random()<.5?[{part:'left',color:a},{part:'right',color:b}]:[{part:'top',color:a},{part:'bottom',color:b}];
+}
 
 /* =============== CHARACTERS =============== */
 const CH = {
@@ -515,15 +550,20 @@ const CH = {
   ray:{name:'Ray "Knuckles" Ortiz',hair:'#2b1d14',style:'bald',beard:1,skin:'#8a5a3c',shirt:'#2a2a2a',shirtD:'#151515',pants:'#3a3a48',boots:'#111',tattoos:1},
   luna:{name:'Luna Vale',hair:'#9b5de5',style:'mohawk',skin:'#f0c7a8',shirt:'#3d2b55',shirtD:'#2a1d3b',pants:'#1f1f2a',boots:'#111'},
   tobias:{name:'Tobias Greene',hair:'#3a2a1a',style:'short',skin:'#5e3b26',shirt:'#e0a33a',shirtD:'#b57e22',pants:'#3b4a5c',boots:'#2a1a14'},
+  rob1:{name:'Robber',hair:'#1a1a1a',style:'cap',hat:'#1a1a1a',skin:'#c48a62',shirt:'#3a3a44',shirtD:'#26262e',pants:'#22222a',boots:'#111'},
+  rob2:{name:'Robber',hair:'#1a1a1a',style:'cap',hat:'#4a1f1f',skin:'#eab894',shirt:'#2f3b2f',shirtD:'#1f281f',pants:'#22222a',boots:'#111',beard:1},
+  rob3:{name:'Robber',hair:'#1a1a1a',style:'cap',hat:'#1a1a1a',skin:'#6a4430',shirt:'#44343a',shirtD:'#2e2228',pants:'#22222a',boots:'#111'},
   marisol:{name:'Marisol Reyes',hair:'#1a1414',style:'long',skin:'#c48a62',shirt:'#b3263e',shirtD:'#861b2e',pants:'#2b2b3a',boots:'#1a1a1a'}
 };
 const CUSTOMERS = [
   {ch:'pip',design:'smiley',spot:'ankle',skin:'#f2cfb1',time:240,tip:15,
-   hi:["Hi! Is this where the tattoos happen?","I want a tiny smiley on my ankle. My very first tattoo!"],
+   shade:[{part:'all',color:'yellow'}],
+   hi:["Hi! Is this where the tattoos happen?","I want a tiny smiley on my ankle. My very first tattoo!","Oh! And fill his face in yellow, like a real smiley!"],
    dee:"Easy one to start. Steady hands.",
    react:["Oh... it's a bit wobbly. I'll wear socks.","It's cute! A little wonky, but cute.","I love it! He's smiling at me!","It's perfect. I'm telling everyone about this place!"]},
   {ch:'june',design:'heart',spot:'wrist',skin:'#e0aa86',time:240,tip:20,
-   hi:["Hello. This one's for my mom.","A simple heart on my wrist. She always drew them on my notes."],
+   shade:[{part:'all',color:'red'}],
+   hi:["Hello. This one's for my mom.","A simple heart on my wrist. She always drew them on my notes.","Fill it in red, please. Her favorite color."],
    dee:"Smooth curves. Meet the point at the bottom clean.",
    react:["I... maybe it'll heal better.","It means a lot. Thank you.","She would have loved this.","It's beautiful. I can't stop looking at it."]},
   {ch:'fenwick',design:'anchor',spot:'forearm',skin:'#d9a07c',time:300,tip:30,
@@ -531,26 +571,30 @@ const CUSTOMERS = [
    dee:"Long straight shaft. Pull it in one go, don't stitch it.",
    react:["Hmph. Looks like it lost a storm.","It'll hold. Mostly.","Now that's a proper anchor.","Fine work. Shipshape, the whole thing."]},
   {ch:'ray',design:'dagger',spot:'upper arm',skin:'#93623f',time:300,tip:35,
-   hi:["Dee says you're the new hand. Don't make me regret it.","Dagger. Upper arm. Sharp lines."],
+   shade:[{part:'left',color:'black'},{part:'right',color:'red'}],
+   hi:["Dee says you're the new hand. Don't make me regret it.","Dagger. Upper arm. Sharp lines.","Blade's half black, half red. Left side black."],
    dee:"He sits like a rock. Your lines are the only thing that can shake.",
    react:["Crooked blade. Not happy.","It's alright. I've had worse.","Sharp. I like it.","Now THAT is a blade. You've got hands, kid."]},
   {ch:'luna',design:'moon',spot:'shoulder blade',skin:'#f3cdb0',time:300,tip:40,
-   hi:["Hey! I want a crescent moon with two little stars.","On my shoulder blade. Something to watch over me."],
+   shade:[{part:'all',color:'purple'}],
+   hi:["Hey! I want a crescent moon with two little stars.","On my shoulder blade. Something to watch over me.","Purple, all of it. The moon and the stars."],
    dee:"Never practiced a moon? Welcome to shop life. Same rules apply.",
    react:["Hmm, the moon looks a bit lumpy.","It's sweet. Thank you!","Dreamy. Exactly what I pictured.","It's glowing! You're amazing!"]},
   {ch:'tobias',design:'star',spot:'calf',skin:'#6a4430',time:200,tip:30,
-   hi:["Quick one, I'm on my lunch break.","A star on my calf. Five points, nice and crisp."],
+   shade:[{part:'left',color:'blue'},{part:'right',color:'red'}],
+   hi:["Quick one, I'm on my lunch break.","A star on my calf. Five points, nice and crisp.","Team colors: left half blue, right half red."],
    dee:"He's in a hurry. Don't rush the corners anyway.",
    react:["Those points are all over the place.","Good enough, gotta run!","Nice and crisp. Thanks!","Fast AND clean? I'm coming back."]},
   {ch:'marisol',design:'rose',spot:'forearm',skin:'#cb946c',time:420,tip:60,
-   hi:["I heard the new apprentice did my cousin's moon.","I want a rose. Petals, leaves, a thorn. The whole thing."],
+   shade:[{part:'all',color:'red'}],
+   hi:["I heard the new apprentice did my cousin's moon.","I want a rose. Petals, leaves, a thorn. The whole thing.","And the bloom red. Deep red."],
    dee:"Your hardest piece yet. Petals first, then leaves, then stem. Breathe.",
    react:["It's... not quite a rose.","It's nice. Maybe touch it up later.","It's gorgeous. Really.","This is art. You're the real thing."]}
 ];
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -701,6 +745,10 @@ function drawInterior(t){
   pixText('♥',nx+45,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
   // rug, chair, lamp, plant
   R(cx-42,fy+2,84,26,'#7a2f4f'); R(cx-38,fy+5,76,20,'#9c4467'); for(let x=cx-34;x<cx+34;x+=8) R(x,fy+14,3,3,'#e0a33a');
+  // practice desk for fake skin, bottom right of the shop: tabletop, legs, a pink pad, a little lamp and a stool
+  const dk=cx+92, dy=fy+12; R(dk,dy,38,5,'#a2683c'); R(dk,dy,38,1,'#c98a52'); R(dk+2,dy+5,3,12,'#5a3520'); R(dk+33,dy+5,3,12,'#5a3520');
+  R(dk+8,dy-3,12,4,'#f1c3b0'); R(dk+9,dy-3,10,1,'#f8dccd'); R(dk+29,dy-11,2,10,'#333'); R(dk+25,dy-13,8,3,'#d8d0c0');
+  R(dk+14,dy+18,10,3,'#6b3a2a'); R(dk+16,dy+21,2,5,'#4a2a18'); R(dk+20,dy+21,2,5,'#4a2a18');
   R(cx+62,fy-4,22,8,'#2b2b2b'); R(cx+70,fy-10,6,8,'#555'); R(cx+50,fy-18,44,10,'#a8323c'); R(cx+50,fy-18,44,2,'#d0505a');
   R(cx+86,fy-42,10,26,'#a8323c'); R(cx+88,fy-40,2,22,'#d0505a'); R(cx+48,fy-24,10,4,'#2b2b2b');
   R(cx+104,fy-62,2,60,'#333'); R(cx+96,fy-66,16,6,'#d8d0c0'); R(cx+98,fy-60,12,3,'rgba(255,240,200,.5)');
@@ -712,8 +760,15 @@ function drawInterior(t){
   R(cx-112,fy-36,16,10,'#5b5b6b'); R(cx-110,fy-34,12,3,'#9fe8ff'); R(cx-86,fy-34,8,8,'#bfe3e0'); R(cx-84,fy-31,4,4,'#f2c14e');
   actors.filter(a=>!a.behind).sort((a,b)=>a.y-b.y).forEach(drawActor);
   if(F.active) drawFloorOverlay(t);
+  drawFx(t);
 }
-function drawActor(a){ drawSprite(sx,CH[a.ch],a.x,a.y,a.moving?((tick/9)|0)%2:0,a.flip); }
+function drawActor(a){
+  if(a.down){ // knocked down: lie on the floor, then fade away
+    sx.save(); sx.globalAlpha=clamp(1-(a.downT-.8)/.8); sx.translate(Math.round(a.x),Math.round(a.y)); sx.rotate(Math.PI/2); drawSprite(sx,CH[a.ch],0,0,0,false); sx.restore(); return; }
+  if(a.hurt>0){ sx.save(); sx.filter='brightness(2) sepia(1) hue-rotate(-50deg) saturate(5)'; }
+  drawSprite(sx,CH[a.ch],a.x,a.y,a.moving?((tick/(a.run?5:9))|0)%2:0,a.flip); // runners swap legs faster
+  if(a.hurt>0) sx.restore();
+}
 function updateActors(){
   actors.forEach(a=>{
     if(a.ctrl) return;
@@ -723,20 +778,22 @@ function updateActors(){
   });
 }
 const sceneGeo=()=>{ const cx=W>>1, wb=Math.round(H*0.55); return {cx,fy:wb+22}; };
+const deskSpot=()=>{ const {cx,fy}=sceneGeo(); return {x:cx+111,y:fy+34}; }; // where you stand to work at the practice desk (bottom right)
 function setActors(list){ actors.length=0; list.forEach(a=>actors.push({...a,tx:a.tx??a.x,ty:a.ty??a.y,moving:false,flip:!!a.flip})); }
 function walk(id,tx,ty){ const a=actors.find(a=>a.ch===id); if(!a) return Promise.resolve(); a.tx=tx; a.ty=ty; return new Promise(r=>{ a.done=r; if(Math.hypot(tx-a.x,ty-a.y)<0.6){ a.done=null; r(); } }); }
 
 /* =============== SCREENS / UI =============== */
 let current='title', modalOpen=false;
-const SCENE_FOR={title:'exterior',controls:'exterior',slots:'exterior',shop:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
+const SCENE_FOR={title:'exterior',controls:'exterior',slots:'exterior',shop:'interior',fight:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+id));
   current=id; sceneMode=SCENE_FOR[id]||(id==='tattoo'?null:sceneMode);
-  F.active=!!save.career&&['floor','store','dayend','results','tattoo'].includes(id); F.keys={};
+  F.active=!!(save.career||F.appr)&&['floor','store','dayend','results','tattoo'].includes(id); F.keys={};
   sc.style.display=id==='tattoo'?'none':'';
   if(id==='tattoo') requestAnimationFrame(layoutPad);
   clearPadFocus(); if(inputMode==='pad') setTimeout(focusFirst,30);
   if(id==='title') refreshTitle();
+  showJoy();
 }
 let toastT; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400); }
 function fade(on){ $('#fade').classList.toggle('on',on); return sleep(480); }
@@ -744,7 +801,7 @@ async function dayCard(h,p){ $('#fadeH').textContent=h; $('#fadeP').textContent=
 function modal(text,btns){
   return new Promise(res=>{
     modalOpen=true; $('#mText').textContent=text; const box=$('#mBtns'); box.innerHTML='';
-    btns.forEach(([label,val,go])=>{ const b=document.createElement('button'); b.className='gbtn'+(go?' go':''); b.textContent=label;
+    btns.forEach(([label,val,go,off])=>{ const b=document.createElement('button'); b.className='gbtn'+(go?' go':''); b.textContent=label; b.disabled=!!off; // 4th item: greyed out
       b.onclick=()=>{ $('#modal').classList.add('hide'); modalOpen=false; clearPadFocus(); res(val); if(inputMode==='pad') setTimeout(focusFirst,30); }; box.appendChild(b); });
     $('#modal').classList.remove('hide'); if(inputMode==='pad') setTimeout(focusFirst,30); else box.lastChild.focus();
   });
@@ -777,6 +834,7 @@ function advance(){
 }
 function hideDlg(){ $('#dlg').classList.add('hide'); }
 $('#scr-shop').addEventListener('click',e=>{ if(!e.target.closest('.hud')) advance(); });
+$('#dlg').addEventListener('click',advance);
 
 /* =============== INPUT MODE =============== */
 let inputMode=matchMedia('(pointer:coarse)').matches?'touch':'mouse';
@@ -785,6 +843,7 @@ function setInput(m){
   $('#inputChip').textContent={mouse:'Mouse',touch:'Touch',pad:'Controller'}[m];
   if(m!=='pad'){ clearPadFocus(); padCursor.show=false; updateRing(); }
   else { padCursor.show=true; if(!document.querySelector('.pad-focus') && current!=='tattoo') focusFirst(); updateRing(); }
+  showJoy();
 }
 window.addEventListener('pointerdown',e=>setInput(e.pointerType==='touch'||e.pointerType==='pen'?'touch':'mouse'),true);
 $('#inputChip').textContent={mouse:'Mouse',touch:'Touch',pad:'Controller'}[inputMode];
@@ -833,24 +892,32 @@ const sizeOf=t=>TOOLS[t].sizes[TOOLS[t].i][0];
 
 // Bounding box of a design in skin coordinates (0-600), measured once with an SVG path.
 const bboxCache={};
-function designBox(key){
-  if(!key) return null; if(bboxCache[key]) return bboxCache[key];
+function designBox(key,shade){
+  if(!key) return null; const ck=key+(shade?':shade':''); if(bboxCache[ck]) return bboxCache[ck];
   const ns='http://www.w3.org/2000/svg', svg=document.createElementNS(ns,'svg'), p=document.createElementNS(ns,'path');
-  svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); p.setAttribute('d',DESIGNS[key].d); svg.appendChild(p); document.body.appendChild(svg);
-  const b=p.getBBox(); svg.remove(); return (bboxCache[key]={x:b.x,y:b.y,w:b.width,h:b.height});
+  svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); p.setAttribute('d',shade?DESIGNS[key].shade:DESIGNS[key].d); svg.appendChild(p); document.body.appendChild(svg);
+  const b=p.getBBox(); svg.remove(); return (bboxCache[ck]={x:b.x,y:b.y,w:b.width,h:b.height});
 }
+// which color a spot in the shading area should be (split parts are cut at the middle of the shaded area)
+function wantColor(x,y){
+  const b=designBox(job.design,true), mx=b.x+b.w/2, my=b.y+b.h/2;
+  for(const p of job.shadeSpec){ if(p.part==='all'||(p.part==='left'&&x<mx)||(p.part==='right'&&x>=mx)||(p.part==='top'&&y<my)||(p.part==='bottom'&&y>=my)) return p.color; }
+  return job.shadeSpec[0].color;
+}
+const PAL_RGB=Object.entries(PALETTE).map(([n,h])=>[n,...hexRgb(h)]);
+function nearestColor(r,g,b){ let best=null,bd=1e9; for(const [n,R,G,B] of PAL_RGB){ const d=(r-R)**2+(g-G)**2+(b-B)**2; if(d<bd){bd=d;best=n;} } return best; }
 // Size the skin so the DESIGN (not the whole pad) fills the work area, then centre on it.
 function layoutPad(){
   const tw=$('#twork'), r=tw.getBoundingClientRect(), m=document.documentElement.classList.contains('compact')?18:34;
-  const aw=Math.max(100,r.width-m), ah=Math.max(100,r.height-m);
+  const aw=Math.max(100,r.width-m), ah=Math.max(100,r.height-m)*.94; // a little spare room at the bottom (phone nav bar)
   const base=Math.min(aw,ah);
   let s=base, dx=0, dy=0;
   const bb=job.mode==='free'?null:designBox(job.design); // free mode keeps the whole skin visible
   if(bb){
-    const M=46, bw=Math.max(bb.w+M*2,200), bh=Math.max(bb.h+M*2,200);
-    s=Math.min(aw*DOC/bw,ah*DOC/bh,base*2.6); s=Math.max(s,base);
+    const M=70, bw=Math.max(bb.w+M*2,200), bh=Math.max(bb.h+M*2,200); // M = margin around the design, in skin units
+    s=Math.min(aw*DOC/bw,ah*DOC/bh,base*2.4); s=Math.max(s,base*.9);
     const cx=bb.x+bb.w/2, cy=bb.y+bb.h/2;
-    dx=(DOC/2-cx)*s/DOC; dy=(DOC/2-cy)*s/DOC;
+    dx=(DOC/2-cx)*s/DOC; dy=(DOC/2-cy)*s/DOC-r.height*.02;
   }
   s=Math.floor(s);
   padEl.style.width=padEl.style.height=s+'px'; padEl.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
@@ -930,7 +997,8 @@ function stamp(x,y,p,d){
       const xi=Math.round(clamp(x,0,DOC-1)), yi=Math.round(clamp(y,0,DOC-1));
       if(!job.strikeMask[yi*DOC+xi]){ stk.out++; showWarn(true); if(stk.out>=3){ stk.slipped=true; slip(); return; } }
     }
-    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.color; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
+    // linework is always black outside Free mode
+    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.mode==='free'?job.color:'#151515'; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
     if(stk.total==null) job.inkAcc+=2*r*spacing(p); // each dab covers about (width × step) of skin
   } else if(stk.tool==='shade'){
     job.inkAcc+=size*spacing(p)*.25; // shading lays down thinner ink
@@ -989,6 +1057,15 @@ $('#tSten').onclick=toggleSten;
 
 function renderStencil(){
   stx.clearRect(0,0,DOC,DOC); cSten.style.opacity=job.stenOp; cSten.style.display=job.stenVisible?'':'none';
+  if(job.shadeStep){ // shade guide: each part tinted in the color it should be, with a dashed line where the colors split
+    cSten.style.opacity=.9; const b=designBox(job.design,true), mx=b.x+b.w/2, my=b.y+b.h/2, path=shadePath(job.design);
+    job.shadeSpec.forEach(p=>{ stx.save(); stx.beginPath();
+      if(p.part==='left') stx.rect(0,0,mx,DOC); else if(p.part==='right') stx.rect(mx,0,DOC,DOC); else if(p.part==='top') stx.rect(0,0,DOC,my); else if(p.part==='bottom') stx.rect(0,my,DOC,DOC); else stx.rect(0,0,DOC,DOC);
+      stx.clip(); stx.globalAlpha=.35; stx.fillStyle=PALETTE[p.color]; stx.fill(path); stx.restore(); });
+    if(job.shadeSpec.length>1){ stx.save(); stx.setLineDash([10,8]); stx.lineWidth=3; stx.strokeStyle='#5a33b8'; stx.beginPath();
+      if(job.shadeSpec[0].part==='left'||job.shadeSpec[0].part==='right'){ stx.moveTo(mx,b.y-10); stx.lineTo(mx,b.y+b.h+10); } else { stx.moveTo(b.x-10,my); stx.lineTo(b.x+b.w+10,my); }
+      stx.stroke(); stx.restore(); }
+    return; }
   if(job.design){
     stx.save(); stx.strokeStyle='#5a33b8'; stx.lineWidth=3.4; stx.lineCap='round'; stx.lineJoin='round';
     stx.shadowColor='rgba(90,51,184,.55)'; stx.shadowBlur=2.5; stx.stroke(pathOf(job.design)); stx.restore();
@@ -1090,7 +1167,9 @@ function failRound(){
 function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false; }
 
 function startJob(opts){
-  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,...opts});
+  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,shadeSpec:null,...opts});
+  if(job.shadeSpec&&!DESIGNS[job.design].shade) job.shadeSpec=null; // designs without a shading area stay lines-only
+  job.shadeStep=false; job.lineRes=null; $('#shadeInks').classList.add('hide');
   job.maxStrikes=isClient(job.mode)?3:5; job.body=isClient(job.mode)?job.cust.spot:null;
   job.strikes=0; job.failed=false; job.phase='ink'; job.usedShade=false; job.used=null; job.wiping=false;
   const real=isClient(job.mode);
@@ -1108,9 +1187,10 @@ function startJob(opts){
   $('#tTimer').classList.toggle('hide',!isClient(job.mode));
   if(!free){ job.color='#151515'; job.ink=1; }
   drawPortrait($('#tPortrait'), isClient(job.mode)?CH[job.cust.ch]:CH.dee);
-  if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`; $('#tSub').textContent='Practice. No clock. Scored on your linework.'; }
+  if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`;
+    $('#tSub').textContent=job.shadeSpec?`Practice. Lines first, then shade ${DESIGNS[job.design].shadeName}. No clock.`:'Practice. No clock. Scored on your linework.'; }
   else if(job.mode==='warmup'){ $('#tTitle').textContent=`Warm-up: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`Fake skin, for ${CH[job.cust.ch].name}. No clock, no supplies used.`; }
-  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
+  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}${job.shadeSpec?`, shaded ${shadeText(job.shadeSpec)}`:''}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
   padCursor.x=300; padCursor.y=300; setTool('liner'); show('tattoo');
   if(real&&!save.seenWipe){ save.seenWipe=true; persist();
@@ -1144,6 +1224,23 @@ function scoreWork(){
   const stars=score>=90?3:score>=78?2:1;
   return {cov,acc,score,stars};
 }
+// shading score: how much of the marked area is shaded, and how much shading stayed inside it
+function scoreShade(){
+  const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d'), path=shadePath(job.design);
+  x.fill(path); const inside=x.getImageData(0,0,DOC,DOC).data;
+  // forgiving band along the outline (and along the split line, if the colors are split)
+  x.clearRect(0,0,DOC,DOC); x.lineWidth=18; x.lineJoin='round'; x.stroke(path);
+  if(job.shadeSpec.length>1){ const b=designBox(job.design,true), mx=b.x+b.w/2, my=b.y+b.h/2; x.lineWidth=16; x.beginPath();
+    if(job.shadeSpec[0].part==='left'||job.shadeSpec[0].part==='right'){ x.moveTo(mx,0); x.lineTo(mx,DOC); } else { x.moveTo(0,my); x.lineTo(DOC,my); } x.stroke(); }
+  const edge=x.getImageData(0,0,DOC,DOC).data;
+  const S=sctx.getImageData(0,0,DOC,DOC).data; let room=0, hit=0, wrong=0, ink=0, spill=0;
+  for(let i=3;i<S.length;i+=12){ const inn=inside[i]>100, onEdge=edge[i]>40, a=S[i];
+    if(inn&&!onEdge){ room++; if(a>30){ const p=(i-3)>>2; if(nearestColor(S[i-3],S[i-2],S[i-1])===wantColor(p%DOC,(p/DOC)|0)) hit++; else wrong++; } }
+    if(a>30){ ink++; if(!inn&&!onEdge) spill++; } }
+  const cov=room?hit/room:0, acc=ink?clamp(1-(spill+wrong)/ink):0, colorOk=hit+wrong?hit/(hit+wrong):1;
+  const score=ink<40?0:Math.round(100*clamp(.6*cov+.4*acc)), stars=score>=90?3:score>=78?2:1;
+  return {cov,acc,score,stars,colorOk,shade:true};
+}
 function composite(includeSten){
   const c=document.createElement('canvas'); c.width=c.height=DOC; const x=c.getContext('2d');
   if(job.body){ x.fillStyle='#5b3a26'; x.fillRect(0,0,DOC,DOC); x.drawImage(cBody,300,300,DOC,DOC,0,0,DOC,DOC); }
@@ -1158,11 +1255,23 @@ async function finishJob(){
   if(job.phase!=='ink') return;
   if(!job.dirty){ toast('Put some ink down first'); return; }
   if(job.failed) return;
+  if(job.shadeStep){ // second step of a shading pad: score = 60% lines + 40% shading
+    const s=scoreShade();
+    if(s.cov<.6){ await modal(`You've only shaded ${Math.round(s.cov*100)}% of ${DESIGNS[job.design].shadeName}. Fill it in first.`,[['Keep working',false,true]]); return; }
+    if(!await modal('Finished shading?',[['Keep working',false],['Done',true,true]])) return;
+    strokeEnd(); const s2=scoreShade(), L=job.lineRes, score=Math.round(.6*L.score+.4*s2.score);
+    const r={...L,score,stars:score>=90?3:score>=78?2:1,shaded:true,lineScore:L.score,shadeCov:s2.cov,shadeAcc:s2.acc,colorOk:s2.colorOk};
+    $('#shadeInks').classList.add('hide');
+    if(isClient(job.mode)) startAftercare(withSmudges(r)); else showResults(r);
+    return;
+  }
   const pre=scoreWork();
   if(pre.cov<.7){ await modal(`You've only traced ${Math.round(pre.cov*100)}% of the stencil. Finish the lines first.`,[['Keep working',false,true]]); return; }
-  const ok=await modal(isClient(job.mode)?'Finished inking? Time for aftercare.':'Finished with this pad?',[['Keep working',false],['Done',true,true]]);
+  const ok=await modal(job.shadeSpec?'Lines finished? Next comes the shading.':isClient(job.mode)?'Finished inking? Time for aftercare.':'Finished with this pad?',[['Keep working',false],['Done',true,true]]);
   if(!ok||job.failed) return; strokeEnd();
-  if(isClient(job.mode)) startAftercare(withSmudges(scoreWork())); else showResults(scoreWork());
+  if(job.shadeSpec) startShadeStep(scoreWork());
+  else if(isClient(job.mode)) startAftercare(withSmudges(scoreWork()));
+  else showResults(scoreWork());
 }
 // smudges left to set in come off the line score
 function withSmudges(r){ r.smudgePen=job.smudgePen; r.score=Math.max(0,r.score-job.smudgePen); r.stars=r.score>=90?3:r.score>=78?2:1; return r; }
@@ -1201,7 +1310,8 @@ $('#tMenu').onclick=async()=>{
   if(v==='restart'){ if(warmup) startWarmup(); else startPractice(job.idx); }
   if(v==='store') openStore('supplies',backToStation);
   if(v==='real') warm.start();
-  if(v==='quit'){ buzz(false); stk=null; if((job.mode==='career'||warmup)&&F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } persist(); show('title'); }
+  // quitting mid-job: the customer goes home (a Day 2-3 customer simply comes back in next time)
+  if(v==='quit'){ buzz(false); stk=null; if(F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } F.busy=false; persist(); show('title'); }
 };
 
 /* =============== RESULTS =============== */
@@ -1234,7 +1344,7 @@ function showFail(){
   drawPortrait($('#rPortrait'),CH[who]); if(cust) drawPortrait($('#rPortrait2'),CH.dee);
   show('results');
   if(career){ $('#fFloor').onclick=()=>afterCareerJob(); return; }
-  if(cust){ $('#fNext').onclick=()=>lastCust?ending():nextCustomer(); return; }
+  if(cust){ $('#fNext').onclick=afterScriptedJob; return; }
   if(warmup){ $('#fRetry').onclick=startWarmup; $('#fReal').onclick=()=>warm.start(); return; }
   $('#fRetry').onclick=()=>startPractice(job.idx);
   $('#fBoard').onclick=openBoard;
@@ -1273,10 +1383,13 @@ function showResults(r){
     btns=save.cust>=CUSTOMERS.length?`<button class="gbtn go" id="rNext">Close up shop</button>`:`<button class="gbtn go" id="rNext">Next customer</button>`;
   }
   if(downloads) btns=`<button class="gbtn" id="rSave">Save PNG</button>`+btns;
+  if(r.shaded&&(job.mode==='practice'||job.mode==='warmup')){
+    if(r.colorOk<.8) quote="Wrong color, kid. Check the palette before you start. The machine always starts on black.";
+    else if(r.shadeCov<.8) quote="Lines are one thing. Your shading's patchy. Slower passes, keep the needle moving."; }
   res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':job.mode==='warmup'?'Warm-up: '+DESIGNS[job.design].name:CH[job.cust.ch].name}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="${r.stars} of 3 stars">${starStr(r.stars)}</div>
-      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd><dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
+      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd>${r.shaded?`<dt>Lines</dt><dd>${r.lineScore}</dd><dt>Shading</dt><dd>${Math.round(r.shadeCov*100)}% filled · ${Math.round(r.colorOk*100)}% right color</dd>`:''}<dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
     ${extra}
     <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[quoteWho].name}:</b> ${quote}</span></div>
     <div class="row">${btns}</div>`;
@@ -1287,7 +1400,7 @@ function showResults(r){
   if(q('#rRetry')) q('#rRetry').onclick=()=>job.mode==='warmup'?startWarmup():startPractice(job.idx);
   if(q('#rReal')) q('#rReal').onclick=()=>warm.start();
   if(q('#rBoard')) q('#rBoard').onclick=openBoard;
-  if(q('#rNext')) q('#rNext').onclick=()=>save.cust>=CUSTOMERS.length?ending():nextCustomer();
+  if(q('#rNext')) q('#rNext').onclick=afterScriptedJob;
   if(q('#rSave')) q('#rSave').onclick=()=>savePng(thumbNoSten());
   if(q('#rFloor')) q('#rFloor').onclick=()=>afterCareerJob();
 }
@@ -1304,41 +1417,82 @@ function savePng(canvas){
 $('#tSave').onclick=()=>savePng(composite(false));
 
 /* =============== PRACTICE BOARD =============== */
-function thumbCanvas(cv,key,skin){
+function thumbCanvas(cv,key,skin,filled){
   const x=cv.getContext('2d'); cv.width=cv.height=192; x.fillStyle=skin; x.fillRect(0,0,192,192);
-  x.save(); x.scale(192/DOC,192/DOC); x.strokeStyle='#5a33b8'; x.lineWidth=9; x.lineCap='round'; x.lineJoin='round'; x.stroke(pathOf(key)); x.restore();
+  x.save(); x.scale(192/DOC,192/DOC);
+  if(filled){ x.fillStyle='rgba(90,51,184,.3)'; x.fill(pathOf(key)); x.strokeStyle='#151515'; } else x.strokeStyle='#5a33b8';
+  x.lineWidth=9; x.lineCap='round'; x.lineJoin='round'; x.stroke(pathOf(key)); x.restore();
 }
+// half the pads are lines first, then shading in the colors Dee asks for: Heart red, Star yellow, Dagger blade half black / half blue
+const PRACTICE_SHADE={1:[{part:'all',color:'red'}],2:[{part:'all',color:'yellow'}],4:[{part:'left',color:'black'},{part:'right',color:'blue'}]};
+const hasShade=i=>!!PRACTICE_SHADE[i];
 function openBoard(){
+  // the robbery lesson happens the first time you come back to the pads after passing pad 2
+  if(save.stars[1]>0&&!save.robTut&&!save.graduated){ robberyLesson(); return; }
   const g=$('#pads'); g.innerHTML='';
   PRACTICE.forEach((k,i)=>{
     const unlocked=i===0||save.stars[i-1]>0||dev;
     const b=document.createElement('button'); b.className='padcard'; b.disabled=!unlocked;
-    b.innerHTML=`<canvas></canvas><b>${i+1}. ${DESIGNS[k].name}</b><span class="st">${starStr(save.stars[i])}</span>${unlocked?'':'<span class="lock">Locked</span>'}`;
-    thumbCanvas(b.querySelector('canvas'),k,'#f1d2bb');
-    b.onclick=()=>startPractice(i); g.appendChild(b);
+    b.innerHTML=`<canvas></canvas><b>${i+1}. ${DESIGNS[k].name}${hasShade(i)?' + shading':''}</b><span class="st">${starStr(save.stars[i])}</span>${unlocked?'':'<span class="lock">Locked</span>'}`;
+    thumbCanvas(b.querySelector('canvas'),k,'#f1d2bb',hasShade(i));
+    b.onclick=()=>goPractice(i); g.appendChild(b);
   });
   $('#bReady').classList.toggle('hide',!(save.stars[5]>0&&!save.graduated));
   if(save.graduated){ $('#bReady').classList.remove('hide'); $('#bReady').textContent='Back to the shop floor'; }
   else $('#bReady').textContent="Tell Dee you're ready";
+  // keep you and Dee in the scene behind the board, so picking a pad can show you walking to the desk
+  if(!actors.some(a=>a.ch==='you')){ const {cx,fy}=sceneGeo(); setActors([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-30,y:fy+16,flip:true}]); }
   show('board');
+}
+// walk over to the practice desk, then sit down to work
+async function goPractice(i){
+  if(busy) return; busy=true;
+  show('shop'); renderHud(); hideDlg();
+  const d=deskSpot(); await walk('you',d.x,d.y); await sleep(200);
+  busy=false; startPractice(i);
 }
 function startPractice(i){
   const k=PRACTICE[i];
-  startJob({mode:'practice',idx:i,design:k,cust:null,skin:'#f1d2bb',stenOp:[.95,.9,.85,.8,.72,.65][i]});
+  startJob({mode:'practice',idx:i,design:k,cust:null,skin:'#f1d2bb',stenOp:[.95,.9,.85,.8,.72,.65][i],shadeSpec:PRACTICE_SHADE[i]||null});
 }
+// after the lines on a shading pad: switch to the shader and fill the marked area
+// after the lines on a design with shading: switch to the shader, show the color guide and the palette (always starting on black)
+function startShadeStep(lineRes){
+  job.lineRes=lineRes; job.shadeStep=true; job.strikeMask=null; wctx.clearRect(0,0,DOC,DOC); renderSlips(); showWarn(false);
+  job.stenVisible=true; renderStencil(); $('#tSten').setAttribute('aria-pressed',false);
+  TOOLS.shade.i=Math.max(TOOLS.shade.i,3); setTool('shade'); pickShadeColor('black');
+  $('#shadeInks').classList.remove('hide');
+  const what=DESIGNS[job.design].shadeName, colors=shadeText(job.shadeSpec), dee=!isClient(job.mode);
+  $('#tSub').textContent=`Now shade ${what}: ${colors}. Pick the color from the palette. Stay inside the lines.`;
+  const say1=dee?`Dee: "Shade ${what} ${job.shadeSpec.length>1?'like this: '+colors:'in '+colors}."`:`${CH[job.cust.ch].name}: "${job.shadeSpec.length>1?colors[0].toUpperCase()+colors.slice(1):'In '+colors}, remember!"`;
+  if(!save.seenShadeTip){ save.seenShadeTip=true; persist();
+    modal(`Dee: "Lines hold a tattoo together. Shading gives it depth and color. Switch to the shader, use a big magnum needle and fill the area smooth and even. Your machine always starts on black, so pick the right color from the palette first."\n\n${say1}`,[['Got it',true,true]]); }
+  else modal(say1,[['Got it',true,true]]);
+}
+// shading palette: simple colors, shown only while shading
+Object.entries(PALETTE).forEach(([n,h])=>{ const b=document.createElement('button'); b.className='ink'; b.dataset.color=n; b.title=n[0].toUpperCase()+n.slice(1); b.setAttribute('aria-label',n+' ink');
+  b.style.background=h; b.onclick=()=>pickShadeColor(n); $('#sInks').appendChild(b); });
+function pickShadeColor(n){ job.color=PALETTE[n]; document.querySelectorAll('#sInks .ink').forEach(x=>x.setAttribute('aria-pressed',x.dataset.color===n)); }
 /* warm-up: practice a customer's design on fake skin before the one real shot */
 let warm=null; // {cust, design, start: begins the real tattoo, career}
 const aOrAn=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
 async function offerWarmup(cust,design,start,career){
   warm={cust,design,start,career};
-  const v=await modal(`${CH[cust.ch].name} wants ${aOrAn(DESIGNS[design].name.toLowerCase())} on the ${cust.spot}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
+  const v=await modal(`${CH[cust.ch].name} wants ${aOrAn(DESIGNS[design].name.toLowerCase())} on the ${cust.spot}${cust.shade&&DESIGNS[design].shade?`, shaded ${shadeText(cust.shade)}`:''}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
     [['Practice on fake skin','practice'],['Supply counter','store'],['Start the tattoo','go',true]]);
-  if(v==='store'){ openStore('supplies',()=>{ if(career) show('floor'); else { show('shop'); renderHud(); } offerWarmup(cust,design,start,career); }); return; }
-  if(v==='practice') startWarmup(); else start();
+  if(v==='store'){ openStore('supplies',()=>{ if(F.player) show('floor'); else { show('shop'); renderHud(); } offerWarmup(cust,design,start,career); }); return; }
+  if(v==='practice'){ await playerWalk(deskSpot()); startWarmup(); } else start();
+}
+// On the shop floor, show the player walking somewhere (the desk or the tattoo chair) before the next screen
+async function playerWalk(to){
+  const p=F.player; if(!p) return;
+  show('floor'); F.busy=true; F.target={x:to.x,y:to.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
+  const t0=performance.now(); while(F.target&&performance.now()-t0<4000) await sleep(50);
+  p.x=to.x; p.y=to.y; F.target=null; await sleep(150);
 }
 function startWarmup(){
   if(warm.career) advanceTime(15);
-  startJob({mode:'warmup',cust:warm.cust,design:warm.design,skin:'#f1d2bb',stenOp:.85});
+  startJob({mode:'warmup',cust:warm.cust,design:warm.design,skin:'#f1d2bb',stenOp:.85,shadeSpec:warm.cust.shade||null});
 }
 
 $('#bBoardMenu').onclick=()=>show('title');
@@ -1367,7 +1521,8 @@ async function intro(){
   await say('dee',controlsLine());
   await say('dee',"I'm strict, and there's no undo in this trade. Drift too far off the line and you'll see red.");
   await say('dee',"Go too far and I wipe the pad clean. You start that design over from the very first line. Five wipes and the round's a fail.");
-  await say('dee',"Sloppy gets you one star. Spot on gets you three. Finish a pad to unlock the next one. They're on the back table. Go on.");
+  await say('dee',"Sloppy gets you one star. Spot on gets you three. Finish a pad to unlock the next one. Some pads have shading too: lines first, then you fill in the marked area.");
+  await say('dee',"You work at the practice desk in the back corner. Go on.");
   hideDlg(); busy=false; openBoard();
 }
 async function graduate(){
@@ -1377,33 +1532,187 @@ async function graduate(){
   await say('dee',"Tomorrow the doors open. Real people, real skin, no do-overs.");
   await say('dee',"Real skin doesn't wipe clean. Every slip stays on them, and three slips outside the lines means they walk out.");
   await say('dee',"Sloppy work earns you nothing. Before each client you can warm up on fake skin first. Use it.");
-  await say('dee',"Customers will wait for good work, but they tip less if you drag your feet past the time on the clock.");
-  await say('dee',"One more thing. Ink, needles, ointment and wraps cost money. Here's a starter kit. When it runs low, restock at the supply counter.");
   await say('dee',"Keep a paper towel in your other hand. Wipe the smudges as you go, before they set.");
   await say('dee',"When you're done, ointment and plastic wrap, or a sheet of healing film. Covered right, it heals right, and healed work is what brings people back.");
+  await say('dee',"Here's a starter kit: needles, ink, ointment, wrap and a sheet of film. Tomorrow I'll show you around the floor.");
   hideDlg(); save.graduated=true; save.sup={needles:4,ink:40,wraps:3,ointment:4,film:1}; persist();
-  await dayCard('Day 2','The doors open'); busy=false; await nextCustomer(true);
+  await dayCard('Day 2','The doors open'); busy=false; F.player=null; enterFloor(); await fade(false);
 }
-async function nextCustomer(fromCard){
-  if(save.cust>=CUSTOMERS.length){ ending(); return; }
-  const miss=missingSupplies();
-  if(miss){
-    if(fromCard) await fade(false);
-    if(save.coins<45){ save.sup.needles+=3; save.sup.ink+=30; save.sup.wraps+=2; save.sup.ointment+=2; persist(); await modal('Dee: "Running on empty and short on cash? This kit is on me. Once."',[['Thanks, Dee',true,true]]); }
-    else { await modal(`You're out of ${miss}. Restock at the supply cabinet before the next client.`,[['Open supply cabinet',true,true]]); openStore('supplies',()=>nextCustomer()); return; }
-  }
-  busy=true;
-  if(!fromCard && save.cust===4 && !save.day3Shown){ save.day3Shown=true; persist(); await dayCard('Day 3','Word is getting around'); fromCard=true; }
-  const c=CUSTOMERS[save.cust], {cx,fy}=sceneGeo();
-  await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx+40,y:fy+12,flip:true},{ch:c.ch,x:cx+10,y:H+40}]);
-  if(fromCard) await fade(false);
-  await walk(c.ch,cx+6,fy+14);
-  actors.find(a=>a.ch===c.ch).flip=false;
-  for(const line of c.hi) await say(c.ch,line);
-  await say('dee',c.dee);
+// Days 2-3 happen on the walkable floor: the next scripted customer walks in by themselves
+function nextCustomer(){ if(save.cust>=CUSTOMERS.length) ending(); else enterFloor(); }
+// after a Day 2-3 customer's results (or after they walked out): they leave, and the next one comes in
+function afterScriptedJob(){
+  const c=F.jobCust; F.jobCust=null;
+  if(c){ const s=chairSit(0); c.x=s.x; c.y=s.y; custLeave(c); }
+  if(save.cust>=CUSTOMERS.length) ending(); else enterFloor();
+}
+
+/* ---------- the robbery lesson (after pad 2): comply, hide or fight, then Dee's gun ---------- */
+async function robberyLesson(){
+  busy=true; const {cx,fy}=sceneGeo();
+  await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-25,y:fy+24,flip:true},{ch:'rob1',x:cx,y:H+30}]);
+  await sleep(300); await say(null,"The door bangs open.");
+  await walk('rob1',cx-20,fy+40);
+  await say('rob1',"Nobody move! Everything in the register, in the bag. Now!");
+  hideDlg();
+  // the choice is shown so you learn it exists, but in Dee's shop only Fight can be picked
+  await modal("Robbery! What do you do?\n(In Dee's shop there's only one answer.)",[['Comply','comply',false,true],['Hide','hide',false,true],['Fight','fight',true]]);
+  await say('dee',"Not in my shop. Twenty years and nobody's taken a dime from this counter. Kid! Get over here!");
+  hideDlg(); await walk('you',cx-54,fy+14);
+  await say('dee',"Catch!"); hideDlg();
+  await tossGun({x:cx-86,y:fy-30},{x:cx-48,y:fy-4}); // Dee throws the gun over the counter
+  await say('dee',inputMode==='pad'?"Left stick to move, right stick to aim, RT to shoot. Don't let him walk out with the cash!"
+    :inputMode==='touch'?"Move with the stick on the left. Drag your other finger to aim, let go to shoot. Don't let him walk out with the cash!"
+    :"WASD to move. Hold the mouse and drag to aim, let go to shoot. Don't let him walk out with the cash!");
   hideDlg(); busy=false;
-  offerWarmup(c,c.design,()=>startJob({mode:'customer',cust:c,design:c.design,skin:c.skin,limit:c.time,stenOp:.75}),false);
+  const won=await runFight({lesson:true,count:1});
+  busy=true;
+  if(!won){ await say('dee',FT.lostBy==='hp'?"You're hit! Stay down a second... Okay. Up. Again, and keep moving this time."
+    :"He walked out the door with my register money. Again. Don't let him leave this time."); hideDlg(); busy=false; robberyLesson(); return; }
+  await say('dee',"...You alright? Nice shooting, kid. Took a few hits to drop him. My aim isn't what it used to be.");
+  await say('dee',"Out there it won't get easier. More of them, better weapons, and they hit back harder.");
+  await say('dee',"When you've got your own place, you'll get the same choice: comply, hide or fight.");
+  await say('dee',"Comply or hide and you keep breathing, but they take the cash. Fight, and you'd better be ready for it. Hospitals aren't cheap.");
+  await say('dee',"Right. Put that back under the counter. Pad three is waiting.");
+  hideDlg(); save.robTut=true; persist(); busy=false; openBoard();
 }
+
+/* ---------- fight engine: move around and shoot robbers in the shop scene ---------- */
+// Dee's gun toss: a little gun flies in an arc from one point to another
+let TOSS=null;
+function tossGun(a,b){ TOSS={a,b,t0:performance.now(),dur:700}; blip(500); return sleep(760).then(()=>{ TOSS=null; blip(700); }); }
+function drawGun(x,y,flip){ const c='#2b2b33'; R(x,y,7,2,c); R(flip?x+5:x,y+2,2,3,c); R(flip?x:x+6,y-1,1,1,'#55555f'); }
+const FT={on:false,robbers:[],shots:[],cd:0,aim:{x:0,y:0},t:0,done:null,lesson:false,flash:0,you:null,keys:{},padMove:[0,0],dodge:.5,hintT:0};
+function runFight(opts){
+  return new Promise(res=>{
+    const {cx,fy}=sceneGeo(), you=actors.find(a=>a.ch==='you');
+    if(you){ you.ctrl=true; you.flip=false; }
+    actors.splice(0,actors.length,...actors.filter(a=>!/^rob/.test(a.ch)));
+    // everyone walks in at once, spread out around the door
+    const n=opts.count||1, robbers=Array.from({length:n},(_,i)=>({ch:'rob'+(i%3+1),x:cx+(i-(n-1)/2)*16,y:H+30,ctrl:true,flip:true,moving:true,
+      hp:4,down:false,downT:0,hurt:0,speed:opts.lesson?12:20,phase:Math.random()*6,dodgeT:0,dodgeVx:0,dodgeVy:0,fireT:1.6+Math.random()}));
+    // hp = your health (100). Robbers shoot back (eshots); Dee shoots from behind the counter now and then, and misses a lot
+    Object.assign(FT,{on:true,robbers,shots:[],eshots:[],cd:0,t:0,lesson:!!opts.lesson,flash:0,you,keys:{},padMove:[0,0],dodge:opts.lesson?.5:.7,hintT:5,
+      hp:100,lostBy:null,deeT:2.2,deeFlash:0,aim:{x:cx,y:fy+30},aiming:false,aimId:null,queued:null,done:res});
+    if(you) you.hurt=0;
+    robbers.forEach(r=>actors.push(r));
+    show('fight'); renderFightHud();
+    const h=$('#fiHint'); h.classList.remove('gone');
+    h.textContent=inputMode==='pad'?'Left stick: move · Right stick: aim · RT: shoot':inputMode==='touch'?'Stick: move · Drag to aim, let go to shoot':'WASD: move · Hold and drag to aim, release to shoot';
+  });
+}
+function renderFightHud(){
+  const hp=Math.max(0,FT.hp), col=hp>50?'var(--go)':hp>25?'var(--warn)':'var(--bad)';
+  $('#fiChips').innerHTML=`<span class="chip wood">You <span class="hpbar"><i style="width:${hp}%;background:${col}"></i></span></span><span class="chip wood">Robbers left: ${FT.robbers.filter(r=>!r.down).length}</span>`;
+}
+function gunPos(){ const you=FT.you; return you?{x:you.x+(you.flip?-8:8),y:you.y-17}:{x:W/2,y:H/2}; }
+function shoot(tx,ty){
+  if(!FT.on||modalOpen) return;
+  if(FT.cd>0){ FT.queued={x:tx,y:ty}; return; } // fired during the cooldown: goes off as soon as the gun is ready
+  const you=FT.you; if(you) you.flip=tx<you.x;
+  const g=gunPos(), dx=tx-g.x, dy=ty-g.y, d=Math.hypot(dx,dy)||1;
+  FT.shots.push({x:g.x,y:g.y,vx:dx/d*260,vy:dy/d*260,life:1.2,seen:new Set()}); FT.cd=.32; FT.flash=.08; blip(950); blip(140);
+}
+function fightTick(dt){
+  if(!FT.on) return; const s=dt/1000; FT.t+=s; FT.cd=Math.max(0,FT.cd-s); FT.flash=Math.max(0,FT.flash-s);
+  if(FT.queued&&FT.cd<=0){ const q=FT.queued; FT.queued=null; shoot(q.x,q.y); }
+  if(FT.hintT>0&&(FT.hintT-=s)<=0) $('#fiHint').classList.add('gone');
+  const {cx,fy}=sceneGeo(), reg={x:cx-70,y:fy+12};
+  // you: joystick, keys or the left stick
+  const you=FT.you;
+  if(you){ let mx=joy.x+FT.padMove[0], my=joy.y+FT.padMove[1]; FT.padMove=[0,0]; const k=FT.keys;
+    if(k.l) mx-=1; if(k.r) mx+=1; if(k.u) my-=1; if(k.d) my+=1;
+    const m=Math.hypot(mx,my);
+    if(m>.08){ const f=Math.min(1,m)/m; you.x+=mx*f*55*s; you.y+=my*f*55*s; you.moving=true; } else you.moving=false;
+    you.x=clamp(you.x,8,W-8); you.y=clamp(you.y,fy+2,H-4); if(you.x<cx-52&&you.y<fy+8) you.y=fy+8; you.tx=you.x; you.ty=you.y;
+    if(!you.moving||Math.abs(FT.aim.x-you.x)>4) you.flip=FT.aim.x<you.x; }
+  FT.robbers.forEach(r=>{
+    if(r.down){ r.downT+=s; return; }
+    r.hurt=Math.max(0,r.hurt-s);
+    // see a shot coming? maybe sidestep it
+    for(const b of FT.shots){ if(b.seen.has(r)) continue; const sp=Math.hypot(b.vx,b.vy), rx=r.x-b.x, ry=r.y-16-b.y, t=(rx*b.vx+ry*b.vy)/(sp*sp);
+      if(t>0&&t<.5){ b.seen.add(r); const px=b.x+b.vx*t-r.x, py=b.y+b.vy*t-(r.y-16);
+        if(Math.hypot(px,py)<14&&Math.random()<FT.dodge){ const nx=-b.vy/sp, ny=b.vx/sp, side=(nx*rx+ny*ry)>=0?1:-1; r.dodgeVx=nx*side*100; r.dodgeVy=ny*side*100; r.dodgeT=.3; } } }
+    // robbers go to the register, grab the cash, then run for the door. You only lose if one gets out with the money
+    r.state=r.state||'in';
+    if(r.state==='in'&&Math.hypot(reg.x-r.x,reg.y-r.y)<5){ r.state='grab'; r.grabT=1.2; toast("He's at the register! Stop him before he gets out the door!"); blip(260); }
+    if(r.state==='grab'&&(r.grabT-=s)<=0){ r.state='out'; r.cash=true; r.run=true; }
+    const goal=r.state==='out'?{x:cx,y:H+28}:reg, dx=goal.x-r.x, dy=goal.y-r.y, d=Math.hypot(dx,dy)||1;
+    if(r.state==='out'&&d<6){ FT.lostBy='escaped'; endFight(false); return; }
+    // move toward the goal, weaving side to side (standing still while grabbing the cash, running on the way out)
+    const weave=r.state==='grab'?0:Math.sin(FT.t*2.6+r.phase)*(r.state==='out'?12:22), sp=r.state==='grab'?0:r.state==='out'?r.speed*1.5:r.speed;
+    let vx=dx/d*sp-dy/d*weave, vy=dy/d*sp+dx/d*weave;
+    if(r.dodgeT>0){ r.dodgeT-=s; vx+=r.dodgeVx; vy+=r.dodgeVy; }
+    r.x=clamp(r.x+vx*s,8,W-8); r.y=clamp(r.y+vy*s,fy+2,H+30); r.flip=vx<0; r.moving=true;
+    // shoot back at you every so often, not very accurately
+    if(you&&r.y<H&&(r.fireT-=s)<=0){ r.fireT=(FT.lesson?1.7:1.2)+Math.random()*.9;
+      const gx=r.x+(you.x<r.x?-8:8), gy=r.y-17, tx=you.x+(Math.random()-.5)*26, ty=you.y-16+(Math.random()-.5)*22, d=Math.hypot(tx-gx,ty-gy)||1;
+      r.flip=you.x<r.x; r.flash=.08; FT.eshots.push({x:gx,y:gy,vx:(tx-gx)/d*150,vy:(ty-gy)/d*150,life:2}); blip(320); }
+    if(r.flash>0) r.flash-=s;
+  });
+  // Dee shoots from behind the counter now and then, missing more often than not
+  const alive=FT.robbers.filter(r=>!r.down&&r.y<H);
+  if(alive.length&&(FT.deeT-=s)<=0){ FT.deeT=1.6+Math.random()*1.1;
+    const r=pickR(alive), gx=cx-82, gy=fy-24, miss=Math.random()<.6, tx=r.x+(miss?(Math.random()<.5?-1:1)*(18+Math.random()*20):0), ty=r.y-16+(Math.random()-.5)*10, d=Math.hypot(tx-gx,ty-gy)||1;
+    FT.shots.push({x:gx,y:gy,vx:(tx-gx)/d*260,vy:(ty-gy)/d*260,life:1.2,seen:new Set(),dee:true}); FT.deeFlash=.08; blip(820); }
+  if(FT.deeFlash>0) FT.deeFlash-=s;
+  // robbers' bullets
+  if(you){ you.hurt=Math.max(0,(you.hurt||0)-s);
+    FT.eshots=FT.eshots.filter(b=>{ b.x+=b.vx*s; b.y+=b.vy*s; b.life-=s;
+      if(Math.abs(b.x-you.x)<7&&b.y>you.y-30&&b.y<you.y+1){ FT.hp-=12; you.hurt=.2; blip(120); renderFightHud();
+        if(FT.hp<=0){ FT.lostBy='hp'; endFight(false); } return false; }
+      return b.life>0&&b.x>-10&&b.x<W+10&&b.y>-10&&b.y<H+10; }); }
+  if(!FT.on) return;
+  FT.shots=FT.shots.filter(b=>{
+    b.x+=b.vx*s; b.y+=b.vy*s; b.life-=s;
+    const hit=FT.robbers.find(r=>!r.down&&Math.abs(b.x-r.x)<9&&b.y>r.y-32&&b.y<r.y+1);
+    if(hit){ hit.hp--; hit.hurt=.15; blip(220); if(hit.hp<=0){ hit.down=true; hit.moving=false; renderFightHud(); } return false; }
+    return b.life>0&&b.x>-10&&b.x<W+10&&b.y>-10&&b.y<H+10;
+  });
+  // knocked-down robbers fade out
+  for(const r of FT.robbers) if(r.down&&r.downT>1.6){ const i=actors.indexOf(r); if(i>=0) actors.splice(i,1); }
+  if(FT.on&&FT.robbers.every(r=>r.down&&r.downT>1)) endFight(true);
+}
+function endFight(won){
+  if(!FT.on) return; FT.on=false; FT.shots=[]; FT.eshots=[];
+  actors.splice(0,actors.length,...actors.filter(a=>!/^rob/.test(a.ch)));
+  if(FT.you){ FT.you.ctrl=false; FT.you.moving=false; }
+  show('shop'); const f=FT.done; FT.done=null; f&&f(won);
+}
+function drawFx(t){
+  if(TOSS){ const p=clamp((performance.now()-TOSS.t0)/TOSS.dur), x=TOSS.a.x+(TOSS.b.x-TOSS.a.x)*p, y=TOSS.a.y+(TOSS.b.y-TOSS.a.y)*p-Math.sin(p*Math.PI)*26; drawGun(x,y,((p*6)|0)%2===1); }
+  if(current!=='fight') return;
+  FT.shots.forEach(b=>{ R(b.x-1,b.y-1,3,2,'#ffe36e'); R(b.x-b.vx*.012,b.y-b.vy*.012,1,1,'#fff6c0'); });
+  FT.eshots.forEach(b=>{ R(b.x-1,b.y-1,3,2,'#ff5a46'); R(b.x-b.vx*.02,b.y-b.vy*.02,1,1,'#ffb0a0'); });
+  FT.robbers.forEach(r=>{ if(r.down||r.y>=H+20) return; const left=FT.you&&FT.you.x<r.x, gx=r.x+(left?-8:8);
+    drawGun(left?gx-6:gx-1,r.y-18,left); if(r.flash>0) R(gx+(left?-4:3),r.y-19,4,4,'#ffd0a0');
+    if(r.cash||r.state==='grab'){ R(r.x-3,r.y-42,7,6,'#c9a24a'); R(r.x-1,r.y-44,3,2,'#8a6a2a'); R(r.x,r.y-41,1,4,'#5a7a2a'); } }); // money bag
+  if(FT.deeFlash>0){ const {cx,fy}=sceneGeo(); R(cx-84,fy-26,4,4,'#fff3b0'); }
+  if(FT.you){ const g=gunPos(); drawGun(FT.you.flip?g.x-6:g.x-1,g.y-1,FT.you.flip); }
+  if(FT.flash>0){ const g=gunPos(); R(g.x+(FT.you&&FT.you.flip?-4:3),g.y-2,4,4,'#fff3b0'); }
+  // dotted aim line while aiming (dragging, or holding the right stick on a controller)
+  if(FT.you&&(FT.aiming||inputMode==='pad'||inputMode==='mouse')){ const g=gunPos(), dx=FT.aim.x-g.x, dy=FT.aim.y-g.y, d=Math.hypot(dx,dy);
+    for(let k=6;k<d-4;k+=6) R(g.x+dx*k/d,g.y+dy*k/d,1,1,FT.aiming?'#ffe36e':'rgba(255,227,110,.45)'); }
+  const a=FT.aim, c=inputMode==='touch'&&!FT.aiming?'rgba(255,90,70,.5)':'#ff5a46';
+  R(a.x-5,a.y,3,1,c); R(a.x+3,a.y,3,1,c); R(a.x,a.y-5,1,3,c); R(a.x,a.y+3,1,3,c);
+}
+function sceneXY(e){ const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2; return {x:(e.clientX-r.left-ox)/s,y:(e.clientY-r.top-oy)/s}; }
+// touch / mouse: press and drag to aim (dotted line), let go to shoot
+const fightEl=$('#scr-fight');
+fightEl.addEventListener('pointerdown',e=>{ if(modalOpen||!FT.on) return; FT.aiming=true; FT.aimId=e.pointerId; fightEl.setPointerCapture(e.pointerId); FT.aim=sceneXY(e); });
+fightEl.addEventListener('pointermove',e=>{ if(FT.aiming&&e.pointerId===FT.aimId) FT.aim=sceneXY(e); else if(e.pointerType==='mouse'&&!FT.aiming) FT.aim=sceneXY(e); });
+fightEl.addEventListener('pointerup',e=>{ if(!FT.aiming||e.pointerId!==FT.aimId) return; FT.aiming=false; FT.aim=sceneXY(e); shoot(FT.aim.x,FT.aim.y); });
+fightEl.addEventListener('pointercancel',()=>{ FT.aiming=false; });
+
+/* ---------- on-screen joystick (left side) for walking the shop floor and moving in fights ---------- */
+const joy={x:0,y:0,id:null}, joyEl=$('#joy'), joyKnob=joyEl.querySelector('i');
+function joySet(e){ const r=joyEl.getBoundingClientRect(), R0=r.width/2, m=R0*.8; let dx=e.clientX-(r.left+R0), dy=e.clientY-(r.top+R0); const d=Math.hypot(dx,dy);
+  if(d>m){ dx*=m/d; dy*=m/d; } joy.x=dx/m; joy.y=dy/m; joyKnob.style.transform=`translate(${dx.toFixed(0)}px,${dy.toFixed(0)}px)`; }
+joyEl.addEventListener('pointerdown',e=>{ e.stopPropagation(); joy.id=e.pointerId; joyEl.setPointerCapture(e.pointerId); joySet(e); });
+joyEl.addEventListener('pointermove',e=>{ if(e.pointerId===joy.id) joySet(e); });
+const joyEnd=e=>{ if(e.pointerId===joy.id){ joy.id=null; joy.x=joy.y=0; joyKnob.style.transform=''; } };
+joyEl.addEventListener('pointerup',joyEnd); joyEl.addEventListener('pointercancel',joyEnd);
+function showJoy(){ joyEl.classList.toggle('hide',!(current==='floor'||current==='fight')||inputMode==='pad'); }
 async function ending(){
   busy=true; const {cx,fy}=sceneGeo();
   await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-30,y:fy+16,flip:true}]);
@@ -1620,7 +1929,8 @@ const HOME={x:.53,y:.56};
 
 /* ---------- floor state ---------- */
 const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:null,targetAct:null,padMove:[0,0],keys:{},
-  today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},busy:false,jobCust:null,talking:null,arrivalAt:OPEN+20,closing:false,nextId:1,hot:null,hotLabel:'',starting:false};
+  today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},busy:false,jobCust:null,talking:null,arrivalAt:OPEN+20,closing:false,nextId:1,hot:null,hotLabel:'',starting:false,
+  appr:false,tour:false,tourAt:null,spawnAt:0}; // appr: Days 2-3 in Dee's shop (scripted customers, no clock)
 const KEYMOVE={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
 const seatPos=i=>{ const {cx}=sceneGeo(); return {x:Math.max(14,cx-128)+i*16,y:H-12}; };
 const chairBase=k=>{ const {cx,fy}=sceneGeo(); return k===0?{x:cx+72,y:fy-6}:{x:cx+34+(k-1)*44,y:fy+44}; };
@@ -1638,6 +1948,8 @@ function drawFloorFurniture(cx,fy){
   R(cx-13,H-5,26,5,'#6b3a2a'); R(cx-11,H-4,22,1,'#8a5a3a');
 }
 function drawFloorOverlay(t){
+  if(F.tourAt){ const b=((t/220)|0)%2, x=F.tourAt.x, y=F.tourAt.y-b; // Dee's tour: "walk here" arrow
+    R(x-4,y,9,3,'#9fe8ff'); R(x-3,y+3,7,2,'#9fe8ff'); R(x-2,y+5,5,1,'#9fe8ff'); R(x-1,y+6,3,1,'#9fe8ff'); R(x,y+7,1,1,'#9fe8ff'); }
   F.custs.forEach(c=>{ if(c.state!=='waiting') return; const f=clamp(c.patience/c.patience0);
     R(c.x-8,c.y-38,16,3,'#2a1a14'); R(c.x-7,c.y-37,Math.max(1,14*f),1,f>.5?'#86c060':f>.25?'#d9a12b':'#c2453a'); });
   save.staff.forEach(st=>{ const a=F.staffActs[st.id], s=F.sst[st.id]; if(!a||!s) return;
@@ -1650,16 +1962,19 @@ function drawFloorOverlay(t){
 
 function hotspots(){
   const {cx,fy}=sceneGeo();
-  const hs=[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:'Counter: supplies, upgrades and staff',act:()=>openStore('supplies',enterFloor)},
-            {x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:'Door: town map or close for the day',act:doorMenu}];
-  F.custs.forEach(c=>{ if(c.state==='waiting') hs.push({x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
+  const hs=[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:F.appr?'Counter: supplies':'Counter: supplies, upgrades and staff',act:()=>openStore('supplies',enterFloor)},
+            F.appr?{x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:'Door',act:()=>toast('Dee: "Where are you going? Clients are on the way."')}
+              :{x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:'Door: town map or close for the day',act:doorMenu}];
+  F.custs.forEach(c=>{ if(c.state==='waiting') hs.push(c.script
+    ?{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}`,act:()=>talkScripted(c)}
+    :{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
   save.staff.forEach(st=>{ const a=F.staffActs[st.id]; if(a) hs.push({x:a.x,y:a.y,r:14,ax:a.x,ay:a.y,label:`${CH['st_'+st.id].name}: ${staffStatus(st)}`,act:()=>toast(`${CH['st_'+st.id].name}: ${staffStatus(st)}`)}); });
   return hs;
 }
 function staffStatus(st){ const s=F.sst[st.id]; if(!s) return 'ready for a client'; if(s.busy) return `tattooing a ${DESIGNS[s.busy.c.design].name}`; if(s.noSup) return 'out of supplies!'; return 'waiting for a client'; }
 
 function enterFloor(){
-  ensureCareerSave();
+  ensureCareerSave(); F.appr=!save.career;
   const {cx,fy}=sceneGeo();
   if(!F.player){
     F.player={ch:'you',x:cx,y:H-22,tx:cx,ty:H-22,ctrl:true,flip:false,moving:false};
@@ -1670,10 +1985,11 @@ function enterFloor(){
   actors.length=0; actors.push(F.dee,F.player,...Object.values(F.staffActs),...F.custs);
   F.busy=false; F.target=null; F.targetAct=null; F.hot=null; F.hotLabel='';
   show('floor'); renderFloorHud(); $('#fPrompt').classList.add('hide');
+  if(F.appr){ F.spawnAt=performance.now()+1200; if(!save.toured&&!F.tour) deeTour(); return; }
   if(save.clock>=CLOSE&&!F.closing){ F.closing=true; setTimeout(endDay,400); }
 }
 function renderFloorHud(){
-  $('#fChips').innerHTML=`<span class="chip wood">Day ${save.cday} · ${clockText()}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
+  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`Day ${save.cday} · ${clockText()}`}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
 }
 function clampPlayer(p){
   const {cx,fy}=sceneGeo();
@@ -1684,7 +2000,7 @@ function floorTick(dt){
   const p=F.player; if(!p) return;
   const pm=F.padMove; F.padMove=[0,0];
   if(modalOpen){ p.moving=false; return; }
-  let mx=pm[0], my=pm[1]; const k=F.keys;
+  let mx=pm[0]+joy.x, my=pm[1]+joy.y; const k=F.keys;
   if(k.l) mx=-1; if(k.r) mx=1; if(k.u) my=-1; if(k.d) my=1;
   const sp=1.3*dt/16.7; let moved=false;
   if(!F.busy&&(Math.abs(mx)>.05||Math.abs(my)>.05)){
@@ -1695,10 +2011,14 @@ function floorTick(dt){
   }
   clampPlayer(p); p.moving=moved; p.tx=p.x; p.ty=p.y;
   if(F.targetAct&&!F.busy){ const h=F.targetAct; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r||!F.target){ F.targetAct=null; F.target=null; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r+6){ h.act(); return; } } }
-  if(!F.busy) advanceTime(dt/1000*CLOCK_RATE);
+  if(!F.busy&&!F.appr) advanceTime(dt/1000*CLOCK_RATE);
+  // Dee's shop: the next scripted customer walks in once the floor is clear
+  if(F.appr&&!F.busy&&!F.tour&&!F.custs.length&&!F.jobCust&&save.cust<CUSTOMERS.length&&performance.now()>F.spawnAt) spawnScripted();
   F.custs.slice().forEach(c=>{
     const arrived=Math.hypot(c.tx-c.x,c.ty-c.y)<.8;
-    if(c.state==='arriving'&&arrived) c.state='waiting';
+    if(c.state==='arriving'&&arrived){ c.state='waiting'; if(c.script&&!save.seenWaitBar) deeWaitBar(); }
+    // Dee's shop: patience drains in real seconds while they sit and nobody is talking
+    if(c.script&&c.state==='waiting'&&!F.busy&&!dlg.active&&c!==F.talking&&(c.patience-=dt/1000)<=0) scriptedWalkout(c);
     else if(c.state==='toChair'&&arrived){ c.state='inChair'; c.flip=false; if(c.by==='you'&&!F.starting){ F.starting=true; setTimeout(()=>{ F.starting=false; startCareerJob(c); },350); } }
     else if(c.state==='leaving'&&arrived) removeCust(c);
   });
@@ -1709,12 +2029,13 @@ function floorTick(dt){
   if(lbl!==F.hotLabel){ F.hotLabel=lbl; const b=$('#fPrompt'); b.classList.toggle('hide',!best);
     b.textContent=best?`${inputMode==='pad'?'A':inputMode==='touch'?'Tap':'E'}: ${lbl}`:''; }
   if(tick%20===0) renderFloorHud();
-  if(save.clock>=CLOSE&&!F.busy&&!F.closing&&!F.jobCust){ F.closing=true; toast('Closing time!'); setTimeout(endDay,700); }
+  if(!F.appr&&save.clock>=CLOSE&&!F.busy&&!F.closing&&!F.jobCust){ F.closing=true; toast('Closing time!'); setTimeout(endDay,700); }
 }
 function floorInteract(){ if(F.hot&&!F.busy) F.hot.act(); }
 $('#fPrompt').onclick=floorInteract;
 $('#fMenuBtn').onclick=()=>{ if(!devTap()) floorMenu(); };
 $('#scr-floor').addEventListener('pointerdown',e=>{
+  if(dlg.active&&!modalOpen){ advance(); return; }
   if(e.target.closest('button')||modalOpen||F.busy||!F.player) return;
   const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2;
   const x=(e.clientX-r.left-ox)/s, y=(e.clientY-r.top-oy)/s;
@@ -1732,13 +2053,80 @@ function spawnCustomer(){
   const pool=Object.keys(DES_INFO).filter(k=>save.rep>=DES_INFO[k].rep);
   const design=Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
   const info=DES_INFO[design], sp=seatPos(seat), pat=150+Math.random()*110;
-  const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,
-    spot:pickR(SPOTS),pay:Math.round(info.pay*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur,time:info.time,
+  const shade=DESIGNS[design].shade&&Math.random()<.6?randomShade():null; // most customers want some color; it pays more and takes longer
+  const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,
+    spot:pickR(SPOTS),pay:Math.round(info.pay*(shade?1.25:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:info.time+(shade?90:0),
     patience:pat,patience0:pat,arrived:save.clock,skin:CH[id].skin};
   F.custs.push(c); actors.push(c);
 }
 function custLeave(c){ c.state='leaving'; c.seat=null; const d=doorOut(); c.tx=d.x; c.ty=d.y; }
-function removeCust(c){ F.custs=F.custs.filter(x=>x!==c); const i=actors.indexOf(c); if(i>=0) actors.splice(i,1); if(F.jobCust!==c) delete CH[c.ch]; }
+function removeCust(c){ F.custs=F.custs.filter(x=>x!==c); const i=actors.indexOf(c); if(i>=0) actors.splice(i,1); if(F.jobCust!==c&&!c.script) delete CH[c.ch]; }
+
+/* ---------- Dee's shop on Days 2-3: a guided tour, then the seven scripted customers walk in one at a time ---------- */
+function spawnScripted(){
+  const C=CUSTOMERS[save.cust];
+  if(save.cust===4&&!save.day3Shown){ // a new day before customer 5
+    save.day3Shown=true; persist(); F.busy=true;
+    (async()=>{ await dayCard('Day 3','Word is getting around'); renderFloorHud(); await fade(false); F.busy=false; F.spawnAt=performance.now()+600; })();
+    return;
+  }
+  const sp=seatPos(0), pat=save.cust===0?60:45; // patience in real seconds (Dee's shop has no clock)
+  const c={ch:C.ch,x:sceneGeo().cx,y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat:0,script:C,
+    design:C.design,spot:C.spot,skin:C.skin,time:C.time,pay:C.tip,patience:pat,patience0:pat};
+  F.custs.push(c); actors.push(c);
+}
+async function talkScripted(c){
+  if(F.busy) return; F.busy=true; F.talking=c; const C=c.script;
+  F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
+  for(const line of C.hi) await say(C.ch,line);
+  if(!save.seenTimer){ save.seenTimer=true; persist();
+    await say('dee',"One thing before you start. See the clock at your station? That's how long they'll sit happy.");
+    await say('dee',"Customers wait for good work, but run over the time and the tip shrinks."); }
+  await say('dee',C.dee); hideDlg(); F.talking=null;
+  const miss=missingSupplies();
+  if(miss){
+    if(save.coins<45){ save.sup.needles+=3; save.sup.ink+=30; save.sup.wraps+=2; save.sup.ointment+=2; persist(); renderFloorHud();
+      await modal('Dee: "Running on empty and short on cash? This kit is on me. Once."',[['Thanks, Dee',true,true]]); }
+    else { const g=await modal(`You're out of ${miss}. Restock at the counter first.`,[['Not now',false],['Go to counter',true,true]]); F.busy=false; if(g) openStore('supplies',enterFloor); return; }
+  }
+  // the customer heads to the chair and you follow; the warm-up offer comes once they sit (startCareerJob)
+  c.state='toChair'; c.by='you'; c.seat=null; const s=chairSit(0); c.tx=s.x; c.ty=s.y;
+  const a=artistPos(); F.target={x:a.x,y:a.y};
+}
+// Dee explains the patience bar the first time a customer sits down
+async function deeWaitBar(){
+  save.seenWaitBar=true; persist(); F.busy=true; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
+  await say('dee',"See the green bar over their head? That's their patience.");
+  await say('dee',"It drains while they sit. When it runs out, they walk out the door, and they take a bit of your name with them. Go say hi before it does.");
+  hideDlg(); F.busy=false;
+}
+// a Day 2-3 customer waited too long: they're gone for good, and the story moves on to the next one
+function scriptedWalkout(c){
+  custLeave(c); save.rep-=1; save.cust++; persist(); renderFloorHud();
+  toast(`${CH[c.ch].name} got tired of waiting and left (−1 rep)`); blip(200);
+  F.spawnAt=performance.now()+2500;
+  (async()=>{ if(!save.seenWalkout){ save.seenWalkout=true; persist(); F.busy=true; await sleep(600);
+      await say('dee',"Lost one. That's money and reputation out the door. Don't keep them sitting."); hideDlg(); F.busy=false; }
+    if(save.cust>=CUSTOMERS.length){ await sleep(1200); ending(); } })();
+}
+const waitFor=async(cond,ms=60000)=>{ const t0=performance.now(); while(!cond()&&performance.now()-t0<ms) await sleep(80); };
+async function deeTour(){
+  F.tour=true; F.busy=true; const {cx,fy}=sceneGeo();
+  await sleep(500);
+  await say('dee',"Morning. From today you walk the floor yourself.");
+  await say('dee',inputMode==='pad'?"Left stick or D-pad to walk. Press A next to something to use it."
+    :inputMode==='touch'?"Tap the floor to walk. Tap a person or the counter to walk over and use it."
+    :"WASD or the arrow keys to walk, or click the floor. Press E next to something to use it.");
+  await say('dee',"Come over to the counter.");
+  hideDlg(); F.busy=false; F.tourAt={x:cx-90,y:fy-46};
+  await waitFor(()=>F.player&&Math.hypot(F.player.x-(cx-88),F.player.y-(fy+10))<26&&!modalOpen&&current==='floor');
+  F.tourAt=null; F.busy=true; F.target=null;
+  await say('dee',"This is the supply counter. Needles, ink, ointment, plastic wrap and film. When you run low, restock here.");
+  await say('dee',"You can also reach it from the warm-up box, or from the menu at your station.");
+  await say('dee',"The desk in the back corner is for fake skin. Before every client you can warm up there first.");
+  await say('dee',"Clients come in through that door and sit on the bench. Walk up to one to talk. Here comes your first.");
+  hideDlg(); save.toured=true; persist(); F.tour=false; F.busy=false; F.spawnAt=0;
+}
 function advanceTime(mins){
   save.clock+=mins;
   F.custs.forEach(c=>{ if(c.state==='waiting'&&c!==F.talking){ c.patience-=mins; if(c.patience<=0){ custLeave(c); save.rep-=1; F.today.lost++; if(current==='floor') toast(`${CH[c.ch].name} got tired of waiting and left (−1 rep)`); } } });
@@ -1765,7 +2153,7 @@ function staffTick(st){
 async function talkCustomer(c){
   if(F.busy) return; F.talking=c;
   const hrs=c.dur/60, ht=Number.isInteger(hrs)?hrs:hrs.toFixed(1);
-  const v=await modal(`${CH[c.ch].name} wants ${/^[aeiou]/i.test(DESIGNS[c.design].name)?'an':'a'} ${DESIGNS[c.design].name.toLowerCase()} on the ${c.spot}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
+  const v=await modal(`${CH[c.ch].name} wants ${/^[aeiou]/i.test(DESIGNS[c.design].name)?'an':'a'} ${DESIGNS[c.design].name.toLowerCase()} on the ${c.spot}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
     [['Not now','later'],['Send away','away'],['Start tattoo','go',true]]);
   F.talking=null;
   if(!F.custs.includes(c)||c.state!=='waiting') return;
@@ -1777,11 +2165,13 @@ async function talkCustomer(c){
   F.busy=true; c.state='toChair'; c.by='you'; c.seat=null; const s=chairSit(0); c.tx=s.x; c.ty=s.y;
   const a=artistPos(); F.target={x:a.x,y:a.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
 }
+// the customer is in the chair: offer a warm-up, then walk to the chair and start
 function startCareerJob(c){
   F.jobCust=c;
-  const cust={ch:c.ch,spot:c.spot,tip:c.pay,react:["This is a mess. I'm not paying for that.","It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']};
-  offerWarmup(cust,c.design,()=>{ F.busy=false;
-    startJob({mode:'career',cust,design:c.design,skin:c.skin,limit:c.time,stenOp:Math.min(.95,.75+(save.up.light?.15:0))}); },true);
+  const career=!c.script, mode=career?'career':'customer';
+  const cust=c.script||{ch:c.ch,spot:c.spot,tip:c.pay,shade:c.shade,react:["This is a mess. I'm not paying for that.","It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']};
+  offerWarmup(cust,c.design,async()=>{ await playerWalk(artistPos()); F.busy=false;
+    startJob({mode,cust,design:c.design,skin:c.skin,limit:c.time,shadeSpec:cust.shade||null,stenOp:career?Math.min(.95,.75+(save.up.light?.15:0)):.75}); },career);
 }
 function afterCareerJob(){
   const c=F.jobCust; F.jobCust=null;
@@ -1798,10 +2188,10 @@ async function closeEarly(){
   if(ok) endDay();
 }
 async function floorMenu(){
-  const opts=[['Counter','store'],['Town map','map'],['Close for today','close'],['Save & quit','quit']];
+  const opts=F.appr?[['Counter','store'],['Save & quit','quit']]:[['Counter','store'],['Town map','map'],['Close for today','close'],['Save & quit','quit']];
   if(dev) opts.push(['Dev: +500 coins','coins'],['Dev: restock supplies','sup']);
   opts.push(['Resume','resume',true]);
-  const v=await modal(`Day ${save.cday}, ${clockText()}`,opts);
+  const v=await modal(F.appr?`Day ${dayNum()} at Dee's shop`:`Day ${save.cday}, ${clockText()}`,opts);
   if(v==='coins'){ save.coins+=500; persist(); renderFloorHud(); toast('+500 coins (developer mode)'); }
   if(v==='sup'){ Object.assign(save.sup,{needles:Math.max(save.sup.needles,20),ink:Math.max(save.sup.ink,200),wraps:Math.max(save.sup.wraps,20),ointment:Math.max(save.sup.ointment,20),film:Math.max(save.sup.film,10)}); persist(); renderFloorHud(); toast('Supplies restocked (developer mode)'); }
   if(v==='store') openStore('supplies',enterFloor);
@@ -1968,11 +2358,16 @@ $('#bEndFree').onclick=startFree; $('#bEndCareer').onclick=startCareer; $('#bEnd
 window.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(dlg.active&&(e.code==='Space'||k==='enter')){ e.preventDefault(); advance(); return; }
+  if(current==='fight'&&!modalOpen){ // keyboard: arrows/WASD move, mouse aims, click or Space/Enter shoots
+    const m=KEYMOVE[k]; if(m){ e.preventDefault(); FT.keys[m]=true; }
+    if(e.code==='Space'||k==='enter'){ e.preventDefault(); shoot(FT.aim.x,FT.aim.y); }
+    return;
+  }
   if(current==='floor'&&!modalOpen){
     const m=KEYMOVE[k]; if(m){ e.preventDefault(); F.keys[m]=true; return; }
     if(k==='e'||k==='enter'||e.code==='Space'){ e.preventDefault(); floorInteract(); return; }
     if(k==='escape'){ floorMenu(); return; }
-    if(k==='m'){ openMap(enterFloor); return; }
+    if(k==='m'&&save.career){ openMap(enterFloor); return; }
     return;
   }
   if(current!=='tattoo'||modalOpen){
@@ -1990,7 +2385,7 @@ window.addEventListener('keydown',e=>{
   else if(k==='f') setFull(!save.fullView);
 });
 
-window.addEventListener('keyup',e=>{ const m=KEYMOVE[e.key.toLowerCase()]; if(m) F.keys[m]=false; });
+window.addEventListener('keyup',e=>{ const m=KEYMOVE[e.key.toLowerCase()]; if(m){ F.keys[m]=false; FT.keys[m]=false; } });
 
 /* =============== GAMEPAD =============== */
 const gp={prev:[],nav:0,stickHeld:false,id:null,blocked:false,rest:null,seen:false};
@@ -2053,6 +2448,14 @@ function pollPad(dt){
   // so in menus ANY face button or Start selects. Back/Select (or the on-screen Back buttons) go back.
   const pressedIdx=b.findIndex((v,i)=>v>.5&&!was(i)); if(pressedIdx>=0) padStatus('on',pressedIdx);
   const confirm=down(0)||down(1)||down(2)||down(3), back=down(8);
+  if(current==='fight'&&!modalOpen){ // left stick / D-pad moves, right stick aims, RT or A shoots
+    let mx=lx, my=ly; if(on(12)) my=-1; if(on(13)) my=1; if(on(14)) mx=-1; if(on(15)) mx=1; FT.padMove=[mx,my];
+    const rx2=ax[2]||0, ry2=ax[3]||0;
+    if(Math.hypot(rx2,ry2)>.25){ FT.aim.x=clamp(FT.aim.x+rx2*3.4*(dt/16.7),0,W); FT.aim.y=clamp(FT.aim.y+ry2*3.4*(dt/16.7),0,H); }
+    if(rt>.5||on(0)) shoot(FT.aim.x,FT.aim.y);
+    return;
+  }
+  if(current==='floor'&&!modalOpen&&dlg.active){ F.padMove=[0,0]; if(confirm||down(9)) advance(); return; }
   if(current==='floor'&&!modalOpen){
     let mx=lx,my=ly; if(on(12))my=-1; if(on(13))my=1; if(on(14))mx=-1; if(on(15))mx=1;
     F.padMove=[mx,my];
@@ -2173,6 +2576,7 @@ function loop(t){
   const dt=Math.min(50,t-lastT); lastT=t; tick++;
   try{ pollPad(dt); }catch(err){ gp.err=String(err&&err.message||err).slice(0,80); }
   if(current==='floor') floorTick(dt);
+  if(current==='fight'&&!modalOpen) fightTick(dt);
   if(sceneMode&&current!=='tattoo'){ updateActors(); sceneMode==='exterior'?drawExterior(t):drawInterior(t); }
   tickDialogue();
   if(current==='tattoo'){ tickJob(dt/1000); if(save.fullView&&tick%15===0) updateMini(); }
