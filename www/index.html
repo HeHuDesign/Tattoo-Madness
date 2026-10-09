@@ -173,6 +173,42 @@ button{font:inherit;color:inherit}
 .mapbox{position:relative;width:min(100%,calc((100vh - 270px)*16/9));min-width:260px;aspect-ratio:16/9;margin:0 auto;border:3px solid var(--wood-d);border-radius:4px;overflow:visible}
 .mapbox canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 .pin{position:absolute;transform:translate(-50%,-100%);font-size:14px;padding:3px 8px;white-space:nowrap}
+.pin.offmap{display:none}
+/* full-screen city map */
+.mapfull{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;background:#d9b77a}
+.mapfull>canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.mapx{position:absolute;z-index:4;left:calc(10px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));width:46px;height:46px;padding:0;border-radius:50%;font-size:22px;line-height:1;font-family:system-ui,sans-serif}
+.maphud{position:absolute;z-index:3;right:10px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;gap:6px}
+.mapzoom{position:absolute;right:10px;top:calc(56px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:6px;z-index:3}
+.mapzoom .gbtn{min-width:40px;padding:3px 6px}
+/* shop blips: small pulsing markers instead of name labels */
+.blip{position:absolute;z-index:2;transform:translate(-50%,-50%);width:22px;height:22px;padding:0;border-radius:50%;border:3px solid #fff;background:#f2c14e;
+  box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 10px 3px rgba(255,227,110,.6);animation:blippulse 1.4s ease-in-out infinite;font:14px/1 system-ui,sans-serif;color:#3d1f0e;cursor:pointer}
+.blip.owned{background:#86c060;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 10px 3px rgba(134,192,96,.7)}
+.blip.home{background:#ff6fa8;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 10px 3px rgba(255,111,168,.7)}
+.blip.supply{background:#4ab0e8;border-radius:5px;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 10px 3px rgba(74,176,232,.75)}
+.blip.guide::after{content:"▼ Supply Store";position:absolute;left:50%;bottom:130%;transform:translateX(-50%);white-space:nowrap;font:13px "Pixelify Sans",sans-serif;
+  color:#fff;background:#1f4fa0;border:2px solid #fff;border-radius:4px;padding:2px 6px;animation:guidebob .5s steps(2) infinite}
+@keyframes guidebob{50%{transform:translate(-50%,-4px)}}
+.blip.supply.shut{background:#8a8a96;box-shadow:0 0 0 2px rgba(0,0,0,.5);animation:none}
+.blip[aria-pressed="true"]{width:30px;height:30px;border-color:#ffe36e}
+.blip.offmap{display:none}
+@keyframes blippulse{50%{transform:translate(-50%,-50%) scale(1.18)}}
+.blip.pad-focus{transform:translate(-50%,-50%) scale(1.3)}
+.blip.pad-focus::before{left:-24px}
+/* the little card for one shop, over the bottom of the map */
+.mapcard{position:absolute;z-index:5;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(560px,calc(100% - 140px));padding:10px 12px;
+  display:flex;gap:10px;align-items:flex-start;max-height:calc(100% - 80px);overflow:hidden}
+.mapcard .front{width:128px;height:72px;image-rendering:pixelated;border:3px solid var(--wood-d);border-radius:4px;flex:none}
+.mapcard .grow{flex:1;min-width:0;font-size:15px;line-height:1.25}
+.mapcard .mbtns{display:flex;flex-direction:column;gap:6px;flex:none}
+.blip.here{outline:3px solid #fff;outline-offset:3px}
+.blip.here:not(.pad-focus)::before{content:"You are here";position:absolute;left:50%;top:135%;transform:translateX(-50%);white-space:nowrap;font:11px "Pixelify Sans",sans-serif;
+  color:#3d1f0e;background:#fff3b0;border:2px solid #3d1f0e;border-radius:3px;padding:1px 4px;pointer-events:none}
+.compact .mapcard{padding:7px 9px;gap:8px}
+.compact .mapcard .front{width:96px;height:54px}
+.compact .mapcard .grow{font-size:12.5px}
+.compact .mapx{width:40px;height:40px;font-size:19px}
 .pin.owned{background:var(--go)}
 .pin.home{background:#ffd7e6}
 .pin[aria-pressed="true"]{background:var(--ink);color:var(--parch)}
@@ -249,8 +285,10 @@ button{font:inherit;color:inherit}
 /* short landscape screens (phones turned sideways) */
 .compact .gbtn{font-size:17px;padding:5px 12px}
 .compact .gbtn.small{font-size:15px;padding:3px 9px}
-.compact #scr-title.active{padding:8px}
-.compact .tfit{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:10px 28px}
+.compact #scr-title.active{padding:8px;justify-content:flex-start}
+/* phones: logo up in the night sky, clear of the shop */
+.compact .tfit{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:10px 28px}
+.compact .logo{margin-top:4px}
 .compact .logo h1{font-size:clamp(34px,13vh,68px);text-shadow:3px 3px 0 #b8432f,6px 6px 0 #3a1830}
 .compact .logo p{margin-top:8px;font-size:17px}
 .compact .menu{gap:7px;padding:12px 14px;min-width:240px}
@@ -475,18 +513,19 @@ button{font:inherit;color:inherit}
   </section>
 
   <section class="screen" id="scr-store"><div class="dim"><div class="store wood">
-    <div class="sthead"><h2>Shop counter</h2><span class="chip" id="stCoins"></span></div>
+    <div class="sthead"><h2 id="stTitle">Supply closet</h2><span class="chip" id="stCoins"></span></div>
     <div class="tabs" id="stTabs"></div>
     <div class="items" id="stItems"></div>
     <div class="row"><button class="gbtn" id="stBack">Back</button></div>
   </div></div></section>
 
-  <section class="screen" id="scr-map"><div class="dim"><div class="mapwrap wood">
-    <div class="sthead"><h2>Neon Springs</h2><span class="chip" id="mapCoins"></span></div>
-    <div class="mapbox" id="mapBox"><canvas id="mapC" width="320" height="180"></canvas></div>
-    <div class="mapinfo" id="mapInfo"></div>
-    <div class="row"><button class="gbtn" id="mapBack">Back to the shop</button></div>
-  </div></div></section>
+  <!-- city map: fills the screen. ✕ closes it; shops are blips; tapping one opens a small card -->
+  <section class="screen" id="scr-map"><div class="mapfull" id="mapBox"><canvas id="mapC" width="480" height="270"></canvas>
+    <button class="gbtn mapx" id="mapBack" title="Back to the shop" aria-label="Close the map">✕</button>
+    <div class="maphud"><span class="chip wood" id="mapTime"></span><span class="chip wood" id="mapCoins"></span></div>
+    <div class="mapzoom"><button class="gbtn small" id="mzIn" title="Zoom in (+)">+</button><button class="gbtn small" id="mzOut" title="Zoom out (−)">−</button><button class="gbtn small" id="mzFit" title="See the whole city">Fit</button></div>
+    <div class="mapcard wood hide" id="mapInfo"></div>
+  </div></section>
 
   <section class="screen" id="scr-dayend"><div class="dim"><div class="board wood">
     <h2 id="deTitle">Closing time</h2>
@@ -558,6 +597,8 @@ const CH = {
   rob1:{name:'Robber',hair:'#1a1a1a',style:'cap',hat:'#1a1a1a',skin:'#c48a62',shirt:'#3a3a44',shirtD:'#26262e',pants:'#22222a',boots:'#111'},
   rob2:{name:'Robber',hair:'#1a1a1a',style:'cap',hat:'#4a1f1f',skin:'#eab894',shirt:'#2f3b2f',shirtD:'#1f281f',pants:'#22222a',boots:'#111',beard:1},
   rob3:{name:'Robber',hair:'#1a1a1a',style:'cap',hat:'#1a1a1a',skin:'#6a4430',shirt:'#44343a',shirtD:'#2e2228',pants:'#22222a',boots:'#111'},
+  // looks like an ordinary customer until he pulls a gun (Day 3 at Dee's)
+  rob4:{name:'Stranger',hair:'#6b3d1f',style:'short',skin:'#d9a07a',shirt:'#5a8a6a',shirtD:'#3e6a4e',pants:'#3b3950',boots:'#2a1a14'},
   marisol:{name:'Marisol Reyes',hair:'#1a1414',style:'long',skin:'#c48a62',shirt:'#b3263e',shirtD:'#861b2e',pants:'#2b2b3a',boots:'#1a1a1a'}
 };
 const CUSTOMERS = [
@@ -599,7 +640,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{}});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -744,7 +785,11 @@ const THEMES={
   pastel:{wall:'#bfe0d0',wall2:'#a6ccbb',trim:'#f4efe6',floor:'#e2c9a0',floor2:'#cbb088',counter:['#f4efe6','#e8a8b8','#d898a8'],chair:['#e8a8b8','#f8c8d4'],rug:['#f4efe6','#a6ccbb','#e8a8b8'],neon:['OPEN','#ff6fa8','rgba(255,111,168,.35)']},
   graffiti:{wall:'#5c5c60',wall2:'#4a4a4e',trim:'#2a2a2e',floor:'#4a4440',floor2:'#3a3430',counter:['#7a7a7e','#3a3a3e','#4a4a4e'],chair:['#2a2a2a','#5a5a5a'],rug:['#3a3a3e','#2a2a2e','#ff5a46'],neon:['INK','#ff3a3a','rgba(255,58,58,.35)']},
   garage:{wall:'#7a8088',wall2:'#666c74',trim:'#d9a12b',floor:'#5a5a58',floor2:'#3e3e3c',counter:['#d9a12b','#3a3a3a','#4a4a4a'],chair:['#d9a12b','#f2c14e'],rug:['#2a2a2a','#3a3a3a','#d9a12b'],neon:['OPEN 24','#7fff7f','rgba(127,255,127,.3)']},
-  nautical:{wall:'#2e6f8e',wall2:'#245a74',trim:'#f4efe6',floor:'#b09a70',floor2:'#97805a',counter:['#f4efe6','#7a4a2e','#6a3e26'],chair:['#f4efe6','#ffffff'],rug:['#f4efe6','#2e6f8e','#b8323c'],neon:['AHOY','#9fe8ff','rgba(159,232,255,.35)']}
+  nautical:{wall:'#2e6f8e',wall2:'#245a74',trim:'#f4efe6',floor:'#b09a70',floor2:'#97805a',counter:['#f4efe6','#7a4a2e','#6a3e26'],chair:['#f4efe6','#ffffff'],rug:['#f4efe6','#2e6f8e','#b8323c'],neon:['AHOY','#9fe8ff','rgba(159,232,255,.35)']},
+  penthouse:{wall:'#1e2a3e',wall2:'#2a3a54',trim:'#9fb8d8',floor:'#2a2a30',floor2:'#3a3a42',counter:['#9fb8d8','#1a1e28','#242a36'],chair:['#e8e8ee','#ffffff'],rug:['#3a4a64','#2a3a54','#9fe8ff'],neon:['SKY','#9fe8ff','rgba(159,232,255,.35)']},
+  gallery:{wall:'#f6f4f0',wall2:'#e4e0d8',trim:'#1a1a1a',floor:'#d8d0c4',floor2:'#c4bcb0',counter:['#1a1a1a','#f6f4f0','#e4e0d8'],chair:['#1a1a1a','#3a3a3a'],rug:['#1a1a1a','#3a3a3a','#c9a24a'],neon:['CROWN','#c9a24a','rgba(201,162,74,.35)']},
+  diner:{wall:'#f4efe6',wall2:'#e0d8ca',trim:'#b8323c',floor:'#f4efe6',floor2:'#1a1a1a',counter:['#b8323c','#e8e8ee','#c8c8d0'],chair:['#b8323c','#e86a72'],rug:['#b8323c','#7a1a24','#f4efe6'],neon:['EAT INK','#ff5a46','rgba(255,90,70,.35)']},
+  adobe:{wall:'#d8a878',wall2:'#c8946a',trim:'#7a4a2e',floor:'#b8643c',floor2:'#9a5030',counter:['#7a4a2e','#5a3420','#6a3e26'],chair:['#2e8a8a','#4ab0b0'],rug:['#e8c25a','#2e8a8a','#b8323c'],neon:['ROSE','#ff6fa8','rgba(255,111,168,.35)']}
 };
 // the theme of the shop you're working in right now (null = Dee's shop)
 function sceneTheme(){ if(!F.active||!save.career||!save.workAt||save.workAt==='dee') return null; const sh=SHOPS.find(s=>s.id===save.workAt); return sh?THEMES[sh.theme]:null; }
@@ -763,12 +808,23 @@ function drawThemeRoom(th,t,cx,wb,fy){
     for(let i=0;i<9;i++){ const x0=(i*61+10)%(W-40), y0=8+(i*17)%(wb-40), c=tags[i%5]; for(let k=0;k<22;k++) R(x0+k,y0+Math.round(Math.sin(k/2+i)*3),2,2,c); R(x0+4,y0+6,14,1,c); } }
   if(st==='garage'){ for(let x=0;x<W;x+=4) R(x,0,1,wb,th.wall2); R(0,wb-30,W,30,'#5a6068'); for(let x=0;x<W;x+=8) R(x,wb-30,1,30,'#4a5058'); }
   if(st==='nautical'){ for(let y=0;y<wb;y+=6) R(0,y,W,1,th.wall2); }
+  if(st==='penthouse'){ // floor-to-ceiling glass with the city at night behind it
+    R(4,4,W-8,wb-10,'#0e1626'); for(let i=0;i<26;i++){ const bx=(i*29)%W, bh=20+(i*13)%44, bw=10+(i%3)*6; R(bx,wb-6-bh,bw,bh,'#1c2840');
+      for(let y=wb-4-bh;y<wb-8;y+=4) for(let x=bx+2;x<bx+bw-2;x+=3) if(((x*7+y*3+i)%5)>1) R(x,y,1,2,'#e8d27a'); }
+    for(let x=4;x<W;x+=48) R(x,4,3,wb-10,th.trim); }
+  if(st==='gallery'){ [['#e85a5a','#2e5aa0'],['#f2c14e','#1a1a1a'],['#4ab0e8','#e8a8b8']].forEach(([a,b],i)=>{ const x=Math.round(W*(.08+i*.3)); if(Math.abs(x-cx)<40) return;
+      R(x,10,34,26,'#1a1a1a'); R(x+2,12,30,22,'#ffffff'); R(x+5,15,14,10,a); R(x+15,22,14,9,b); }); }
+  if(st==='diner'){ R(0,wb-30,W,6,th.trim); R(0,wb-22,W,2,th.trim); for(let x=0;x<W;x+=22){ R(x+6,6,10,10,'#ffffff'); R(x+7,7,8,8,'#f2c14e'); } }
+  if(st==='adobe'){ for(let i=0;i<120;i++) R((i*37)%W,(i*23)%wb,2,1,th.wall2); R(0,wb-24,W,4,'#2e8a8a'); for(let x=0;x<W;x+=8) R(x+2,wb-23,4,2,'#e8c25a'); }
   R(0,wb-3,W,3,th.trim);
   // floor
   R(0,wb,W,H-wb,th.floor);
   if(st==='casino'){ for(let y=wb+4;y<H;y+=10) for(let x=((y/10|0)%2)*10;x<W;x+=20){ R(x+4,y,2,2,th.trim); R(x+3,y+1,4,1,th.floor2); } }
   if(st==='marble'){ for(let y=wb;y<H;y+=16) R(0,y,W,1,th.floor2); for(let x=0;x<W;x+=24) R(x,wb,1,H-wb,th.floor2); }
-  if(st==='brick'){ for(let y=wb,r=0;y<H;y+=10,r++) for(let x=(r%2)*10;x<W;x+=20) R(x,y,10,10,th.floor2); }
+  if(st==='brick'||st==='diner'){ for(let y=wb,r=0;y<H;y+=10,r++) for(let x=(r%2)*10;x<W;x+=20) R(x,y,10,10,th.floor2); }
+  if(st==='penthouse'){ for(let x=0;x<W;x+=30) R(x,wb,1,H-wb,th.floor2); for(let i=0;i<6;i++) R((i*67)%W,wb+8+(i*11)%(H-wb-10),18,1,'rgba(159,184,216,.25)'); }
+  if(st==='gallery'){ for(let y=wb;y<H;y+=20) R(0,y,W,1,th.floor2); for(let x=0;x<W;x+=40) R(x,wb,1,H-wb,th.floor2); }
+  if(st==='adobe'){ for(let y=wb;y<H;y+=12) R(0,y,W,1,th.floor2); for(let y=wb,r=0;y<H;y+=12,r++) for(let x=(r%2)*12;x<W;x+=24) R(x,y,1,12,th.floor2); }
   if(st==='mural'){ for(let i=0;i<30;i++) R((i*37)%W,wb+4+(i*13)%(H-wb-6),2,2,['#e85a8a','#4ab0e8','#f2c14e'][i%3]); }
   if(st==='pastel'||st==='nautical'){ for(let y=wb,row=0;y<H;y+=7,row++){ R(0,y,W,1,th.floor2); for(let x=(row%2)*18;x<W;x+=36) R(x,y,1,7,th.floor2); } }
   if(st==='graffiti'||st==='garage'){ for(let i=0;i<8;i++){ const x0=(i*53)%W, y0=wb+6+(i*19)%(H-wb-10); R(x0,y0,12,1,th.floor2); R(x0+8,y0+1,1,5,th.floor2); }
@@ -779,6 +835,8 @@ function drawThemeRoom(th,t,cx,wb,fy){
   if(st==='nautical'){ [cx-20,cx+14].forEach(x=>{ sx.fillStyle=th.trim; sx.beginPath(); sx.arc(x,wy+wh/2,13,0,7); sx.fill(); sx.fillStyle='#a9dcef'; sx.beginPath(); sx.arc(x,wy+wh/2,10,0,7); sx.fill(); }); }
   else if(st==='casino'){ for(let i=0;i<3;i++){ const x=cx-30+i*20; R(x,wy+6,16,wh,'#3a1a40'); R(x+2,wy+9,12,8,'#ffe08a'); R(x+3,wy+11,3,4,'#b8323c'); R(x+7,wy+11,3,4,'#b8323c'); R(x+5,wy+20,6,3,'#c9a24a'); } }
   else if(st==='garage'){ R(cx-30,wy-4,60,wh+8,'#8a9098'); for(let y=wy-2;y<wy+wh+4;y+=4) R(cx-30,y,60,1,'#6a7078'); R(cx-30,wy+wh+3,60,2,th.trim); }
+  else if(st==='penthouse'){ /* the whole wall is already a window */ }
+  else if(st==='adobe'){ R(cx-24,wy+4,48,wh-4,'#a9dcef'); sx.fillStyle='#a9dcef'; sx.beginPath(); sx.ellipse(cx,wy+4,24,10,0,Math.PI,0); sx.fill(); R(cx-1,wy-4,2,wh+4,th.trim); R(cx-28,wy+wh,56,3,th.trim); }
   else { R(cx-27,wy-3,54,wh+6,th.trim); R(cx-24,wy,48,wh,st==='graffiti'?'#5a6a7a':'#a9dcef'); R(cx-24,wy,48,wh/3,st==='graffiti'?'#6a7a8a':'#cfeefa');
     if(st==='graffiti') for(let x=cx-22;x<cx+24;x+=6) R(x,wy,2,wh,'#2a2a2e'); // bars on the window
     else { R(cx-1,wy,2,wh,th.trim); R(cx-24,wy+wh/2,48,2,th.trim); }
@@ -815,7 +873,8 @@ function drawInterior(t){
     if(i===1){ R(x+10,fwY+5,2,16,c); R(x+6,fwY+8,10,2,c); R(x+5,fwY+18,12,2,c); }
     if(i===2){ R(x+8,fwY+6,6,6,c); R(x+6,fwY+14,10,8,'#5a8f3c'); }
   });
-  if(save.graduated && sceneMode==='interior'){ const x=cx-34; R(x,fwY,22,28,'#3d2414'); R(x+2,fwY+2,18,24,'#f2e6cc'); R(x+7,fwY+6,8,7,'#b3263e'); R(x+10,fwY+13,2,9,'#3f6b33'); R(x+12,fwY+16,4,2,'#3f6b33'); }
+  // your graduation rose hangs on the wall under the neon sign (not over the window)
+  if(save.graduated && sceneMode==='interior'){ const x=cx+54, y=fwY+26; R(x,y,22,28,'#3d2414'); R(x+2,y+2,18,24,'#f2e6cc'); R(x+7,y+6,8,7,'#b3263e'); R(x+10,y+13,2,9,'#3f6b33'); R(x+12,y+16,4,2,'#3f6b33'); }
   // neon
   const nx=cx+46; R(nx,fwY,62,20,'#2a1a2a'); const on=!(Math.sin(t/110)>0.95);
   pixText('♥',nx+5,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
@@ -871,7 +930,7 @@ const SCENE_FOR={title:'exterior',controls:'exterior',slots:'exterior',shop:'int
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+id));
   current=id; sceneMode=SCENE_FOR[id]||(id==='tattoo'?null:sceneMode);
-  F.active=!!(save.career||F.appr)&&['floor','store','dayend','results','tattoo'].includes(id); F.keys={};
+  F.active=!!(save.career||F.appr)&&['floor','store','dayend','results','tattoo','fight'].includes(id)&&!!F.player; F.keys={};
   sc.style.display=id==='tattoo'?'none':'';
   if(id==='tattoo') requestAnimationFrame(layoutPad);
   clearPadFocus(); if(inputMode==='pad') setTimeout(focusFirst,30);
@@ -943,7 +1002,8 @@ function focusables(){
   return [...root.querySelectorAll('button:not([disabled])')].filter(e=>e.offsetParent!==null && !e.closest('.hide'));
 }
 function clearPadFocus(){ if(padFocusEl) padFocusEl.classList.remove('pad-focus'); padFocusEl=null; }
-function setPadFocus(el){ clearPadFocus(); if(!el) return; padFocusEl=el; el.classList.add('pad-focus'); el.focus({preventScroll:true}); el.scrollIntoView({block:'nearest'}); }
+function setPadFocus(el){ clearPadFocus(); if(!el) return; padFocusEl=el; el.classList.add('pad-focus'); el.focus({preventScroll:true}); el.scrollIntoView({block:'nearest'});
+  if(el.classList.contains('pin')) centerMapOn(el.dataset.id); } // controller on the city map: glide to the highlighted shop
 function focusFirst(){ if((current==='tattoo'||current==='floor')&&!modalOpen) return; const f=focusables(); setPadFocus(f.find(e=>e.classList.contains('go'))||f[0]); }
 function moveFocus(dir){
   const f=focusables(); if(!f.length) return;
@@ -1130,6 +1190,8 @@ function updateRing(){
 /* tools UI */
 function setTool(t){
   job.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));
+  // the color palette shows whenever you're shading a tattoo that has colors (not only after the lines are done)
+  const pal=$('#shadeInks'); if(pal) pal.classList.toggle('hide',!(job.shadeSpec&&job.mode!=='free'&&(job.shadeStep||t==='shade')));
   $('#szVal').textContent=TOOLS[t].sizes[TOOLS[t].i][1]; updateRing();
 }
 function bumpSize(dir){ const T=TOOLS[job.tool]; T.i=Math.max(0,Math.min(T.sizes.length-1,T.i+dir)); setTool(job.tool); blip(dir>0?700:500); }
@@ -1387,11 +1449,11 @@ $('#tMenu').onclick=async()=>{
   const warmup=job.mode==='warmup', opts=[['Resume','resume',true]];
   if(job.mode==='practice'||warmup) opts.push(['Restart pad','restart']);
   if(warmup) opts.push([`Start on ${CH[job.cust.ch].name}`,'real']);
-  if(isClient(job.mode)&&job.phase!=='wash') opts.push(['Supply counter','store']);
+  if(isClient(job.mode)&&job.phase==='ink'&&F.player) opts.push(['Step out (your customer waits)','store']);
   opts.push(['Quit to title','quit']);
   const v=await modal(isClient(job.mode)||warmup?'Paused. Your customer is waiting patiently.':'Paused',opts);
   if(v==='restart'){ if(warmup) startWarmup(); else startPractice(job.idx); }
-  if(v==='store') openStore('supplies',backToStation);
+  if(v==='store') stepOut();
   if(v==='real') warm.start();
   // quitting mid-job: the customer goes home (a Day 2-3 customer simply comes back in next time)
   if(v==='quit'){ buzz(false); stk=null; if(F.jobCust){ custLeave(F.jobCust); F.jobCust=null; } F.busy=false; persist(); show('title'); }
@@ -1562,8 +1624,7 @@ const aOrAn=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
 async function offerWarmup(cust,design,start,career){
   warm={cust,design,start,career};
   const v=await modal(`${CH[cust.ch].name} wants ${aOrAn(DESIGNS[design].name.toLowerCase())} on the ${cust.spot}${cust.shade&&DESIGNS[design].shade?`, shaded ${shadeText(cust.shade)}`:''}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
-    [['Practice on fake skin','practice'],['Supply counter','store'],['Start the tattoo','go',true]]);
-  if(v==='store'){ openStore('supplies',()=>{ if(F.player) show('floor'); else { show('shop'); renderHud(); } offerWarmup(cust,design,start,career); }); return; }
+    [['Practice on fake skin','practice'],['Start the tattoo','go',true]]);
   if(v==='practice'){ await playerWalk(deskSpot()); startWarmup(); } else start();
 }
 // On the shop floor, show the player walking somewhere (the desk or the tattoo chair) before the next screen
@@ -1669,14 +1730,15 @@ const FT={on:false,robbers:[],shots:[],cd:0,aim:{x:0,y:0},t:0,done:null,lesson:f
 function runFight(opts){
   return new Promise(res=>{
     const {cx,fy}=sceneGeo(), you=actors.find(a=>a.ch==='you');
+    FT.youCtrl=you?!!you.ctrl:false; // the shop-floor player is normally ctrl; a cutscene actor isn't
     if(you){ you.ctrl=true; you.flip=false; }
     actors.splice(0,actors.length,...actors.filter(a=>!/^rob/.test(a.ch)));
-    // everyone walks in at once, spread out around the door
-    const n=opts.count||1, robbers=Array.from({length:n},(_,i)=>({ch:'rob'+(i%3+1),x:cx+(i-(n-1)/2)*16,y:H+30,ctrl:true,flip:true,moving:true,
+    // everyone walks in at once, spread out around the door (or starts where opts.start says, e.g. at the register)
+    const n=opts.count||1, robbers=Array.from({length:n},(_,i)=>({ch:opts.ch||'rob'+(i%3+1),x:opts.start?opts.start.x:cx+(i-(n-1)/2)*16,y:opts.start?opts.start.y:H+30,ctrl:true,flip:true,moving:true,
       hp:4,down:false,downT:0,hurt:0,speed:opts.lesson?12:20,phase:Math.random()*6,dodgeT:0,dodgeVx:0,dodgeVy:0,fireT:1.6+Math.random()}));
     // hp = your health (100). Robbers shoot back (eshots); Dee shoots from behind the counter now and then, and misses a lot
     Object.assign(FT,{on:true,robbers,shots:[],eshots:[],cd:0,t:0,lesson:!!opts.lesson,flash:0,you,keys:{},padMove:[0,0],dodge:opts.lesson?.5:.7,hintT:5,
-      hp:100,lostBy:null,deeT:2.2,deeFlash:0,aim:{x:cx,y:fy+30},aiming:false,aimId:null,queued:null,done:res});
+      hp:100,lostBy:null,deeT:2.2,deeFlash:0,aim:{x:cx,y:fy+30},aiming:false,aimId:null,queued:null,done:res,backTo:opts.backTo||'shop'});
     if(you) you.hurt=0;
     robbers.forEach(r=>actors.push(r));
     show('fight'); renderFightHud();
@@ -1759,8 +1821,8 @@ function fightTick(dt){
 function endFight(won){
   if(!FT.on) return; FT.on=false; FT.shots=[]; FT.eshots=[];
   actors.splice(0,actors.length,...actors.filter(a=>!/^rob/.test(a.ch)));
-  if(FT.you){ FT.you.ctrl=false; FT.you.moving=false; }
-  show('shop'); const f=FT.done; FT.done=null; f&&f(won);
+  if(FT.you){ FT.you.ctrl=FT.youCtrl; FT.you.moving=false; }
+  show(FT.backTo); const f=FT.done; FT.done=null; f&&f(won);
 }
 function drawFx(t){
   if(TOSS){ const p=clamp((performance.now()-TOSS.t0)/TOSS.dur), x=TOSS.a.x+(TOSS.b.x-TOSS.a.x)*p, y=TOSS.a.y+(TOSS.b.y-TOSS.a.y)*p-Math.sin(p*Math.PI)*26; drawGun(x,y,((p*6)|0)%2===1); }
@@ -1869,10 +1931,20 @@ function renderInk(){
 async function outOfInk(){
   ptr=null; padCursor.drawing=false; if(stk) strokeEnd(); buzz(false);
   if(modalOpen) return;
-  const go=await modal('Out of ink! Restock at the supply counter to keep going. Your customer will wait.',[['Not now',false],['Supply counter',true,true]]);
-  if(go) openStore('supplies',backToStation);
+  const go=await modal('Out of ink! Step out, walk out the front door and find the Supply Store on the map. Your customer waits in the chair, but the clock keeps running.',[['Not now',false],['Step out',true,true]]);
+  if(go&&F.player) stepOut();
 }
-function backToStation(){ show('tattoo'); renderInk(); }
+function backToStation(){ job.onRun=false; F.away=false; show('tattoo'); renderInk(); }
+// leave the station mid-tattoo: you're back on the floor, the customer waits in the chair and their timer keeps running.
+// Walk back to the chair ("Back to your client") to pick up where you left off
+function stepOut(){
+  ptr=null; padCursor.drawing=false; if(stk) strokeEnd(); buzz(false);
+  job.onRun=true; F.suspended=true; enterFloor(); toast('Stepped out. Your client waits in the chair, and their clock is running.');
+}
+async function resumeJob(){
+  F.busy=true; await playerWalk(artistPos()); F.busy=false; F.suspended=false; job.onRun=false;
+  show('tattoo'); renderInk(); requestAnimationFrame(layoutPad);
+}
 
 /* ---------- keeping it clean while you ink: smudges of excess ink and blood build up and must be wiped ---------- */
 const cDirt=$('#cDirt'), dctx=cDirt.getContext('2d');
@@ -1951,9 +2023,8 @@ async function startAftercare(r){
   let cover=null;
   while(!cover){
     const opts=[]; if(save.sup.film>0) opts.push(['Second-skin film','film']);
-    opts.push(['Supply counter','store'],['Ointment + wrap','wrap',true]);
+    opts.push(['Ointment + wrap','wrap',true]);
     const v=await modal(`How do you want to cover it?\nOintment ${save.sup.ointment} · Plastic wrap ${save.sup.wraps} · Film ${save.sup.film}`,opts);
-    if(v==='store'){ await new Promise(res=>openStore('supplies',()=>{ show('tattoo'); res(); })); continue; }
     cover=v;
   }
   job.cover=cover; job.phase='care'; job.careMask=careMask(); wipeLast=null;
@@ -1983,7 +2054,9 @@ async function wrapUp(){
 }
 
 /* ---------- shop sim data ---------- */
-const OPEN=600, CLOSE=1200, LAST_IN=1140, CLOCK_RATE=4;
+// a career day: you arrive at 9 AM with the doors closed and open up when ready; customers come in until 10 PM (CLOSE);
+// the day ends when you choose "End the day", or at midnight (DAY_END)
+const DAY_START=540, OPEN=600, CLOSE=1320, LAST_IN=1290, DAY_END=1440, CLOCK_RATE=4;
 const DES_INFO={smiley:{pay:25,dur:60,time:180,rep:0},heart:{pay:32,dur:75,time:200,rep:0},star:{pay:38,dur:75,time:200,rep:3},
   anchor:{pay:48,dur:105,time:280,rep:6},dagger:{pay:52,dur:105,time:280,rep:10},moon:{pay:58,dur:120,time:300,rep:14},rose:{pay:80,dur:150,time:400,rep:18}};
 const NAMES=['Ava','Bram','Cass','Dario','Enzo','Faye','Hollis','Ines','Jory','Kit','Lior','Mabel','Nico','Odette','Priya','Quinn','Rafe','Sunny','Tamsin','Uri','Vida','Wren','Xavi','Yara','Zeke','Bea','Cole','Dot','Ezra','Gia'];
@@ -2010,19 +2083,27 @@ const UPGRADES=[
 /* ---------- Neon Springs: a made-up desert city. Shops for sale, each in a district with its own crowd ---------- */
 // safe: 1 (rough) to 5 (calm), used for robberies later. Popular districts cost more and pay more.
 const DISTRICTS={strip:{name:'The Strip',safe:4},downtown:{name:'Downtown',safe:3},arts:{name:'Arts District',safe:3},
-  suburbs:{name:'Suburbs',safe:5},eastside:{name:'Eastside',safe:1},lakeside:{name:'Lakeside',safe:4}};
-// traffic = how many customers come in, payMul = how much they pay. ids harbor/mill/alley/hill are from the old town map (old saves own them)
+  suburbs:{name:'Suburbs',safe:5},eastside:{name:'Eastside',safe:1},lakeside:{name:'Lakeside',safe:4},
+  uptown:{name:'Uptown',safe:5},northside:{name:'Northside',safe:2}};
+// traffic = how many customers come in, payMul = how much they pay. x/y = position on the city map (960x540).
+// ids harbor/mill/alley/hill are from the old town map (old saves own them)
 const SHOPS=[
-  {id:'eastink',name:'Eastside Ink',district:'eastside',theme:'graffiti',price:600,rent:25,traffic:.9,payMul:.8,x:.82,y:.74,desc:'Bars on the windows, tags on the walls. Cheap rent on a rough block.'},
-  {id:'block',name:'Block Party Tattoo',district:'eastside',theme:'garage',price:1200,rent:35,traffic:1,payMul:.85,x:.7,y:.86,desc:'An old garage with the roll-up door still on. Open late, loud crowd.'},
-  {id:'harbor',name:'Harborside Ink',district:'lakeside',theme:'nautical',price:1500,rent:45,traffic:.9,payMul:1,x:.86,y:.33,desc:'A little shop on the lake docks. Boaters love anchors.'},
-  {id:'mill',name:'Old Mill Studio',district:'arts',theme:'mural',price:2500,rent:60,traffic:1.1,payMul:1.1,x:.22,y:.3,desc:'Murals on every wall and a loyal crowd of artists.'},
-  {id:'alley',name:'Neon Alley Tattoo',district:'downtown',theme:'brick',price:4500,rent:80,traffic:1.3,payMul:1.2,x:.42,y:.13,desc:'Brick walls and a checkered floor, two blocks from Dee. Always busy.'},
-  {id:'hill',name:'Hilltop Atelier',district:'suburbs',theme:'pastel',price:7000,rent:90,traffic:1,payMul:1.4,x:.17,y:.72,desc:'Quiet, bright and calm. Fine-line clients who pay well.'},
-  {id:'jackpot',name:'Jackpot Ink',district:'strip',theme:'casino',price:14000,rent:160,traffic:1.8,payMul:1.6,x:.5,y:.5,desc:'Black and gold on the Strip. Tourists all night, big tips.'},
-  {id:'highroller',name:'High Roller Tattoo',district:'strip',theme:'marble',price:22000,rent:220,traffic:2,payMul:1.9,x:.62,y:.72,desc:'Marble floors and VIP clients. The best address in Neon Springs.'}];
-const DEE_SHOP={id:'dee',name:"Dee's shop",district:'downtown',x:.6,y:.24,rent:20,traffic:1,payMul:1};
-const shopById=id=>id==='dee'?DEE_SHOP:SHOPS.find(s=>s.id===id);
+  {id:'eastink',name:'Eastside Ink',district:'eastside',theme:'graffiti',price:600,rent:25,traffic:.9,payMul:.8,x:700,y:296,desc:'Bars on the windows, tags on the walls. Cheap rent on a rough block.'},
+  {id:'block',name:'Block Party Tattoo',district:'eastside',theme:'garage',price:1200,rent:35,traffic:1,payMul:.85,x:815,y:378,desc:'An old garage with the roll-up door still on. Open late, loud crowd.'},
+  {id:'north',name:'Northside Needle',district:'northside',theme:'diner',price:2000,rent:50,traffic:1.1,payMul:.95,x:605,y:104,desc:'An old diner turned tattoo shop. Regulars, coffee and cheap flash.'},
+  {id:'harbor',name:'Harborside Ink',district:'lakeside',theme:'nautical',price:1500,rent:45,traffic:.9,payMul:1,x:835,y:196,desc:'A little shop on the marina. Boaters love anchors.'},
+  {id:'mill',name:'Old Mill Studio',district:'arts',theme:'mural',price:2500,rent:60,traffic:1.1,payMul:1.1,x:255,y:290,desc:'Murals on every wall and a loyal crowd of artists.'},
+  {id:'cactus',name:'Cactus Rose Tattoo',district:'suburbs',theme:'adobe',price:3500,rent:55,traffic:.9,payMul:1.2,x:250,y:462,desc:'Adobe walls and terracotta tile at the edge of the desert. Families and first tattoos.'},
+  {id:'alley',name:'Neon Alley Tattoo',district:'downtown',theme:'brick',price:4500,rent:80,traffic:1.3,payMul:1.2,x:440,y:186,desc:'Brick walls and a checkered floor, two blocks from Dee. Always busy.'},
+  {id:'hill',name:'Hilltop Atelier',district:'suburbs',theme:'pastel',price:7000,rent:90,traffic:1,payMul:1.4,x:128,y:378,desc:'Quiet, bright and calm. Fine-line clients who pay well.'},
+  {id:'jackpot',name:'Jackpot Ink',district:'strip',theme:'casino',price:14000,rent:160,traffic:1.8,payMul:1.6,x:520,y:296,desc:'Black and gold on the Strip. Tourists all night, big tips.'},
+  {id:'skyline',name:'Skyline Studio',district:'uptown',theme:'penthouse',price:18000,rent:180,traffic:1.4,payMul:1.8,x:232,y:104,desc:'A glass penthouse studio above Uptown. Executives and celebrities.'},
+  {id:'highroller',name:'High Roller Tattoo',district:'strip',theme:'marble',price:22000,rent:220,traffic:2,payMul:1.9,x:610,y:452,desc:'Marble floors and VIP clients. The best address on the Strip.'},
+  {id:'crown',name:'Crown & Quill',district:'uptown',theme:'gallery',price:30000,rent:260,traffic:1.5,payMul:2.2,x:120,y:196,desc:'A white-wall gallery studio. The most expensive chair in Neon Springs.'}];
+const DEE_SHOP={id:'dee',name:"Dee's shop",district:'downtown',x:525,y:196,rent:20,traffic:1,payMul:1};
+// the Supply Store: the only place to buy supplies (a blue blip on the map)
+const SUPPLIER={id:'supply',name:'Neon Springs Supply Co.',district:'northside',x:690,y:196,desc:'Needles, ink, ointment, plastic wrap and film. Every tattoo shop in town shops here.'};
+const shopById=id=>id==='dee'?DEE_SHOP:id==='supply'?SUPPLIER:SHOPS.find(s=>s.id===id);
 // veteran artists you can hire to run a shop for you
 const VETERANS=[
   {id:'vet_hank',name:'Hank "Hammer" Doyle',skill:.82,wage:50,fee:500},
@@ -2068,9 +2149,11 @@ function drawFloorOverlay(t){
 
 function hotspots(){
   const {cx,fy}=sceneGeo();
-  const hs=[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:F.appr?'Counter: supplies':'Counter: supplies, upgrades and staff',act:()=>openStore('supplies',enterFloor)},
-            F.appr?{x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:'Door',act:()=>toast('Dee: "Where are you going? Clients are on the way."')}
-              :{x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:'Door: town map or close for the day',act:doorMenu}];
+  const hs=[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:F.appr?'Supply closet':'Supply closet & office (upgrades, staff)',act:()=>openStore('closet',enterFloor)},
+            F.appr?{x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:save.runAsk||save.runTut?'Door: head out (city map)':'Door',
+                act:()=>{ if(save.runAsk||save.runTut){ F.away=true; openMap(enterFloor); } else toast('Dee: "Where are you going? Clients are on the way."'); }}
+              :{x:cx,y:H-10,r:16,ax:cx,ay:H+6,label:`Door: ${F.open?'close up':'open up'}, head out, end the day`,act:doorMenu}];
+  if(F.suspended){ const a=artistPos(); hs.push({x:a.x,y:a.y,r:16,ax:a.x+26,ay:a.y-14,label:'Back to your client',act:resumeJob}); }
   F.custs.forEach(c=>{ if(c.state==='waiting') hs.push(c.script
     ?{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}`,act:()=>talkScripted(c)}
     :{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
@@ -2093,11 +2176,23 @@ function enterFloor(){
   actors.length=0; actors.push(...(deeHere?[F.dee]:[]),F.player,...Object.values(F.staffActs),...F.custs);
   F.busy=false; F.target=null; F.targetAct=null; F.hot=null; F.hotLabel='';
   show('floor'); renderFloorHud(); $('#fPrompt').classList.add('hide');
-  if(F.appr){ F.spawnAt=performance.now()+1200; if(!save.toured&&!F.tour) deeTour(); return; }
-  if(save.clock>=CLOSE&&!F.closing){ F.closing=true; setTimeout(endDay,400); }
+  F.away=false; F.at=save.workAt; // you're inside your shop (a stepped-out tattoo keeps job.onRun until you resume it)
+  if(F.appr){ F.spawnAt=performance.now()+1200; if(!save.toured&&!F.tour) deeTour(); else deeRunCheck(); return; }
+  if(save.clock>=DAY_END&&!F.closing){ F.closing=true; setTimeout(endDay,400); }
+}
+// open or close the doors (closing only stops new customers; anyone waiting stays)
+function setDoors(open){
+  F.open=open; if(open) F.arrivalAt=Math.max(F.arrivalAt,save.clock+5);
+  toast(open?(save.clock>=CLOSE?"Doors open, but it's late. Nobody new is coming tonight.":'Doors open! Customers can come in.'):'Doors closed. Nobody new comes in.'); blip(open?880:440); renderFloorHud();
+}
+async function endDayAsk(){
+  if(F.suspended){ toast('Finish the tattoo in the chair first'); return; }
+  const ok=await modal(`End the day now${F.custs.some(c=>c.state==='waiting')?'? Anyone still waiting goes home':''}?`,[['Keep working',false],['End the day',true,true]]);
+  if(ok&&!F.closing){ F.closing=true; endDay(); }
 }
 function renderFloorHud(){
-  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`${shopById(save.workAt).name} · Day ${save.cday} · ${clockText()}`}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
+  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`${shopById(save.workAt).name} · Day ${save.cday} · ${clockText()}`}</span>`+
+    (F.appr?'':`<span class="chip wood ${F.open?'':'low'}">${F.open?'OPEN':'CLOSED'}</span>`)+`<span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
 }
 function clampPlayer(p){
   const {cx,fy}=sceneGeo();
@@ -2107,7 +2202,7 @@ function clampPlayer(p){
 function floorTick(dt){
   const p=F.player; if(!p) return;
   const pm=F.padMove; F.padMove=[0,0];
-  if(modalOpen){ p.moving=false; return; }
+  if(modalOpen){ p.moving=false; passiveTick(dt); return; } // a box is open: you stand still, but the shop doesn't
   let mx=pm[0]+joy.x, my=pm[1]+joy.y; const k=F.keys;
   if(k.l) mx=-1; if(k.r) mx=1; if(k.u) my=-1; if(k.d) my=1;
   const sp=1.3*dt/16.7; let moved=false;
@@ -2119,15 +2214,17 @@ function floorTick(dt){
   }
   clampPlayer(p); p.moving=moved; p.tx=p.x; p.ty=p.y;
   if(F.targetAct&&!F.busy){ const h=F.targetAct; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r||!F.target){ F.targetAct=null; F.target=null; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r+6){ h.act(); return; } } }
-  if(!F.busy&&!F.appr) advanceTime(dt/1000*CLOCK_RATE);
+  passiveTick(dt);
   // Dee's shop: the next scripted customer walks in once the floor is clear
+  // Dee's supply errand starts as soon as the floor is clear after customer 2
+  if(F.appr&&save.toured&&!save.runAsk&&!save.runTut&&save.cust>=2&&!F.busy&&!dlg.active) deeRunCheck();
+  // Day 3: after customer 5, once the floor is clear, the fake customer comes in
+  if(F.appr&&save.cust>=5&&save.cust<CUSTOMERS.length&&!save.rob2&&!save.runAsk&&!F.busy&&!dlg.active&&!F.custs.some(c=>c.state!=='leaving')&&!F.jobCust&&!F.suspended) deeRobbery2();
   if(F.appr&&!F.busy&&!F.tour&&!F.custs.length&&!F.jobCust&&save.cust<CUSTOMERS.length&&performance.now()>F.spawnAt) spawnScripted();
   F.custs.slice().forEach(c=>{
     const arrived=Math.hypot(c.tx-c.x,c.ty-c.y)<.8;
     if(c.state==='arriving'&&arrived){ c.state='waiting'; if(c.script&&!save.seenWaitBar) deeWaitBar(); }
-    // Dee's shop: patience drains in real seconds while they sit and nobody is talking
-    if(c.script&&c.state==='waiting'&&!F.busy&&!dlg.active&&c!==F.talking&&(c.patience-=dt/1000)<=0) scriptedWalkout(c);
-    else if(c.state==='toChair'&&arrived){ c.state='inChair'; c.flip=false; if(c.by==='you'&&!F.starting){ F.starting=true; setTimeout(()=>{ F.starting=false; startCareerJob(c); },350); } }
+    if(c.state==='toChair'&&arrived){ c.state='inChair'; c.flip=false; if(c.by==='you'&&!F.starting){ F.starting=true; setTimeout(()=>{ F.starting=false; startCareerJob(c); },350); } }
     else if(c.state==='leaving'&&arrived) removeCust(c);
   });
   // nearest interaction
@@ -2137,7 +2234,14 @@ function floorTick(dt){
   if(lbl!==F.hotLabel){ F.hotLabel=lbl; const b=$('#fPrompt'); b.classList.toggle('hide',!best);
     b.textContent=best?`${inputMode==='pad'?'A':inputMode==='touch'?'Tap':'E'}: ${lbl}`:''; }
   if(tick%20===0) renderFloorHud();
-  if(!F.appr&&save.clock>=CLOSE&&!F.busy&&!F.closing&&!F.jobCust){ F.closing=true; toast('Closing time!'); setTimeout(endDay,700); }
+  if(!F.appr&&save.clock>=CLOSE&&!F.lateToast){ F.lateToast=true; toast("It's 10 PM. No more new customers tonight. End the day when you're ready."); }
+}
+// time on the floor keeps going even while a box is open (warm-up choice, menus) or you're walking somewhere:
+// the career clock runs, and Dee's waiting customers lose patience (it only pauses while someone is talking)
+function passiveTick(dt){
+  if(!F.appr){ if(!F.closing) advanceTime(dt/1000*CLOCK_RATE); }
+  else F.custs.slice().forEach(c=>{ if(c.script&&c.state==='waiting'&&!dlg.active&&c!==F.talking&&(c.patience-=dt/1000)<=0) scriptedWalkout(c); });
+  if(F.suspended) job.elapsed+=dt/1000; // a client left waiting in the chair: their tattoo clock keeps running
 }
 function floorInteract(){ if(F.hot&&!F.busy) F.hot.act(); }
 $('#fPrompt').onclick=floorInteract;
@@ -2178,13 +2282,15 @@ function spawnScripted(){
     (async()=>{ await dayCard('Day 3','Word is getting around'); renderFloorHud(); await fade(false); F.busy=false; F.spawnAt=performance.now()+600; })();
     return;
   }
-  const sp=seatPos(0), pat=save.cust===0?60:45; // patience in real seconds (Dee's shop has no clock)
+  const sp=seatPos(0), pat=save.cust===0?60:save.runAsk?75:45; // patience in real seconds (Dee's shop has no clock); a bit more during Dee's supply errand
   const c={ch:C.ch,x:sceneGeo().cx,y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat:0,script:C,
     design:C.design,spot:C.spot,skin:C.skin,time:C.time,pay:C.tip,patience:pat,patience0:pat};
   F.custs.push(c); actors.push(c);
 }
 async function talkScripted(c){
-  if(F.busy) return; F.busy=true; F.talking=c; const C=c.script;
+  if(F.busy) return; if(F.suspended){ toast('Finish your client in the chair first'); return; }
+  if(save.runAsk&&!save.runTut){ toast('Dee: "Supplies first! Out the door, quick!"'); return; }
+  F.busy=true; F.talking=c; const C=c.script;
   F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
   for(const line of C.hi) await say(C.ch,line);
   if(!save.seenTimer){ save.seenTimer=true; persist();
@@ -2195,11 +2301,54 @@ async function talkScripted(c){
   if(miss){
     if(save.coins<45){ save.sup.needles+=3; save.sup.ink+=30; save.sup.wraps+=2; save.sup.ointment+=2; persist(); renderFloorHud();
       await modal('Dee: "Running on empty and short on cash? This kit is on me. Once."',[['Thanks, Dee',true,true]]); }
-    else { const g=await modal(`You're out of ${miss}. Restock at the counter first.`,[['Not now',false],['Go to counter',true,true]]); F.busy=false; if(g) openStore('supplies',enterFloor); return; }
+    else { await modal(`You're out of ${miss}. Walk out the front door and get to the Supply Store, fast, before they give up waiting.`,[['Go',true,true]]); F.busy=false; return; }
   }
   // the customer heads to the chair and you follow; the warm-up offer comes once they sit (startCareerJob)
   c.state='toChair'; c.by='you'; c.seat=null; const s=chairSit(0); c.tx=s.x; c.ty=s.y;
   const a=artistPos(); F.target={x:a.x,y:a.y};
+}
+// Day 3 at Dee's: a "customer" walks up to the counter, chats with Dee, then pulls a gun. The fight starts right at the register
+async function deeRobbery2(){
+  F.busy=true; F.hot=null; F.hotLabel=''; F.target=null; $('#fPrompt').classList.add('hide');
+  const {cx,fy}=sceneGeo(), reg={x:cx-58,y:fy+20};
+  actors.push({ch:'rob4',x:cx,y:H+26,tx:cx,ty:H+26,moving:false,flip:false});
+  await walk('rob4',reg.x,reg.y);
+  await say('rob4',"Hey. Is this where I sign up for a tattoo?");
+  await say('dee',"You're in the right place. What are you thinking of getting?");
+  await say('rob4',"I'm thinking... you open that register. Slowly. Everything in the bag.");
+  await say(null,"He pulls a gun from his jacket.");
+  hideDlg();
+  await modal("Robbery! What do you do?\n(In Dee's shop there's only one answer.)",[['Comply','comply',false,true],['Hide','hide',false,true],['Fight','fight',true]]);
+  await say('dee',"Not again! Kid, the gun's still under the counter. Catch!"); hideDlg();
+  const p=F.player; await tossGun({x:cx-86,y:fy-30},{x:p.x+(p.x<cx-86?-6:6),y:p.y-18});
+  let won=await runFight({lesson:true,count:1,ch:'rob4',start:reg,backTo:'floor'});
+  while(!won){
+    await say('dee',FT.lostBy==='hp'?"You're hit! Get up, kid. He's coming back for the rest!":"He's out the door with my money! Again, kid, and faster!");
+    hideDlg(); actors.push({ch:'rob4',x:reg.x,y:reg.y,tx:reg.x,ty:reg.y,moving:false,flip:false});
+    won=await runFight({lesson:true,count:1,ch:'rob4',start:reg,backTo:'floor'});
+  }
+  await say('dee',"...Twice in one apprenticeship. Welcome to Neon Springs, kid.");
+  await say('dee',"Remember this when it's your own shop. They don't all walk in wearing masks.");
+  hideDlg(); save.rob2=true; persist(); F.busy=false; F.spawnAt=performance.now()+1500; enterFloor();
+}
+// after your second customer, Dee sends you on your first supply run (with the money for it) while the next customer walks in.
+// This is the only time the map marks the Supply Store for you
+async function deeRunCheck(){
+  if(save.runAsk&&save.runTut){ save.runAsk=false; persist(); F.tourAt=null; F.busy=true; await sleep(300);
+    const waiting=F.custs.some(c=>c.script&&c.state==='waiting');
+    await say('dee',waiting?"You made it, and they're still here. Stock goes in the closet. Now go take care of them.":"Too slow, kid. We lost that one. Stock goes in the closet.");
+    await say('dee',"Next time you run low, nobody marks the map for you. Remember where the store is, and plan ahead. Customers don't wait.");
+    hideDlg(); F.busy=false; F.spawnAt=performance.now()+1500; return; }
+  if(save.runAsk){ const {cx}=sceneGeo(); F.tourAt={x:cx,y:H-48}; return; } // still on the errand: arrow at the door
+  // only when the shop is clear (someone walking out the door doesn't count)
+  if(save.runTut||save.cust<2||save.cust>=CUSTOMERS.length||F.busy||F.tour||F.custs.some(c=>c.state!=='leaving')||F.jobCust) return;
+  save.runAsk=true; F.busy=true; await sleep(400);
+  save.sup.ointment=0; save.sup.wraps=0; persist(); // the shop really is out
+  await say('dee',"Kid! We're out of ointment and wrap, and the next customer is walking in right now. I need a supply run.");
+  await say('dee',"Here's 60 coins. Walk out the front door and open the city map. The Supply Store is the blue blip. I've marked it for you, this once.");
+  await say('dee',"Buy what we need and get back here fast, before we lose the customer!");
+  save.coins+=60; persist(); renderFloorHud(); hideDlg(); F.busy=false; F.spawnAt=performance.now()+800;
+  const {cx}=sceneGeo(); F.tourAt={x:cx,y:H-48};
 }
 // Dee explains the patience bar the first time a customer sits down
 async function deeWaitBar(){
@@ -2229,8 +2378,8 @@ async function deeTour(){
   hideDlg(); F.busy=false; F.tourAt={x:cx-90,y:fy-46};
   await waitFor(()=>F.player&&Math.hypot(F.player.x-(cx-88),F.player.y-(fy+10))<26&&!modalOpen&&current==='floor');
   F.tourAt=null; F.busy=true; F.target=null;
-  await say('dee',"This is the supply counter. Needles, ink, ointment, plastic wrap and film. When you run low, restock here.");
-  await say('dee',"You can also reach it from the warm-up box, or from the menu at your station.");
+  await say('dee',"This is the supply closet. Needles, ink, ointment, plastic wrap and film. Check it before you take a client.");
+  await say('dee',"When it runs low, somebody makes a supply run across town. Usually that somebody is the new kid.");
   await say('dee',"The desk in the back corner is for fake skin. Before every client you can warm up there first.");
   await say('dee',"Clients come in through that door and sit on the bench. Walk up to one to talk. Here comes your first.");
   hideDlg(); save.toured=true; persist(); F.tour=false; F.busy=false; F.spawnAt=0;
@@ -2238,7 +2387,8 @@ async function deeTour(){
 function advanceTime(mins){
   save.clock+=mins;
   F.custs.forEach(c=>{ if(c.state==='waiting'&&c!==F.talking){ c.patience-=mins; if(c.patience<=0){ custLeave(c); save.rep-=1; F.today.lost++; if(current==='floor') toast(`${CH[c.ch].name} got tired of waiting and left (−1 rep)`); } } });
-  while(F.arrivalAt<=save.clock&&F.arrivalAt<LAST_IN){ spawnCustomer(); F.arrivalAt+=arrivalGap(); }
+  while(F.open&&F.arrivalAt<=save.clock&&F.arrivalAt<LAST_IN){ spawnCustomer(); F.arrivalAt+=arrivalGap(); } // only while the doors are open
+  if(save.career&&save.clock>=DAY_END&&!F.closing){ F.closing=true; toast("Midnight. Time to go home."); setTimeout(endDay,600); }
   save.staff.forEach(staffTick);
 }
 function staffTick(st){
@@ -2259,7 +2409,7 @@ function staffTick(st){
   const len=Math.round(DES_INFO[c.design].dur*(1.7-def.skill)); s.busy={c,until:save.clock+len,len};
 }
 async function talkCustomer(c){
-  if(F.busy) return; F.talking=c;
+  if(F.busy) return; if(F.suspended){ toast('Finish your client in the chair first'); return; } F.talking=c;
   const hrs=c.dur/60, ht=Number.isInteger(hrs)?hrs:hrs.toFixed(1);
   const v=await modal(`${CH[c.ch].name} wants ${/^[aeiou]/i.test(DESIGNS[c.design].name)?'an':'a'} ${DESIGNS[c.design].name.toLowerCase()} on the ${c.spot}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
     [['Not now','later'],['Send away','away'],['Start tattoo','go',true]]);
@@ -2268,7 +2418,7 @@ async function talkCustomer(c){
   if(v==='away'){ custLeave(c); return; }
   if(v!=='go') return;
   const miss=missingSupplies();
-  if(miss){ const g=await modal(`You're out of ${miss}. Restock at the counter first.`,[['Not now',false],['Go to counter',true,true]]); if(g) openStore('supplies',enterFloor); return; }
+  if(miss){ await modal(`You're out of ${miss}. Walk out the front door and get to the Supply Store, fast, before they give up waiting.`,[['Go',true,true]]); return; }
   if(!save.sup.wraps&&!save.sup.film) toast('No plastic wrap or film left. This one will heal dirty.');
   F.busy=true; c.state='toChair'; c.by='you'; c.seat=null; const s=chairSit(0); c.tx=s.x; c.ty=s.y;
   const a=artistPos(); F.target={x:a.x,y:a.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
@@ -2287,24 +2437,23 @@ function afterCareerJob(){
   advanceTime(c?c.dur:90); persist(); enterFloor();
 }
 async function doorMenu(){
-  const v=await modal('Step outside?',[['Stay in','stay'],['Close up for today','close'],['Town map','map',true]]);
-  if(v==='map') openMap(enterFloor);
-  if(v==='close') closeEarly();
-}
-async function closeEarly(){
-  const ok=save.clock<CLOSE-60?await modal('Close early? Anyone still waiting goes home.',[['Keep working',false],['Close up',true,true]]):true;
-  if(ok) endDay();
+  const v=await modal(`The front door. ${F.open?'The sign says OPEN.':'The sign says CLOSED.'}`,
+    [['Stay in','stay'],[F.open?'Close the doors':'Open the doors','doors',!F.open],['Head out (city map)','map',F.open],['End the day','end']]);
+  if(v==='doors') setDoors(!F.open);
+  if(v==='map'){ F.away=true; openMap(enterFloor); }
+  if(v==='end') endDayAsk();
 }
 async function floorMenu(){
-  const opts=F.appr?[['Counter','store'],['Save & quit','quit']]:[['Counter','store'],['Town map','map'],['Close for today','close'],['Save & quit','quit']];
+  const opts=F.appr?[['Supply closet','store'],['Save & quit','quit']]
+    :[[F.open?'Close the doors':'Open the doors','doors'],['Supply closet & office','store'],['End the day','end'],['Save & quit','quit']];
   if(dev) opts.push(['Dev: +500 coins','coins'],['Dev: restock supplies','sup']);
   opts.push(['Resume','resume',true]);
-  const v=await modal(F.appr?`Day ${dayNum()} at Dee's shop`:`Day ${save.cday}, ${clockText()}`,opts);
+  const v=await modal(F.appr?`Day ${dayNum()} at Dee's shop`:`Day ${save.cday}, ${clockText()} · ${F.open?'Open':'Closed'}`,opts);
   if(v==='coins'){ save.coins+=500; persist(); renderFloorHud(); toast('+500 coins (developer mode)'); }
   if(v==='sup'){ Object.assign(save.sup,{needles:Math.max(save.sup.needles,20),ink:Math.max(save.sup.ink,200),wraps:Math.max(save.sup.wraps,20),ointment:Math.max(save.sup.ointment,20),film:Math.max(save.sup.film,10)}); persist(); renderFloorHud(); toast('Supplies restocked (developer mode)'); }
-  if(v==='store') openStore('supplies',enterFloor);
-  if(v==='map') openMap(enterFloor);
-  if(v==='close') closeEarly();
+  if(v==='doors') setDoors(!F.open);
+  if(v==='store') openStore('closet',enterFloor);
+  if(v==='end') endDayAsk();
   if(v==='quit'){ persist(); show('title'); }
 }
 function endDay(){
@@ -2353,24 +2502,24 @@ function releaseManager(id){
 }
 // go and work at another shop: the floor there starts fresh (anyone waiting here goes home)
 function workAt(id){
-  save.workAt=id; F.custs.slice().forEach(removeCust); F.custs=[]; F.player=null; F.staffActs={}; F.sst={}; F.jobCust=null;
+  save.workAt=id; F.custs.slice().forEach(removeCust); F.custs=[]; F.player=null; F.staffActs={}; F.sst={}; F.jobCust=null; F.open=false; // a new shop starts with its doors closed
   if(save.career) advanceTime(30);
   persist(); enterFloor(); toast(`Now working at ${shopById(id).name}`);
 }
 $('#bNextDay').onclick=async()=>{
-  save.cday++; save.clock=OPEN; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+20; F.sst={}; F.player=null; persist();
-  await dayCard(`Day ${save.cday}`,save.coins<0?'Money is tight. Get to work.':'Doors open at 10'); F.closing=false; enterFloor(); await fade(false);
+  save.cday++; save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
+  await dayCard(`Day ${save.cday}`,save.coins<0?'Money is tight. Get to work.':'9 AM. Open the doors when you\'re ready.'); F.closing=false; enterFloor(); await fade(false);
 };
 async function startCareer(){
-  save.career=true; ensureCareerSave(); save.cday=1; save.clock=OPEN;
+  save.career=true; ensureCareerSave(); save.cday=1; save.clock=DAY_START;
   save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5); save.sup.ointment=Math.max(save.sup.ointment,5);
-  F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+15; persist();
+  F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=DAY_START+15; F.open=false; F.lateToast=false; F.closing=false; persist();
   save.workAt='dee'; persist();
   await dayCard('On your own','Day 1 running the floor'); enterFloor(); await fade(false);
   const how=inputMode==='pad'?'Move with the left stick or D-pad. Walk up to someone and press A to talk. Start opens the menu.'
     :inputMode==='touch'?'Tap the floor to walk. Tap a customer, the counter or the door to walk over and use it.'
     :'Move with WASD or the arrow keys, or click the floor. Walk up to someone and press E to talk. Esc opens the menu.';
-  await modal(`${how} You run Dee's floor for now and keep what you earn. The counter sells supplies, upgrades and staff. The door opens the map of Neon Springs: save up, buy your own shops, and work wherever you like.`,[["Let's go",true,true]]);
+  await modal(`${how} You run Dee's floor for now and keep what you earn. The day starts at 9 with the doors closed: open them at the door when you're ready, and end the day there when you're done. The counter is your supply closet and office (upgrades, staff). Supplies come from the Supply Store across town (open 8 AM to 6 PM): walk out the door and find it on the city map, and don't leave customers waiting too long. Save up, buy your own shops on the city map, and work wherever you like.`,[["Let's go",true,true]]);
 }
 
 /* ---------- counter store ---------- */
@@ -2380,12 +2529,17 @@ function itemRow(name,desc,price,key,doneLabel){
   return `<div class="item"><div class="grow"><div class="nm">${name}</div><div class="ds">${desc}</div></div>`+
     (doneLabel?`<span class="pr">${doneLabel}</span>`:`<span class="pr"><i class="coin"></i>${price}</span><button class="gbtn small go" data-buy="${key}" ${save.coins<price?'disabled':''}>Buy</button>`)+`</div>`;
 }
+// two kinds of store screen: the Supply Store across town (buy supplies), and your own closet & office (see stock, buy upgrades and staff)
 function renderStore(focusKey){
-  const tabs=save.career?['supplies','upgrades','staff']:['supplies'];
-  $('#stTabs').innerHTML=tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{supplies:'Supplies',upgrades:'Upgrades',staff:'Staff'}[t]}</button>`).join('');
+  const supplier=storeTab==='supplies';
+  const tabs=supplier?['supplies']:save.career?['closet','upgrades','staff']:['closet'];
+  $('#stTitle').textContent=supplier?SUPPLIER.name:save.career?'Supply closet & office':'Supply closet';
+  $('#stTabs').innerHTML=tabs.length<2?'':tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{closet:'Closet',upgrades:'Upgrades',staff:'Staff'}[t]}</button>`).join('');
   $('#stCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
   let rows='';
   if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id)).join('');
+  if(storeTab==='closet') rows=SUPPLY.map(it=>`<div class="item"><div class="grow"><div class="nm">${it.name}</div><div class="ds">${it.desc}</div></div><span class="pr ${save.sup[it.id]<(it.id==='ink'?10:2)?'failtag':''}">${save.sup[it.id]}${it.unit}</span></div>`).join('')
+    +`<p class="hint">Running low? Walk out the front door and find the Supply Store on the city map${save.career?' (open 8 AM to 6 PM)':''}.</p>`;
   if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(); return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):null); }).join('');
   if(storeTab==='staff') rows=STAFF_POOL.map(st=>{ const hired=save.staff.some(x=>x.id===st.id), mg=isManaging(st.id);
       return itemRow(`${st.name} · skill ${Math.round(st.skill*100)}`,`${st.desc} Wage ${st.wage} coins a day.`,st.fee,'hire:'+st.id,hired?'On your team':mg?'Running a shop':null); }).join('')
@@ -2398,7 +2552,7 @@ function renderStore(focusKey){
 }
 function buyItem(key){
   const [kind,id]=key.split(':');
-  if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; toast(`Bought ${it.name.toLowerCase()}`); }
+  if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; save.runTut=true; toast(`Bought ${it.name.toLowerCase()}`); }
   if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy(); toast(`${u.name} installed`); }
   if(kind==='hire'){ const st=STAFF_POOL.find(x=>x.id===id);
     if(save.staff.length>=save.up.chairs){ toast('Buy an extra tattoo chair first (Upgrades)'); return; }
@@ -2409,38 +2563,93 @@ $('#stBack').onclick=()=>{ if(storeBack) storeBack(); else show('title'); };
 
 /* ---------- town map ---------- */
 let mapSel=null, mapBack=null;
-// Neon Springs, drawn on a 320x180 canvas: desert, mountains, a lake, the Strip and the districts around it
-function drawTownMap(){
-  const c=$('#mapC'), x=c.getContext('2d'); x.imageSmoothingEnabled=false;
+/* ---------- Neon Springs city map: a big top-down city drawn once, viewed through a pannable, zoomable window ---------- */
+const CITY_W=960, CITY_H=540; let MAP_W=480, MAP_H=270; // the map canvas matches the screen's shape (see sizeMap)
+// street grid: x of the north-south roads and y of the east-west roads. 400 and 240 are freeways; 560 south of 240 is the Strip
+const ROADS_X=[70,190,310,400,475,560,650,760,870], ROADS_Y=[60,150,240,330,420,500];
+const roadW=(v,horiz)=>(!horiz&&v===400)||(horiz&&v===240)?14:(!horiz&&v===560)?16:9;
+// which district a spot is in (for drawing the blocks)
+function districtAt(x,y){
+  if(x>770&&y<235) return 'lake';
+  if(y>470&&x>660) return 'airport';
+  if(x<310&&y<240) return 'uptown';
+  if(y<150) return 'northside';
+  if(y<240) return x>400&&x<650?'downtown':x>=650?'northside':'uptown';
+  if(x>=475&&x<650) return 'strip';
+  if(x>=650) return 'eastside';
+  if(y<330&&x>=190) return 'arts';
+  return 'suburbs';
+}
+let cityCv=null;
+function drawCity(){
+  if(cityCv) return cityCv;
+  cityCv=document.createElement('canvas'); cityCv.width=CITY_W; cityCv.height=CITY_H;
+  const x=cityCv.getContext('2d'); let seed=11; const rnd=()=>((seed=seed*16807%2147483647)/2147483647);
   const Rm=(a,b,w,h,col)=>{ x.fillStyle=col; x.fillRect(Math.round(a),Math.round(b),Math.round(w),Math.round(h)); };
-  Rm(0,0,320,180,'#d9b77a');
-  for(let i=0;i<300;i++) Rm((i*73)%320,(i*41)%180,1,1,i%3?'#cfa86a':'#e6c88e');
-  // mountains along the top
-  for(let px=0;px<320;px++){ const h=8+6*Math.sin(px/17)+4*Math.sin(px/7+1); Rm(px,0,1,h,'#9a6a4a'); Rm(px,h-2,1,2,'#b0805a'); }
-  // the lake (Lakeside), with docks
-  x.fillStyle='#3a8fc2'; x.beginPath(); x.ellipse(300,40,52,30,0,0,7); x.fill(); x.fillStyle='#6ab8e2'; x.beginPath(); x.ellipse(306,34,36,18,0,0,7); x.fill();
-  [[262,50],[270,60]].forEach(([a,b])=>{ Rm(a,b,14,3,'#8a5532'); for(let k=0;k<14;k+=3) Rm(a+k,b,1,3,'#6b3a1f'); });
-  // highway across town and the Strip running south
-  Rm(0,88,320,7,'#4a4a4e'); for(let px=0;px<320;px+=10) Rm(px,91,5,1,'#e8c25a');
-  Rm(168,24,9,156,'#3a3a3e'); for(let py=26;py<180;py+=9) Rm(172,py,1,4,'#e8c25a');
-  // the Strip: neon towers on both sides
-  const neon=['#ff6fa8','#ffd84a','#9fe8ff','#b58cff','#7fff7f'];
-  for(let i=0;i<10;i++){ const by=100+i*8, side=i%2?180:150, h=10+(i*7)%12, w=14;
-    Rm(side,by-h+8,w,h,'#2a1d3a'); for(let k=0;k<h-3;k+=3) Rm(side+2,by-h+10+k,w-4,1,neon[(i+k)%5]); }
-  // downtown: brick blocks at the north end of the Strip
-  for(let i=0;i<8;i++){ const bx=118+(i%4)*14, by=30+((i/4)|0)*16; Rm(bx,by,11,12,'#8a4632'); Rm(bx+2,by+2,7,2,'#e8c25a'); Rm(bx+2,by+7,7,2,'#e8c25a'); }
-  // arts district: colorful blocks in the west
-  const art=['#e85a8a','#4ab0e8','#f2c14e','#6fc06a','#9b5de5'];
-  for(let i=0;i<9;i++){ const bx=40+(i%3)*18, by=34+((i/3)|0)*16; Rm(bx,by,14,12,art[i%5]); Rm(bx+3,by+3,8,3,'#f4efe6'); }
-  // suburbs: little houses with pools in the south-west
-  for(let i=0;i<10;i++){ const bx=18+(i%5)*20, by=110+((i/5)|0)*26; Rm(bx-2,by+8,18,10,'#7ab06a'); Rm(bx,by,12,8,'#f4efe6'); Rm(bx-1,by-3,14,3,'#c0504a'); Rm(bx+3,by+11,8,4,'#4ab0e8'); }
-  // eastside: warehouses with graffiti
-  for(let i=0;i<8;i++){ const bx=212+(i%4)*24, by=112+((i/4)|0)*26; Rm(bx,by,20,14,'#6a6a70'); Rm(bx,by,20,2,'#55555a'); for(let k=0;k<16;k+=4) Rm(bx+2+k,by+8,3,2,art[(i+k)%5]); }
-  // cacti in the open desert
-  [[100,64],[150,170],[200,60],[245,96],[120,150],[30,90],[290,100],[205,170]].forEach(([a,b])=>{ Rm(a,b,2,7,'#4f8a40'); Rm(a-2,b+2,2,3,'#4f8a40'); Rm(a+2,b+1,2,3,'#4f8a40'); });
-  // district names
-  [['THE STRIP',150,170,'#ff6fa8'],['DOWNTOWN',116,62,'#f4efe6'],['ARTS',50,82,'#f4efe6'],['SUBURBS',30,164,'#f4efe6'],['EASTSIDE',236,166,'#f4efe6'],['LAKESIDE',262,72,'#f4efe6']].forEach(([s,a,b,col])=>{
-    Rm(a-2,b-2,pixW(s,1)+4,9,'rgba(30,20,30,.55)'); pixText(s,a,b,1,col,null,x); });
+  // desert all around
+  Rm(0,0,CITY_W,CITY_H,'#d9b77a'); for(let i=0;i<900;i++) Rm(rnd()*CITY_W,rnd()*CITY_H,1,1,rnd()<.5?'#cfa86a':'#e6c88e');
+  // city blocks between the roads
+  const xs=[0,...ROADS_X,CITY_W], ys=[0,...ROADS_Y,CITY_H];
+  for(let i=0;i<xs.length-1;i++) for(let j=0;j<ys.length-1;j++){
+    const x0=xs[i]+(i?roadW(xs[i])/2:0), x1=xs[i+1]-(i<xs.length-2?roadW(xs[i+1])/2:0), y0=ys[j]+(j?roadW(ys[j],1)/2:0), y1=ys[j+1]-(j<ys.length-2?roadW(ys[j+1],1)/2:0);
+    if(i===0||j===0||i===xs.length-2||j===ys.length-2){ // the edge of town: open desert with cacti and a few ranch houses
+      for(let k=0;k<4;k++){ const a=x0+rnd()*(x1-x0-6), b=y0+rnd()*(y1-y0-8); Rm(a,b,2,7,'#4f8a40'); Rm(a-2,b+2,2,3,'#4f8a40'); Rm(a+2,b+1,2,3,'#4f8a40'); }
+      if(rnd()<.35){ const a=x0+8+rnd()*(x1-x0-30), b=y0+8+rnd()*(y1-y0-24); Rm(a,b,16,10,'#c8a070'); Rm(a,b,16,3,'#8a5a3a'); }
+      continue; }
+    drawBlock(x,Rm,rnd,x0,y0,x1,y1,districtAt((x0+x1)/2,(y0+y1)/2));
+  }
+  // roads on top: asphalt, curbs, yellow center lines, white lane dashes, crosswalks at crossings
+  ROADS_X.forEach(rx=>{ const w=roadW(rx); Rm(rx-w/2,0,w,CITY_H,'#2c2c36'); Rm(rx-w/2,0,1,CITY_H,'#55555f'); Rm(rx+w/2-1,0,1,CITY_H,'#55555f');
+    if(w>=14){ for(let y=0;y<CITY_H;y+=10){ Rm(rx-w/4,y,1,5,'#e8e8ee'); Rm(rx+w/4,y,1,5,'#e8e8ee'); } Rm(rx,0,1,CITY_H,'#e8c25a'); }
+    else Rm(rx,0,1,CITY_H,'#d9a12b'); });
+  ROADS_Y.forEach(ry=>{ const w=roadW(ry,1); Rm(0,ry-w/2,CITY_W,w,'#2c2c36'); Rm(0,ry-w/2,CITY_W,1,'#55555f'); Rm(0,ry+w/2-1,CITY_W,1,'#55555f');
+    if(w>=14){ for(let px=0;px<CITY_W;px+=10){ Rm(px,ry-w/4,5,1,'#e8e8ee'); Rm(px,ry+w/4,5,1,'#e8e8ee'); } Rm(0,ry,CITY_W,1,'#e8c25a'); }
+    else Rm(0,ry,CITY_W,1,'#d9a12b'); });
+  ROADS_X.forEach(rx=>ROADS_Y.forEach(ry=>{ const w=roadW(rx), h=roadW(ry,1); Rm(rx-w/2,ry-h/2,w,h,'#2c2c36');
+    for(let k=0;k<w;k+=2) Rm(rx-w/2+k,ry-h/2-3,1,2,'#e8e8ee'); for(let k=0;k<h;k+=2) Rm(rx-w/2-3,ry-h/2+k,2,1,'#e8e8ee'); }));
+  // the Strip median: palm trees down the middle of the boulevard
+  for(let y=246;y<CITY_H;y+=14){ Rm(559,y,2,6,'#6b4a2a'); Rm(556,y-2,8,2,'#3f8a40'); Rm(558,y-4,4,2,'#4f9a50'); }
+  // the lake over the north-east corner, with a marina
+  x.fillStyle='#2f78a8'; x.beginPath(); x.ellipse(880,95,120,92,-.2,0,7); x.fill(); x.fillStyle='#4a98c8'; x.beginPath(); x.ellipse(890,80,92,66,-.2,0,7); x.fill();
+  for(let i=0;i<30;i++) Rm(800+rnd()*150,30+rnd()*120,3,1,'#9fd3f2');
+  for(let k=0;k<4;k++){ const dy=150+k*14; Rm(796,dy,30,3,'#8a5532'); for(let q=0;q<30;q+=3) Rm(796+q,dy,1,3,'#6b3a1f'); Rm(818-k*4,dy-5,8,4,'#f4efe6'); }
+  // airport runway in the south-east
+  Rm(668,505,280,16,'#3a3a42'); for(let px=676;px<940;px+=16) Rm(px,512,8,2,'#e8e8ee'); Rm(700,476,60,20,'#c8c8d0'); Rm(704,480,52,4,'#4ab0e8');
+  // mountains on the far edges
+  for(let px=0;px<CITY_W;px++){ const h=12+8*Math.sin(px/31)+5*Math.sin(px/11+1); Rm(px,0,1,h,'#9a6a4a'); Rm(px,h-2,1,2,'#b0805a'); }
+  // district names in big letters
+  [['UPTOWN',150,80],['NORTHSIDE',610,30],['DOWNTOWN',470,160],['ARTS DISTRICT',200,250],['THE STRIP',530,520],['EASTSIDE',720,250],['SUBURBS',90,320],['LAKESIDE',820,215],['AIRPORT',820,488]].forEach(([s,a,b])=>{
+    const w=pixW(s,2); Rm(a-3,b-3,w+6,16,'rgba(20,14,28,.6)'); pixText(s,a,b,2,s==='THE STRIP'?'#ff6fa8':'#f4efe6',null,x); });
+  return cityCv;
+}
+// fill one city block with the buildings of its district (top-down, like the reference city)
+function drawBlock(x,Rm,rnd,x0,y0,x1,y1,d){
+  const w=x1-x0, h=y1-y0;
+  Rm(x0,y0,w,h,'#a8a2b0'); Rm(x0+1,y0+1,w-2,h-2,'#b8b2c0'); // sidewalk around the block
+  const ix=x0+4, iy=y0+4, iw=w-8, ih=h-8;
+  const tower=(a,b,tw,th,glass,rim)=>{ Rm(a,b,tw,th,rim); Rm(a+1,b+1,tw-2,th-2,glass); for(let yy=b+3;yy<b+th-2;yy+=3) for(let xx=a+2;xx<a+tw-2;xx+=3) if(rnd()<.8) Rm(xx,yy,2,1,rnd()<.3?'#e8d27a':'#9fc0e8'); };
+  const shop=(a,b,sw,sh,roof,awn)=>{ Rm(a,b,sw,sh,roof); Rm(a,b+sh-3,sw,3,awn); for(let xx=a;xx<a+sw;xx+=3) Rm(xx,b+sh-3,1,3,'#f4efe6'); };
+  const tree=(a,b)=>{ Rm(a-2,b-2,5,5,'#2f6a34'); Rm(a-1,b-3,3,1,'#3f8a40'); Rm(a-1,b-1,2,2,'#4f9a50'); };
+  if(d==='uptown'){ Rm(ix,iy,iw,ih,'#5a9a4a'); let a=ix+2; while(a<ix+iw-14){ const tw=12+(rnd()*10|0), th=Math.min(ih-6,24+(rnd()*30|0)); tower(a,iy+2,tw,th,'#3a5a7a','#1e2a3e'); a+=tw+4; }
+    for(let k=0;k<5;k++) tree(ix+4+rnd()*(iw-8),iy+ih-6-rnd()*8); Rm(ix+iw-18,iy+ih-12,12,7,'#4ab0e8'); }
+  else if(d==='downtown'){ Rm(ix,iy,iw,ih,'#6e5a52'); for(let a=ix;a<ix+iw-8;a+=12) for(let b=iy;b<iy+ih-8;b+=14) { Rm(a,b,10,12,rnd()<.5?'#8a4632':'#a0563a'); Rm(a+2,b+2,6,1,'#e8c25a'); Rm(a+2,b+6,6,1,'#e8c25a'); } }
+  else if(d==='northside'){ Rm(ix,iy,iw,ih,'#9a8a6a'); for(let a=ix+1;a<ix+iw-10;a+=13) for(let b=iy+1;b<iy+ih-10;b+=13){ if(rnd()<.25){ tree(a+5,b+5); continue; }
+      shop(a,b,11,10,['#c87850','#8a6a4a','#5a7a9a','#a05a5a'][rnd()*4|0],['#b8323c','#2e6f8e','#4f8a40'][rnd()*3|0]); } }
+  else if(d==='arts'){ Rm(ix,iy,iw,ih,'#8a8288'); const c=['#e85a8a','#4ab0e8','#f2c14e','#6fc06a','#9b5de5'];
+    for(let a=ix+1;a<ix+iw-10;a+=13) for(let b=iy+1;b<iy+ih-10;b+=13){ Rm(a,b,11,11,c[rnd()*5|0]); Rm(a+2,b+2,7,2,'#f4efe6'); } }
+  else if(d==='strip'){ // big resorts with neon roofs, pools and parking
+    const neon=['#ff6fa8','#ffd84a','#9fe8ff','#b58cff','#7fff7f'], col=neon[rnd()*5|0];
+    Rm(ix,iy,iw,ih,'#3a3a44'); for(let a=ix+2;a<ix+iw;a+=6) for(let b=iy+ih-14;b<iy+ih-2;b+=5) Rm(a,b,4,3,['#b8323c','#2e5aa0','#f4efe6','#4a4a4a'][rnd()*4|0]);
+    tower(ix+4,iy+4,iw-30,ih-22,'#2a1d3a',col); Rm(ix+iw-22,iy+6,16,12,'#4ab0e8'); Rm(ix+iw-20,iy+8,12,8,'#6ac8f0');
+    for(let a=ix+4;a<ix+iw-26;a+=3) Rm(a,iy+3,1,1,col);
+    const names=['LUCKY 7','ORBIT','GOLDEN PALM','CORAL','SUNSET','MOON TOWER','ROYAL FLUSH','OASIS'], nm=names[rnd()*names.length|0];
+    if(pixW(nm,1)<iw-34){ Rm(ix+6,iy+ih-30,pixW(nm,1)+4,9,'#151018'); pixText(nm,ix+8,iy+ih-28,1,col,null,x); } }
+  else if(d==='eastside'){ Rm(ix,iy,iw,ih,'#5a5a5e'); for(let a=ix+1;a<ix+iw-18;a+=22) for(let b=iy+1;b<iy+ih-14;b+=18){ Rm(a,b,20,15,'#7a7a80'); for(let k=0;k<15;k+=3) Rm(a,b+k,20,1,'#6a6a70');
+      if(rnd()<.6) Rm(a+2+rnd()*12,b+12,5,2,['#ff5a46','#4ab0e8','#f2c14e','#9b5de5'][rnd()*4|0]); } for(let k=0;k<4;k++) Rm(ix+rnd()*iw,iy+ih-4,4,2,['#b8323c','#2e5aa0','#e8e8ee'][rnd()*3|0]); }
+  else if(d==='suburbs'){ Rm(ix,iy,iw,ih,'#6aa85a');
+    if(rnd()<.18){ for(let k=0;k<6;k++){ Rm(ix+rnd()*(iw-10),iy+rnd()*(ih-6),8,5,'#e8d6a0'); } for(let k=0;k<8;k++) tree(ix+4+rnd()*(iw-8),iy+4+rnd()*(ih-8)); return; } // golf course
+    for(let a=ix+1;a<ix+iw-12;a+=15) for(let b=iy+1;b<iy+ih-12;b+=15){ Rm(a,b,11,8,'#f4efe6'); Rm(a,b,11,3,['#c0504a','#8a6a4a','#5a7a9a'][rnd()*3|0]); if(rnd()<.5) Rm(a+3,b+10,6,3,'#4ab0e8'); else tree(a+9,b+11); } }
+  else if(d==='lake'||d==='airport'){ Rm(ix,iy,iw,ih,'#c8b890'); }
 }
 // storefront preview for the map panel: each shop has its own front
 function drawShopFront(cv,sh){
@@ -2450,7 +2659,8 @@ function drawShopFront(cv,sh){
   const sky=night?['#120c22','#1e1438','#2c1e50']:['#5a3a6a','#b05a63','#e98a5f'];
   sky.forEach((c,i)=>Rm(0,i*Hc/6,Wc,Hc/6+1,c)); Rm(0,Hc/2,Wc,Hc/2,night?'#2a2a30':'#c9a878');
   const FR={dee:['#9a6440','#5a2533','#2a1a2a'],casino:['#1a1a1a','#c9a24a','#2a1d3a'],marble:['#ece6dc','#b8323c','#c9a24a'],brick:['#8a4632','#2a2220','#1a1a1a'],
-    mural:['#e4ddd0','#4ab0e8','#3a3a3a'],pastel:['#bfe0d0','#e8a8b8','#f4efe6'],graffiti:['#5c5c60','#2a2a2e','#151515'],garage:['#7a8088','#d9a12b','#2a2a2a'],nautical:['#2e6f8e','#f4efe6','#1e4a60']}[t];
+    mural:['#e4ddd0','#4ab0e8','#3a3a3a'],pastel:['#bfe0d0','#e8a8b8','#f4efe6'],graffiti:['#5c5c60','#2a2a2e','#151515'],garage:['#7a8088','#d9a12b','#2a2a2a'],nautical:['#2e6f8e','#f4efe6','#1e4a60'],
+    penthouse:['#1e2a3e','#9fb8d8','#0e1626'],gallery:['#f6f4f0','#1a1a1a','#1a1a1a'],diner:['#f4efe6','#b8323c','#b8323c'],adobe:['#d8a878','#2e8a8a','#7a4a2e']}[t];
   const bx=14, by=18, bw=Wc-28, bh=Hc-28;
   Rm(bx,by,bw,bh,FR[0]);
   if(t==='brick') for(let y=by;y<by+bh;y+=4) Rm(bx,y,bw,1,'#6e3424');
@@ -2469,33 +2679,159 @@ function drawShopFront(cv,sh){
   else { Rm(bx+bw-36,by+26,20,bh-26,'#3a2214'); Rm(bx+bw-34,by+28,16,bh-28,'#5c3520'); Rm(bx+bw-20,by+bh-14,2,2,'#e8c25a'); }
   if(t==='pastel'){ Rm(Wc-12,by+10,3,bh-10,'#8a5532'); [[-6,0],[0,-3],[5,0]].forEach(([a,b])=>Rm(Wc-12+a,by+8+b,8,3,'#4f8a40')); } // palm tree
 }
+// the view onto the city: center (x,y) in city pixels and zoom z (1 = MAP_W x MAP_H city pixels on screen)
+const MV={x:525,y:196,z:1,goal:null};
+let MAP_ZMIN=.5; const MAP_ZMAX=2.6;
+// match the map canvas to the screen's shape so it fills the whole frame without stretching
+function sizeMap(){ const r=$('#mapBox').getBoundingClientRect(); if(!r.width||!r.height) return;
+  MAP_H=270; MAP_W=Math.round(clamp(270*r.width/r.height,300,720)); const c=$('#mapC'); if(c.width!==MAP_W){ c.width=MAP_W; c.height=MAP_H; }
+  MAP_ZMIN=Math.max(MAP_W/CITY_W,MAP_H/CITY_H); MV.z=clamp(MV.z,MAP_ZMIN,MAP_ZMAX); }
+function viewRect(){ const w=MAP_W/MV.z, h=MAP_H/MV.z; MV.x=clamp(MV.x,w/2,CITY_W-w/2); MV.y=clamp(MV.y,h/2,CITY_H-h/2); return {x:MV.x-w/2,y:MV.y-h/2,w,h}; }
+function zoomMap(f,ax,ay){ // zoom by factor f, keeping city point (ax,ay) under the same spot on screen
+  closeMapCard(true);
+  const r=viewRect(); ax=ax??MV.x; ay=ay??MV.y; const z=clamp(MV.z*f,MAP_ZMIN,MAP_ZMAX), k=MV.z/z;
+  MV.x=ax+(MV.x-ax)*k; MV.y=ay+(MV.y-ay)*k; MV.z=z; MV.goal=null; placePins(); }
+
+/* traffic: cars keep their lane, keep a gap, and stop at red lights; people wait at the curb for a green.
+   Time of day (the game clock) sets how many are out and how dark the city is. */
+const MOVERS=[], CAR_L=5, CAR_GAP=4;
+function busyAt(x,y){ return {strip:2.2,downtown:1.7,uptown:1.1,arts:1,northside:.8,eastside:.7,suburbs:.5,lake:0,airport:.2}[districtAt(x,y)]||.4; }
+const bump=(h,c,w)=>Math.exp(-(((h-c)/w)**2));
+// share of cars and people out at hour h: rush hours, lunch, a quiet night, plus a little wobble
+function trafficLevel(h,t){ return clamp(.1+.5*bump(h,8.3,1.2)+.3*bump(h,12.5,1.1)+.55*bump(h,17.6,1.4)+(h>6.5&&h<21?.3:0)+.07*Math.sin(t/6)+.05*Math.sin(t/2.3),.08,1); }
+function nightAt(h){ return h>=21||h<5?1:h>=18.5?(h-18.5)/2.5:h<7?(7-h)/2:0; }
+// traffic lights: a 10 second cycle per crossing. East-west green 0-3.6 s, all red, north-south green 5-8.6 s, all red.
+// greenLeft = seconds of green left for that direction (0 = red). The last 1.2 s count as yellow: cars that haven't reached the line stop
+function greenLeft(horiz,ix,iy,t){ const p=(t+ix*1.7+iy*2.9)%10, s=horiz?0:5; return p>=s&&p<s+3.6?s+3.6-p:0; }
+const YELLOW=1.2, WALK_SPEED=14;
+let mapT=0;
+function initMovers(){
+  if(MOVERS.length) return; let seed=5; const rnd=()=>((seed=seed*16807%2147483647)/2147483647);
+  const carCols=['#e85a5a','#4ab0e8','#f2c14e','#e8e8ee','#6fc06a','#b58cff','#2a2a2a'];
+  const add=(horiz,rv,len)=>{ const w=roadW(rv,horiz);
+    for(let i=0;i<len/9;i++){ const pos=rnd()*len, px=horiz?pos:rv, py=horiz?rv:pos; if(rnd()*2.4>busyAt(px,py)+.15) continue;
+      const dir=rnd()<.5?1:-1; MOVERS.push({car:true,horiz,rv,v:rv+(dir>0?w/4:-w/4)*(horiz?1:-1),pos,len,dir,vmax:20+rnd()*18,r:rnd(),out:true,lane:(horiz?'h':'v')+rv+':'+dir,col:carCols[rnd()*carCols.length|0]}); }
+    for(let i=0;i<len/6;i++){ const pos=rnd()*len, px=horiz?pos:rv, py=horiz?rv:pos; if(rnd()*2.4>busyAt(px,py)) continue;
+      const side=rnd()<.5?-1:1; MOVERS.push({car:false,horiz,rv,v:rv+side*(w/2+2),pos,len,dir:rnd()<.5?1:-1,sp:3+rnd()*4,r:rnd(),col:['#ffe36e','#ff6fa8','#9fe8ff','#f4efe6','#e8a070'][rnd()*5|0]}); } };
+  ROADS_X.forEach(rx=>add(false,rx,CITY_H)); ROADS_Y.forEach(ry=>add(true,ry,CITY_W));
+  // start with the cars already spread out and not overlapping
+  const byLane={}; MOVERS.filter(m=>m.car).forEach(m=>(byLane[m.lane]=byLane[m.lane]||[]).push(m));
+  // cars that would start inside a crossing, or too close to the car ahead, start off the map and drive in later
+  Object.values(byLane).forEach(a=>{ a.sort((p,q)=>p.pos-q.pos); let last=-99;
+    a.forEach(m=>{ const inX=(m.horiz?ROADS_X:ROADS_Y).some(k=>Math.abs(m.pos-k)<roadW(k,!m.horiz)/2+CAR_L/2+6);
+      if(inX||m.pos-last<CAR_L+CAR_GAP+2) m.out=true; else { m.out=false; last=m.pos; } }); });
+}
+// the next crossing ahead of a mover, with the crossing road's half width and the light indexes
+function nextCrossing(m){
+  const list=m.horiz?ROADS_X:ROADS_Y; let best=null;
+  for(let i=0;i<list.length;i++){ const d=(list[i]-m.pos)*m.dir; if(d>-1&&(best===null||d<best.d)) best={k:list[i],d,i}; }
+  if(!best) return null; const half=roadW(best.k,!m.horiz)/2, other=(m.horiz?ROADS_Y:ROADS_X).indexOf(m.rv);
+  return {k:best.k,half,ix:m.horiz?best.i:other,iy:m.horiz?other:best.i};
+}
+function moveTraffic(s,h){
+  const level=trafficLevel(h,mapT), speedF=1-.15*nightAt(h), lanes={};
+  MOVERS.forEach(m=>{ if(m.car&&!m.out) (lanes[m.lane]=lanes[m.lane]||[]).push(m); });
+  Object.values(lanes).forEach(a=>{ a.sort((p,q)=>(q.pos-p.pos)*p.dir); // front car first
+    a.forEach((c,i)=>{ const lead=a[i-1]; let mv=c.vmax*speedF*s;
+      if(lead) mv=Math.min(mv,Math.max(0,(lead.pos-c.pos)*c.dir-CAR_L-CAR_GAP)); // keep a gap to the car ahead
+      const x=nextCrossing(c);
+      if(x){ const stop=x.k-c.dir*(x.half+CAR_L/2+5), dStop=(stop-c.pos)*c.dir; // stop line, clear of the crosswalk
+        // don't block the crossing or the far crosswalk: only go if there's a car length of room past them
+        if(dStop>=0&&dStop<24){ const room=!lead||(lead.pos-(x.k+c.dir*(x.half+2*CAR_L+CAR_GAP+6)))*c.dir>=0;
+          if(greenLeft(c.horiz,x.ix,x.iy,mapT)<=YELLOW||!room) mv=Math.min(mv,dStop); } }
+      c.pos+=c.dir*mv;
+      if(c.pos<-8||c.pos>c.len+8) c.out=true; }); });
+  // cars off the map come back in when traffic is up and the entry is clear; when it's quiet they stay off
+  MOVERS.forEach(m=>{ if(!m.car||!m.out||m.r>level) return; const entry=m.dir>0?-6:m.len+6, a=lanes[m.lane]||[];
+    if(a.every(o=>Math.abs(o.pos-entry)>CAR_L+CAR_GAP+3)){ m.pos=entry; m.out=false; (lanes[m.lane]=a).push(m); } });
+  // people: walk the sidewalk; at a crossing they only step out if there's enough green left to get across, then hurry over
+  MOVERS.forEach(m=>{ if(m.car) return;
+    const cross=m.horiz?ROADS_X:ROADS_Y, inRoad=cross.some(k=>Math.abs(m.pos-k)<roadW(k,!m.horiz)/2+1);
+    if(!inRoad) m.on=m.r<level; // people only show up or leave on the sidewalk, never in the middle of a road (hidden ones keep walking)
+    let mv=(inRoad?Math.max(m.sp,WALK_SPEED):m.sp)*s; const x=nextCrossing(m);
+    if(x&&!inRoad){ const curb=x.k-m.dir*(x.half+1), d=(curb-m.pos)*m.dir, need=(2*x.half+2)/WALK_SPEED+.4;
+      if(d>=0&&d<3&&greenLeft(m.horiz,x.ix,x.iy,mapT)<need) mv=Math.min(mv,d); }
+    m.pos+=m.dir*mv; if(m.pos<4||m.pos>m.len-4) m.dir*=-1; });
+}
+function mapTick(dt){
+  const c=$('#mapC'); if(!c||!cityCv) return; const s=Math.min(.05,dt/1000); mapT+=s;
+  if(MV.goal){ MV.x+=(MV.goal.x-MV.x)*.18; MV.y+=(MV.goal.y-MV.y)*.18; if(Math.hypot(MV.goal.x-MV.x,MV.goal.y-MV.y)<1) MV.goal=null; placePins(); }
+  const h=(save.clock||600)/60, night=nightAt(h);
+  moveTraffic(s,h);
+  const x=c.getContext('2d'), r=viewRect(), z=MV.z; x.imageSmoothingEnabled=false;
+  x.drawImage(cityCv,r.x,r.y,r.w,r.h,0,0,MAP_W,MAP_H);
+  // evening glow, then night
+  const dusk=bump(h,18.6,1.1)*.22; if(dusk>.01){ x.fillStyle=`rgba(255,120,60,${dusk.toFixed(3)})`; x.fillRect(0,0,MAP_W,MAP_H); }
+  if(night>0){ x.fillStyle=`rgba(10,12,40,${(.5*night).toFixed(3)})`; x.fillRect(0,0,MAP_W,MAP_H); }
+  const S=(wx,wy)=>[(wx-r.x)*z,(wy-r.y)*z], vis=(a,b)=>a>-6&&b>-6&&a<MAP_W+6&&b<MAP_H+6;
+  // traffic lights at the crossings, when zoomed in
+  const lamp=g=>g>YELLOW?'#5aff6a':g>0?'#ffd23a':'#ff4a3a';
+  if(z>=1.4) ROADS_X.forEach((rx,ix)=>ROADS_Y.forEach((ry,iy)=>{ const [a,b]=S(rx,ry); if(!vis(a,b)) return; const hw=roadW(rx)/2*z, hh=roadW(ry,1)/2*z;
+    x.fillStyle=lamp(greenLeft(true,ix,iy,mapT)); x.fillRect(a-hw-3,b-hh-3,2,2); x.fillRect(a+hw+1,b+hh+1,2,2);
+    x.fillStyle=lamp(greenLeft(false,ix,iy,mapT)); x.fillRect(a+hw+1,b-hh-3,2,2); x.fillRect(a-hw-3,b+hh+1,2,2); }));
+  // cars (with headlights at night) and people
+  const cl=Math.max(3,Math.round(CAR_L*z)), cw=Math.max(2,Math.round(3*z)), ps=Math.max(1,Math.round(z));
+  MOVERS.forEach(m=>{ if(m.car?m.out:!m.on) return; const wx=m.horiz?m.pos:m.v, wy=m.horiz?m.v:m.pos; if(districtAt(wx,wy)==='lake') return;
+    const [a,b]=S(wx,wy); if(!vis(a,b)) return;
+    if(m.car){ x.fillStyle=m.col; if(m.horiz) x.fillRect(a-cl/2,b-cw/2,cl,cw); else x.fillRect(a-cw/2,b-cl/2,cw,cl);
+      if(night>.4){ x.fillStyle='#fff6b0'; const f=cl/2; if(m.horiz) x.fillRect(a+m.dir*f-(m.dir<0?1:0),b-cw/2,1,cw); else x.fillRect(a-cw/2,b+m.dir*f-(m.dir<0?1:0),cw,1); } }
+    else { x.fillStyle=m.col; x.fillRect(a,b,ps,ps); } });
+  // highlight the building you picked
+  if(mapSel){ const sh=shopById(mapSel), [a,b]=S(sh.x,sh.y), p=.5+.5*Math.sin(mapT*5);
+    x.strokeStyle=`rgba(255,227,110,${(.55+.45*p).toFixed(2)})`; x.lineWidth=2; x.strokeRect(a-13*z,b-11*z,26*z,22*z); }
+  $('#mapTime').textContent=`Day ${save.cday} · ${clockText()}`;
+}
+// shop blips follow the view
+function placePins(){
+  const r=viewRect();
+  document.querySelectorAll('#mapBox .blip').forEach(b=>{ const px=(+b.dataset.x-r.x)/r.w, py=(+b.dataset.y-r.y)/r.h, out=px<-.02||px>1.02||py<-.02||py>1.02;
+    b.style.left=px*100+'%'; b.style.top=py*100+'%'; b.classList.toggle('offmap',out); });
+}
+function centerMapOn(id){ const sh=shopById(id); if(sh) MV.goal={x:sh.x,y:sh.y}; }
 function renderMap(){
   $('#mapCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
-  const box=$('#mapBox'); box.querySelectorAll('.pin').forEach(p=>p.remove());
-  const mk=(label,cls,x,y,id)=>{ const b=document.createElement('button'); b.className='gbtn small pin '+cls; b.textContent=label;
-    b.style.left=x*100+'%'; b.style.top=y*100+'%'; b.setAttribute('aria-pressed',mapSel===id); b.onclick=()=>{ mapSel=id; renderMap(); if(inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); }; b.dataset.id=id; box.appendChild(b); };
-  const here=id=>save.workAt===id?' ★':'';
-  // short names on the pins so they don't cover each other; the full name is in the panel
-  const SHORT={eastink:'Eastside Ink',block:'Block Party',harbor:'Harborside',mill:'Old Mill',alley:'Neon Alley',hill:'Hilltop',jackpot:'Jackpot',highroller:'High Roller'};
-  mk("Dee's"+here('dee'),'home',DEE_SHOP.x,DEE_SHOP.y,'dee');
-  SHOPS.forEach(sh=>mk(SHORT[sh.id]+here(sh.id),save.shops.includes(sh.id)?'owned':'',sh.x,sh.y,sh.id));
+  const box=$('#mapBox'); box.querySelectorAll('.blip').forEach(p=>p.remove());
+  // blips instead of name labels: gold = for sale, green = yours, pink = Dee's, ★ = where you work
+  // the ✕ only works while you're still at your own shop; once you've gone somewhere else, pick your shop and enter it
+  $('#mapBack').classList.toggle('hide',!!F.at&&F.at!==save.workAt);
+  const mk=(sh,cls)=>{ const id=sh.id, b=document.createElement('button'); b.className='blip '+cls+(F.at===id?' here':''); b.textContent=save.workAt===id?'★':'';
+    b.title=sh.name; b.setAttribute('aria-label',sh.name); b.dataset.x=sh.x; b.dataset.y=sh.y; b.dataset.id=id;
+    b.setAttribute('aria-pressed',mapSel===id); b.onclick=()=>{ if(mapDragged) return; mapSel=id; centerMapOn(id); renderMap(); if(inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); };
+    box.appendChild(b); };
+  mk(DEE_SHOP,'home');
+  mk(SUPPLIER,'supply'+(save.runTut?'':' guide')+(supplierOpen()?'':' shut')); // only the very first time (Dee's errand) a marker points at it
+  SHOPS.forEach(sh=>mk(sh,save.shops.includes(sh.id)?'owned':''));
+  placePins();
   const info=$('#mapInfo');
-  if(!mapSel){ const own=save.shops.length;
-    info.innerHTML=`<div class="grow"><b>Neon Springs</b><br>Day ${save.cday} · Rep ${save.rep} · You're working at ${shopById(save.workAt).name} (★). ${own?`You own ${own} shop${own>1?'s':''}.`:'Pick a shop to see if it\'s for sale.'} Busy districts cost more and pay more.</div>`; return; }
+  info.classList.toggle('hide',!mapSel); if(!mapSel) return;
+  if(mapSel==='supply'){ // the Supply Store card
+    const open=supplierOpen();
+    info.innerHTML=`<div class="grow"><b>${SUPPLIER.name}</b>${save.career?` · open 8 AM to 6 PM`:''}<br>${SUPPLIER.desc}`+
+      (!open?`<br><b class="failtag">Closed right now. ${save.clock>=SUP_CLOSE?'It opens again at 8 AM tomorrow.':'It opens at 8 AM.'}</b>`:save.career?'<br>The trip takes about 20 minutes, and your shop keeps running while you\'re out.':'')+
+      `</div><div class="mbtns">${open?'<button class="gbtn go small" id="mShopSup">Shop here</button>':''}</div>`;
+    // shopping puts you AT the store: to get back you have to pick your shop on the map and enter it
+    if(open) $('#mShopSup').onclick=()=>{ F.away=!!F.player; if(save.career&&F.at!=='supply') advanceTime(20); F.at='supply'; openStore('supplies',()=>{ show('map'); renderMap(); placePins(); }); };
+    return; }
   const sh=shopById(mapSel), owned=save.shops.includes(sh.id), dee=sh.id==='dee', d=DISTRICTS[sh.district], st=save.shopState[sh.id], m=st&&st.mgr;
   const dots=(n,max)=>'●'.repeat(Math.max(1,Math.round(n)))+'○'.repeat(Math.max(0,max-Math.max(1,Math.round(n))));
   const facts=dee?`Dee's place. Dee runs the counter; you can always work here. Rent ${sh.rent} a day.`
     :`${sh.desc}<br>${d.name} · Rent ${sh.rent}/day · Busy ${dots(sh.traffic*2.5,5)} · Pay ${dots(sh.payMul*2.5,5)} · Safety ${'★'.repeat(d.safe)}${'☆'.repeat(5-d.safe)}`+
       (owned?`<br>${m?`Run by ${m.name} (skill ${Math.round(m.skill*100)}, wage ${m.wage}/day).`:'No manager: closed when you work elsewhere, but rent is still due.'}${st&&st.lose>=3?` <b class="failtag">Losing money ${st.lose} days in a row!</b>`:''}`:`<br>Price <i class="coin"></i> ${sh.price}`);
   let btns='';
+  // you're away (e.g. at the Supply Store): going back means picking your shop and entering it
+  if(sh.id===save.workAt&&F.at&&F.at!==save.workAt) btns+=`<button class="gbtn go small" id="mEnter">Enter shop</button>`;
+  if(!save.career){ } // during the apprenticeship you can only look (and do supply runs)
+  else {
   if(save.workAt!==sh.id&&(dee||owned)) btns+=`<button class="gbtn go small" id="mWork">Work here</button>`;
   if(!dee&&!owned) btns+=`<button class="gbtn go small" id="mBuy" ${save.coins<sh.price?'disabled':''}>${save.coins<sh.price?`Need ${sh.price-save.coins} more`:'Buy this shop'}</button>`;
   if(owned){ btns+=m?`<button class="gbtn small" id="mFire">Remove manager</button>`:`<button class="gbtn small" id="mHire">Get a manager</button>`;
     btns+=`<button class="gbtn small" id="mSell">Sell (${Math.round(sh.price*.7)})</button>`; }
+  }
   info.innerHTML=`<canvas id="mFront" width="160" height="90" class="front"></canvas><div class="grow"><b>${sh.name}</b>${owned?' <span class="chip">Yours</span>':''}<br>${facts}</div><div class="mbtns">${btns}</div>`;
   drawShopFront($('#mFront'),sh);
   const on=(id,f)=>{ const b=$('#'+id); if(b) b.onclick=f; };
-  on('mWork',async()=>{ const ok=F.custs.length?await modal(`Head over to ${sh.name}? Anyone waiting here goes home, and the trip takes half an hour.`,[['Stay',false],['Go',true,true]]):true; if(ok) workAt(sh.id); });
+  on('mEnter',()=>{ if(save.career) advanceTime(20); F.at=save.workAt; mapSel=null; const b=mapBack; mapBack=null; (b||enterFloor)(); });
+  on('mWork',async()=>{ if(F.suspended){ toast('Finish the tattoo in the chair first'); return; } const ok=F.custs.length?await modal(`Head over to ${sh.name}? Anyone waiting here goes home, and the trip takes half an hour.`,[['Stay',false],['Go',true,true]]):true; if(ok) workAt(sh.id); });
   on('mBuy',async()=>{ const ok=await modal(`Buy ${sh.name} for ${sh.price} coins? Rent is ${sh.rent} a day. Without a manager it's only open when you work there.`,[['Not yet',false],['Buy it',true,true]]);
     if(ok&&save.coins>=sh.price){ save.coins-=sh.price; save.shops.push(sh.id); save.shopState[sh.id]={mgr:null,lose:0}; persist(); blip(990); toast(`${sh.name} is yours!`);
       const go=await modal(`${sh.name} is yours! Work there now?`,[['Later',false],['Go there',true,true]]); if(go){ workAt(sh.id); return; } } renderMap(); });
@@ -2520,8 +2856,45 @@ async function pickManager(sh){
     s.mgr={kind:'staff',id,name:p.name,skill:p.skill,wage:p.wage+10}; }
   persist(); blip(880); toast(`${s.mgr.name} now runs ${sh.name}`); renderMap();
 }
-function openMap(back){ mapBack=back||null; mapSel=null; drawTownMap(); renderMap(); show('map'); }
-$('#mapBack').onclick=()=>{ if(mapBack) mapBack(); else show('title'); };
+function openMap(back){
+  mapBack=back||null; mapSel=null; drawCity(); initMovers();
+  const sh=shopById(save.workAt)||DEE_SHOP; MV.x=sh.x; MV.y=sh.y; MV.z=1; MV.goal=null; // start zoomed in on where you work
+  renderMap(); show('map'); sizeMap(); placePins();
+  // start with the right amount of traffic for this time of day (quiet at night)
+  const lv=trafficLevel((save.clock||600)/60,mapT); MOVERS.forEach(m=>{ if(m.car&&m.r>lv) m.out=true; });
+}
+// the Supply Store keeps shop hours in career mode: 8 AM to 6 PM (Dee's errand on Days 2-3 has no clock)
+const SUP_OPEN=480, SUP_CLOSE=1080;
+const supplierOpen=()=>!save.career||(save.clock>=SUP_OPEN&&save.clock<SUP_CLOSE);
+// you stepped out (map or Supply Store): the shop's clock, customers and staff keep going, and so does a tattoo you left mid-way
+function offFloorTick(dt){
+  if(save.career) advanceTime(dt/1000*CLOCK_RATE);
+  else if(F.appr) F.custs.slice().forEach(c=>{ if(c.script&&c.state==='waiting'&&(c.patience-=dt/1000)<=0) scriptedWalkout(c); });
+  if(job.onRun&&job.phase!=='care'&&isClient(job.mode)) job.elapsed+=dt/1000;
+}
+function closeMapCard(quiet){ const id=mapSel; if(!id) return; mapSel=null; renderMap(); if(!quiet&&inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); }
+addEventListener('resize',()=>{ if(current==='map'){ sizeMap(); placePins(); } });
+// pan by dragging, pinch or mouse wheel to zoom, plus +/−/Fit buttons (also reachable with a controller)
+let mapDragged=false, mapTapEmpty=false; const mapPtrs=new Map(); let pinch0=null;
+const mapBoxEl=$('#mapBox');
+// a tap on empty map (not a blip or the card) closes the shop card; so does starting to pan or zoom
+mapBoxEl.addEventListener('pointerdown',e=>{ if(e.target.closest('.mapzoom,.mapcard,.mapx,.maphud')) return; mapPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); mapDragged=false; mapTapEmpty=!e.target.closest('.blip');
+  if(mapPtrs.size===2){ const [a,b]=[...mapPtrs.values()]; pinch0={d:Math.hypot(a.x-b.x,a.y-b.y),z:MV.z}; } });
+mapBoxEl.addEventListener('pointermove',e=>{ const p=mapPtrs.get(e.pointerId); if(!p) return; const rect=mapBoxEl.getBoundingClientRect(), r=viewRect();
+  if(mapPtrs.size===1){ const dx=e.clientX-p.x, dy=e.clientY-p.y; if(Math.abs(dx)+Math.abs(dy)>3||mapDragged){ if(!mapDragged){ mapDragged=true; closeMapCard(true); try{ mapBoxEl.setPointerCapture(e.pointerId); }catch(_){} }
+      MV.x-=dx*r.w/rect.width; MV.y-=dy*r.h/rect.height; MV.goal=null; placePins(); p.x=e.clientX; p.y=e.clientY; } }
+  else if(pinch0){ p.x=e.clientX; p.y=e.clientY; const [a,b]=[...mapPtrs.values()], d=Math.hypot(a.x-b.x,a.y-b.y); mapDragged=true;
+    const mx=r.x+((a.x+b.x)/2-rect.left)/rect.width*r.w, my=r.y+((a.y+b.y)/2-rect.top)/rect.height*r.h; zoomMap(pinch0.z*d/pinch0.d/MV.z,mx,my); } });
+const mapUp=e=>{ if(mapPtrs.has(e.pointerId)&&mapTapEmpty&&!mapDragged&&e.type==='pointerup') closeMapCard(true);
+  mapPtrs.delete(e.pointerId); if(mapPtrs.size<2) pinch0=null; setTimeout(()=>{ if(!mapPtrs.size) mapDragged=false; },0); };
+mapBoxEl.addEventListener('pointerup',mapUp); mapBoxEl.addEventListener('pointercancel',mapUp);
+mapBoxEl.addEventListener('wheel',e=>{ e.preventDefault(); const rect=mapBoxEl.getBoundingClientRect(), r=viewRect();
+  zoomMap(e.deltaY<0?1.15:1/1.15,r.x+(e.clientX-rect.left)/rect.width*r.w,r.y+(e.clientY-rect.top)/rect.height*r.h); },{passive:false});
+$('#mzIn').onclick=()=>zoomMap(1.3); $('#mzOut').onclick=()=>zoomMap(1/1.3); $('#mzFit').onclick=()=>{ MV.z=MAP_ZMIN; MV.goal=null; placePins(); };
+// ✕ (and the back button): close the shop card first if one is open, otherwise leave the map
+$('#mapBack').onclick=()=>{ if(mapSel){ closeMapCard(); return; }
+  if(F.at&&F.at!==save.workAt){ toast(`You're at ${shopById(F.at).name}. Tap your shop on the map and choose Enter shop.`); return; }
+  if(mapBack) mapBack(); else show('title'); };
 
 /* =============== TITLE =============== */
 function refreshTitle(){
@@ -2591,9 +2964,11 @@ window.addEventListener('keydown',e=>{
     const m=KEYMOVE[k]; if(m){ e.preventDefault(); F.keys[m]=true; return; }
     if(k==='e'||k==='enter'||e.code==='Space'){ e.preventDefault(); floorInteract(); return; }
     if(k==='escape'){ floorMenu(); return; }
-    if(k==='m'&&save.career){ openMap(enterFloor); return; }
     return;
   }
+  if(current==='map'&&!modalOpen){ // map: WASD pans, + and - zoom (arrows still move between buttons)
+    const pan={w:[0,-30],a:[-30,0],s:[0,30],d:[30,0]}[k]; if(pan){ e.preventDefault(); MV.x+=pan[0]/MV.z; MV.y+=pan[1]/MV.z; MV.goal=null; placePins(); return; }
+    if(k==='+'||k==='='){ zoomMap(1.3); return; } if(k==='-'||k==='_'){ zoomMap(1/1.3); return; } if(k==='escape'){ $('#mapBack').click(); return; } }
   if(current!=='tattoo'||modalOpen){
     const dir={arrowup:'u',arrowdown:'d',arrowleft:'l',arrowright:'r'}[k];
     if(dir){ e.preventDefault(); moveFocus(dir); return; }
@@ -2690,6 +3065,9 @@ function pollPad(dt){
   if(modalOpen||current!=='tattoo'){
     // dialogue: any face button or Start moves the conversation along
     if(dlg.active&&!modalOpen){ if(down(0)||down(1)||down(2)||down(3)||down(9)) advance(); return; }
+    if(current==='map'&&!modalOpen){ // map: right stick pans, LT/RT zoom (D-pad still moves between pins and buttons)
+      const rx2=ax[2]||0, ry2=ax[3]||0; if(Math.hypot(rx2,ry2)>.25){ MV.x+=rx2*4/MV.z*(dt/16.7); MV.y+=ry2*4/MV.z*(dt/16.7); MV.goal=null; placePins(); }
+      if(rt>.3) zoomMap(1+.03*rt*(dt/16.7)); if(lt>.3) zoomMap(1/(1+.03*lt*(dt/16.7))); }
     let dir=null; if(down(12))dir='u'; else if(down(13))dir='d'; else if(down(14))dir='l'; else if(down(15))dir='r';
     if(!dir){
       if(mag>.6){ if(!gp.stickHeld||gp.nav<=0){ dir=Math.abs(rx)>Math.abs(ry)?(rx>0?'r':'l'):(ry>0?'d':'u'); gp.nav=gp.stickHeld?10:22; gp.stickHeld=true; } else gp.nav--; }
@@ -2701,7 +3079,7 @@ function pollPad(dt){
       if(!padFocusEl||!f.includes(padFocusEl)) setPadFocus(f.find(e=>e.classList.contains('go'))||f[0]);
       else padFocusEl.click();
     }
-    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board'||current==='slots') show('title'); }
+    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board'||current==='slots') show('title'); else if(current==='map') $('#mapBack').click(); }
     return;
   }
   // tattoo station: D-pad walks every button on screen, A presses the highlighted one
@@ -2801,6 +3179,8 @@ function loop(t){
   try{ pollPad(dt); }catch(err){ gp.err=String(err&&err.message||err).slice(0,80); }
   if(current==='floor') floorTick(dt);
   if(current==='fight'&&!modalOpen) fightTick(dt);
+  if(current==='map') mapTick(dt);
+  if((current==='map'||current==='store')&&F.away) offFloorTick(dt);
   if(sceneMode&&current!=='tattoo'){ updateActors(); sceneMode==='exterior'?drawExterior(t):drawInterior(t); }
   tickDialogue();
   if(current==='tattoo'){ tickJob(dt/1000); if(save.fullView&&tick%15===0) updateMini(); }
