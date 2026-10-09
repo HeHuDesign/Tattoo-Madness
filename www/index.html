@@ -177,7 +177,12 @@ button{font:inherit;color:inherit}
 .pin.home{background:#ffd7e6}
 .pin[aria-pressed="true"]{background:var(--ink);color:var(--parch)}
 .mapinfo{display:flex;gap:12px;align-items:center;flex-wrap:wrap;min-height:44px}
-.mapinfo .grow{flex:1;min-width:200px}
+.mapinfo .grow{flex:1;min-width:200px;font-size:16px}
+.mapinfo .front{width:160px;height:90px;image-rendering:pixelated;border:3px solid var(--wood-d);border-radius:4px;flex:none}
+.mbtns{display:flex;flex-direction:column;gap:6px}
+.compact .mapinfo .front{width:120px;height:68px}
+.compact .mapinfo .grow{min-width:0;font-size:13px}
+.compact .mbtns{flex-direction:row;flex-wrap:wrap}
 .revs{margin:8px 0 0;padding-left:20px}
 .slips i{width:13px;height:13px;border-radius:50%;border:2px solid var(--wood-d);background:var(--parch-2)}
 .slips i.used{background:var(--bad)}
@@ -282,7 +287,7 @@ button{font:inherit;color:inherit}
 .compact .mapbox{grid-row:2/4;width:min(calc((100vh - 90px)*16/9),calc(100vw - 300px));min-width:220px}
 .compact .mapinfo{flex-direction:column;align-items:flex-start;font-size:15px;gap:6px}
 .compact .mapwrap>.row{grid-column:2;margin:0}
-.compact .pin{font-size:12px;padding:2px 6px}
+.compact .pin{font-size:11px;padding:1px 5px}
 .compact #dlg{min-height:0;padding:8px 12px;gap:10px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 .compact #dlgPortrait{width:54px;height:54px}
 .compact #dlg .who{font-size:17px}
@@ -477,7 +482,7 @@ button{font:inherit;color:inherit}
   </div></div></section>
 
   <section class="screen" id="scr-map"><div class="dim"><div class="mapwrap wood">
-    <div class="sthead"><h2>Town map</h2><span class="chip" id="mapCoins"></span></div>
+    <div class="sthead"><h2>Neon Springs</h2><span class="chip" id="mapCoins"></span></div>
     <div class="mapbox" id="mapBox"><canvas id="mapC" width="320" height="180"></canvas></div>
     <div class="mapinfo" id="mapInfo"></div>
     <div class="row"><button class="gbtn" id="mapBack">Back to the shop</button></div>
@@ -594,7 +599,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{}});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -673,16 +678,29 @@ function resizeScene(){
   sc.width=W; sc.height=H; sx.imageSmoothingEnabled=false;
 }
 const R=(x,y,w,h,c)=>{ sx.fillStyle=c; sx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
-const GL={T:["111","010","010","010","010"],A:["010","101","111","101","101"],O:["111","101","101","101","111"],
-  I:["111","010","010","010","111"],N:["101","111","111","101","101"],K:["101","110","100","110","101"],
-  S:["111","100","111","001","111"],H:["101","101","111","101","101"],P:["111","101","111","100","100"]};
+// 3x5 pixel font for signs and the city map (uppercase letters, digits, a few symbols)
+const GL={A:["010","101","111","101","101"],B:["110","101","110","101","110"],C:["011","100","100","100","011"],D:["110","101","101","101","110"],
+  E:["111","100","110","100","111"],F:["111","100","110","100","100"],G:["011","100","101","101","011"],H:["101","101","111","101","101"],
+  I:["111","010","010","010","111"],J:["001","001","001","101","010"],K:["101","110","100","110","101"],L:["100","100","100","100","111"],
+  M:["101","111","101","101","101"],N:["101","111","111","101","101"],O:["111","101","101","101","111"],P:["111","101","111","100","100"],
+  Q:["111","101","101","111","001"],R:["110","101","110","101","101"],S:["111","100","111","001","111"],T:["111","010","010","010","010"],
+  U:["101","101","101","101","111"],V:["101","101","101","101","010"],W:["101","101","111","111","101"],X:["101","101","010","101","101"],
+  Y:["101","101","010","010","010"],Z:["111","001","010","100","111"],0:["111","101","101","101","111"],1:["010","110","010","010","111"],
+  2:["111","001","111","100","111"],3:["111","001","011","001","111"],4:["101","101","111","001","001"],5:["111","100","111","001","111"],
+  6:["111","100","111","101","111"],7:["111","001","010","010","010"],8:["111","101","111","101","111"],9:["111","101","111","001","111"],
+  "'":["010","010","000","000","000"],'-':["000","000","111","000","000"],'&':["010","101","010","101","011"],'.':["000","000","000","000","010"],
+  '$':["011","110","010","011","110"],'!':["010","010","010","000","010"]};
 const HEART=["01010","11111","11111","01110","00100"];
-function pixText(str,x,y,s,col,glow){
-  [...str].forEach((ch,n)=>{ const g=ch==='♥'?HEART:GL[ch]; if(!g) return;
-    g.forEach((row,i)=>[...row].forEach((v,j)=>{ if(v==='1'){ if(glow) R(x+n*(4*s)+j*s-1,y+i*s-1,s+2,s+2,glow); } })); });
-  [...str].forEach((ch,n)=>{ const g=ch==='♥'?HEART:GL[ch]; if(!g) return;
-    g.forEach((row,i)=>[...row].forEach((v,j)=>{ if(v==='1') R(x+n*(4*s)+j*s,y+i*s,s,s,col); })); });
+// draws pixel text on the scene, or on another canvas when ctx is given
+function pixText(str,x,y,s,col,glow,ctx){
+  const put=(px,py,w,h,c)=>{ if(ctx){ ctx.fillStyle=c; ctx.fillRect(Math.round(px),Math.round(py),w,h); } else R(px,py,w,h,c); };
+  const chars=[...str.toUpperCase()];
+  if(glow) chars.forEach((ch,n)=>{ const g=ch==='♥'?HEART:GL[ch]; if(!g) return;
+    g.forEach((row,i)=>[...row].forEach((v,j)=>{ if(v==='1') put(x+n*(4*s)+j*s-1,y+i*s-1,s+2,s+2,glow); })); });
+  chars.forEach((ch,n)=>{ const g=ch==='♥'?HEART:GL[ch]; if(!g) return;
+    g.forEach((row,i)=>[...row].forEach((v,j)=>{ if(v==='1') put(x+n*(4*s)+j*s,y+i*s,s,s,col); })); });
 }
+const pixW=(str,s)=>str.length*4*s-s; // width of a pixText string
 const STARS=Array.from({length:60},(_,i)=>({x:((i*97)%101)/101,y:((i*53)%89)/89,p:(i*7)%5}));
 function drawExterior(t){
   const gy=Math.round(H*0.78), cx=W>>1;
@@ -717,8 +735,68 @@ function drawExterior(t){
   for(let i=0;i<8;i++){ const fx=(W*(i*0.13+0.05)+Math.sin(t/900+i)*14)%W, fy=gy-10-((i*17)%30)+Math.cos(t/700+i*2)*6;
     if(((t/300+i)|0)%3) R(fx,fy,1,1,'#f8f2a0'); }
 }
+/* ---------- shop interiors: every shop you can buy has its own look. Dee's shop keeps the original drawing ---------- */
+const THEMES={
+  casino:{wall:'#1d1428',wall2:'#2c1e3c',trim:'#c9a24a',floor:'#5a1a24',floor2:'#7a2430',counter:['#c9a24a','#1a1a1a','#2a2a2a'],chair:['#1a1a1a','#c9a24a'],rug:['#c9a24a','#2a1a10','#ffe08a'],neon:['JACKPOT','#ffd84a','rgba(255,216,74,.35)']},
+  marble:{wall:'#ece6dc',wall2:'#cfc6b8',trim:'#c9a24a',floor:'#f4f0ea',floor2:'#d8d0c4',counter:['#f4f0ea','#b8323c','#9a2830'],chair:['#b8323c','#e86a72'],rug:['#b8323c','#7a1a24','#c9a24a'],neon:['VIP','#ff6fa8','rgba(255,111,168,.35)']},
+  brick:{wall:'#8a4632',wall2:'#6e3424',trim:'#2a2220',floor:'#e8e2d4',floor2:'#2a2a2a',counter:['#4a3a30','#2e241e','#3a2e26'],chair:['#2e6f8e','#4ab0d8'],rug:['#2e3a5a','#1e283e','#e8c25a'],neon:['TATTOO','#ff5a46','rgba(255,90,70,.35)']},
+  mural:{wall:'#e4ddd0',wall2:'#c8bfb0',trim:'#3a3a3a',floor:'#9a9a96',floor2:'#82827e',counter:['#e8c25a','#3a3a3a','#4a4a4a'],chair:['#4ab0e8','#8ad4f8'],rug:['#e85a8a','#9b5de5','#f2c14e'],neon:['ART','#9fe8ff','rgba(159,232,255,.35)']},
+  pastel:{wall:'#bfe0d0',wall2:'#a6ccbb',trim:'#f4efe6',floor:'#e2c9a0',floor2:'#cbb088',counter:['#f4efe6','#e8a8b8','#d898a8'],chair:['#e8a8b8','#f8c8d4'],rug:['#f4efe6','#a6ccbb','#e8a8b8'],neon:['OPEN','#ff6fa8','rgba(255,111,168,.35)']},
+  graffiti:{wall:'#5c5c60',wall2:'#4a4a4e',trim:'#2a2a2e',floor:'#4a4440',floor2:'#3a3430',counter:['#7a7a7e','#3a3a3e','#4a4a4e'],chair:['#2a2a2a','#5a5a5a'],rug:['#3a3a3e','#2a2a2e','#ff5a46'],neon:['INK','#ff3a3a','rgba(255,58,58,.35)']},
+  garage:{wall:'#7a8088',wall2:'#666c74',trim:'#d9a12b',floor:'#5a5a58',floor2:'#3e3e3c',counter:['#d9a12b','#3a3a3a','#4a4a4a'],chair:['#d9a12b','#f2c14e'],rug:['#2a2a2a','#3a3a3a','#d9a12b'],neon:['OPEN 24','#7fff7f','rgba(127,255,127,.3)']},
+  nautical:{wall:'#2e6f8e',wall2:'#245a74',trim:'#f4efe6',floor:'#b09a70',floor2:'#97805a',counter:['#f4efe6','#7a4a2e','#6a3e26'],chair:['#f4efe6','#ffffff'],rug:['#f4efe6','#2e6f8e','#b8323c'],neon:['AHOY','#9fe8ff','rgba(159,232,255,.35)']}
+};
+// the theme of the shop you're working in right now (null = Dee's shop)
+function sceneTheme(){ if(!F.active||!save.career||!save.workAt||save.workAt==='dee') return null; const sh=SHOPS.find(s=>s.id===save.workAt); return sh?THEMES[sh.theme]:null; }
+function drawThemeRoom(th,t,cx,wb,fy){
+  const st=Object.keys(THEMES).find(k=>THEMES[k]===th);
+  R(0,0,W,wb,th.wall);
+  if(st==='casino'){ for(let x=6;x<W;x+=40){ R(x,0,8,wb,th.wall2); R(x+3,0,2,wb,th.trim); } }
+  if(st==='marble'){ for(let i=0;i<46;i++) R((i*53)%W,(i*29)%(wb-12),10+(i%3)*6,1,th.wall2); for(let x=4;x<W;x+=50) R(x,0,4,wb,th.trim); }
+  if(st==='brick'){ for(let y=0,row=0;y<wb;y+=6,row++){ R(0,y,W,1,th.wall2); for(let x=(row%2)*8;x<W;x+=16) R(x,y,1,6,th.wall2); } }
+  if(st==='mural'){ const c=['#e85a8a','#4ab0e8','#f2c14e','#6fc06a','#9b5de5'];
+    for(let i=0;i<16;i++) R((i*47)%W,(i*23)%(wb-34)+4,16+(i%3)*8,8+(i%4)*4,c[i%5]);
+    for(let x=0;x<W;x+=3) R(x,wb-36+Math.round(Math.sin(x/9)*3),3,2,c[(x/15|0)%5]); }
+  if(st==='pastel'){ R(0,wb-32,W,32,'#f4efe6'); for(let x=0;x<W;x+=12) R(x,wb-32,1,32,'#ddd6c8'); }
+  if(st==='graffiti'){ for(let y=0,row=0;y<wb;y+=8,row++){ R(0,y,W,1,th.wall2); for(let x=(row%2)*12;x<W;x+=24) R(x,y,1,8,th.wall2); }
+    const tags=['#ff5a46','#4ab0e8','#f2c14e','#9b5de5','#6fc06a'];
+    for(let i=0;i<9;i++){ const x0=(i*61+10)%(W-40), y0=8+(i*17)%(wb-40), c=tags[i%5]; for(let k=0;k<22;k++) R(x0+k,y0+Math.round(Math.sin(k/2+i)*3),2,2,c); R(x0+4,y0+6,14,1,c); } }
+  if(st==='garage'){ for(let x=0;x<W;x+=4) R(x,0,1,wb,th.wall2); R(0,wb-30,W,30,'#5a6068'); for(let x=0;x<W;x+=8) R(x,wb-30,1,30,'#4a5058'); }
+  if(st==='nautical'){ for(let y=0;y<wb;y+=6) R(0,y,W,1,th.wall2); }
+  R(0,wb-3,W,3,th.trim);
+  // floor
+  R(0,wb,W,H-wb,th.floor);
+  if(st==='casino'){ for(let y=wb+4;y<H;y+=10) for(let x=((y/10|0)%2)*10;x<W;x+=20){ R(x+4,y,2,2,th.trim); R(x+3,y+1,4,1,th.floor2); } }
+  if(st==='marble'){ for(let y=wb;y<H;y+=16) R(0,y,W,1,th.floor2); for(let x=0;x<W;x+=24) R(x,wb,1,H-wb,th.floor2); }
+  if(st==='brick'){ for(let y=wb,r=0;y<H;y+=10,r++) for(let x=(r%2)*10;x<W;x+=20) R(x,y,10,10,th.floor2); }
+  if(st==='mural'){ for(let i=0;i<30;i++) R((i*37)%W,wb+4+(i*13)%(H-wb-6),2,2,['#e85a8a','#4ab0e8','#f2c14e'][i%3]); }
+  if(st==='pastel'||st==='nautical'){ for(let y=wb,row=0;y<H;y+=7,row++){ R(0,y,W,1,th.floor2); for(let x=(row%2)*18;x<W;x+=36) R(x,y,1,7,th.floor2); } }
+  if(st==='graffiti'||st==='garage'){ for(let i=0;i<8;i++){ const x0=(i*53)%W, y0=wb+6+(i*19)%(H-wb-10); R(x0,y0,12,1,th.floor2); R(x0+8,y0+1,1,5,th.floor2); }
+    if(st==='garage') [[cx-60,H-20],[cx+70,wb+30]].forEach(([x,y])=>{ R(x,y,16,5,'#2e2e2c'); R(x+3,y-1,10,7,'#2e2e2c'); }); }
+  R(0,wb,W,2,'rgba(0,0,0,.35)');
+  // window
+  const wy=Math.round(wb*0.16), wh=Math.round(wb*0.42);
+  if(st==='nautical'){ [cx-20,cx+14].forEach(x=>{ sx.fillStyle=th.trim; sx.beginPath(); sx.arc(x,wy+wh/2,13,0,7); sx.fill(); sx.fillStyle='#a9dcef'; sx.beginPath(); sx.arc(x,wy+wh/2,10,0,7); sx.fill(); }); }
+  else if(st==='casino'){ for(let i=0;i<3;i++){ const x=cx-30+i*20; R(x,wy+6,16,wh,'#3a1a40'); R(x+2,wy+9,12,8,'#ffe08a'); R(x+3,wy+11,3,4,'#b8323c'); R(x+7,wy+11,3,4,'#b8323c'); R(x+5,wy+20,6,3,'#c9a24a'); } }
+  else if(st==='garage'){ R(cx-30,wy-4,60,wh+8,'#8a9098'); for(let y=wy-2;y<wy+wh+4;y+=4) R(cx-30,y,60,1,'#6a7078'); R(cx-30,wy+wh+3,60,2,th.trim); }
+  else { R(cx-27,wy-3,54,wh+6,th.trim); R(cx-24,wy,48,wh,st==='graffiti'?'#5a6a7a':'#a9dcef'); R(cx-24,wy,48,wh/3,st==='graffiti'?'#6a7a8a':'#cfeefa');
+    if(st==='graffiti') for(let x=cx-22;x<cx+24;x+=6) R(x,wy,2,wh,'#2a2a2e'); // bars on the window
+    else { R(cx-1,wy,2,wh,th.trim); R(cx-24,wy+wh/2,48,2,th.trim); }
+    if(st==='brick'){ sx.fillStyle=th.trim; sx.fillRect(cx-27,wy-10,54,8); sx.fillStyle=th.wall; sx.beginPath(); sx.ellipse(cx,wy-2,24,8,0,Math.PI,0); sx.fill(); }
+    if(st==='pastel'){ R(cx-32,wy-4,8,wh+10,'#e8a8b8'); R(cx+24,wy-4,8,wh+10,'#e8a8b8'); } }
+  // framed flash on the wall, and a neon sign
+  const fwY=Math.round(wb*0.2);
+  [[cx-118,'#b8432f'],[cx-90,'#2e5866'],[cx-62,'#e0a33a']].forEach(([x,c],i)=>{ R(x,fwY,22,28,th.trim); R(x+2,fwY+2,18,24,'#f2e6cc');
+    if(i===0){ R(x+6,fwY+8,4,4,c); R(x+12,fwY+8,4,4,c); R(x+6,fwY+11,10,5,c); R(x+9,fwY+16,4,3,c); }
+    if(i===1){ R(x+10,fwY+5,2,16,c); R(x+6,fwY+8,10,2,c); R(x+5,fwY+18,12,2,c); }
+    if(i===2){ R(x+8,fwY+6,6,6,c); R(x+6,fwY+14,10,8,'#5a8f3c'); } });
+  const [txt,col,glow]=th.neon, nw=pixW(txt,2)+12, nx=cx+46, on=!(Math.sin(t/110)>0.95);
+  R(nx,fwY,nw,20,'#151018'); pixText(txt,nx+6,fwY+5,2,on?col:'#3a3040',on?glow:null);
+  if(st==='nautical'){ sx.strokeStyle='#f4efe6'; sx.lineWidth=4; sx.beginPath(); sx.arc(cx+126,fwY+38,8,0,7); sx.stroke(); sx.strokeStyle='#b8323c'; sx.lineWidth=2; sx.setLineDash([3,3]); sx.stroke(); sx.setLineDash([]); } // life ring
+}
 function drawInterior(t){
-  const cx=W>>1, wb=Math.round(H*0.55), fy=wb+22;
+  const cx=W>>1, wb=Math.round(H*0.55), fy=wb+22, th=sceneTheme();
+  if(th){ drawThemeRoom(th,t,cx,wb,fy); drawShopFurniture(t,cx,wb,fy,th); return; }
   R(0,0,W,wb,'#7b4a5c'); for(let x=0;x<W;x+=10) R(x,0,4,wb,'#835264');
   for(let y=6;y<wb-26;y+=12) for(let x=((y/12)|0)%2*5+2;x<W;x+=10) R(x,y,1,1,'#a0687a');
   R(0,wb-22,W,22,'#6a3f25'); R(0,wb-24,W,3,'#a2683c'); for(let x=4;x<W;x+=16) R(x,wb-20,1,18,'#57331e');
@@ -743,20 +821,25 @@ function drawInterior(t){
   pixText('♥',nx+5,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
   pixText('INK',nx+19,fwY+5,2,on?'#9fe8ff':'#3a5a66',on?'rgba(159,232,255,.3)':null);
   pixText('♥',nx+45,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
+  drawShopFurniture(t,cx,wb,fy,null);
+}
+// furniture and people, shared by every shop (colors come from the theme; null = Dee's colors)
+function drawShopFurniture(t,cx,wb,fy,th){
+  const rug=th?th.rug:['#7a2f4f','#9c4467','#e0a33a'], chair=th?th.chair:['#a8323c','#d0505a'], ctr=th?th.counter:['#d39a5a','#8a5532','#7a4a2a'];
   // rug, chair, lamp, plant
-  R(cx-42,fy+2,84,26,'#7a2f4f'); R(cx-38,fy+5,76,20,'#9c4467'); for(let x=cx-34;x<cx+34;x+=8) R(x,fy+14,3,3,'#e0a33a');
+  R(cx-42,fy+2,84,26,rug[0]); R(cx-38,fy+5,76,20,rug[1]); for(let x=cx-34;x<cx+34;x+=8) R(x,fy+14,3,3,rug[2]);
   // practice desk for fake skin, bottom right of the shop: tabletop, legs, a pink pad, a little lamp and a stool
   const dk=cx+92, dy=fy+12; R(dk,dy,38,5,'#a2683c'); R(dk,dy,38,1,'#c98a52'); R(dk+2,dy+5,3,12,'#5a3520'); R(dk+33,dy+5,3,12,'#5a3520');
   R(dk+8,dy-3,12,4,'#f1c3b0'); R(dk+9,dy-3,10,1,'#f8dccd'); R(dk+29,dy-11,2,10,'#333'); R(dk+25,dy-13,8,3,'#d8d0c0');
   R(dk+14,dy+18,10,3,'#6b3a2a'); R(dk+16,dy+21,2,5,'#4a2a18'); R(dk+20,dy+21,2,5,'#4a2a18');
-  R(cx+62,fy-4,22,8,'#2b2b2b'); R(cx+70,fy-10,6,8,'#555'); R(cx+50,fy-18,44,10,'#a8323c'); R(cx+50,fy-18,44,2,'#d0505a');
-  R(cx+86,fy-42,10,26,'#a8323c'); R(cx+88,fy-40,2,22,'#d0505a'); R(cx+48,fy-24,10,4,'#2b2b2b');
+  R(cx+62,fy-4,22,8,'#2b2b2b'); R(cx+70,fy-10,6,8,'#555'); R(cx+50,fy-18,44,10,chair[0]); R(cx+50,fy-18,44,2,chair[1]);
+  R(cx+86,fy-42,10,26,chair[0]); R(cx+88,fy-40,2,22,chair[1]); R(cx+48,fy-24,10,4,'#2b2b2b');
   R(cx+104,fy-62,2,60,'#333'); R(cx+96,fy-66,16,6,'#d8d0c0'); R(cx+98,fy-60,12,3,'rgba(255,240,200,.5)');
   R(cx+122,fy-14,14,14,'#b5562d'); R(cx+122,fy-14,14,2,'#d0703f'); [[-4,-30,6,18],[4,-36,6,24],[12,-28,6,16]].forEach(l=>R(cx+122+l[0],fy+l[1],l[2],l[3],'#4e8a3e'));
   if(F.active) drawFloorFurniture(cx,fy);
   // mentor behind counter, then counter, then others
   actors.filter(a=>a.behind).forEach(drawActor);
-  R(cx-124,fy-26,68,5,'#d39a5a'); R(cx-122,fy-21,64,24,'#8a5532'); for(let x=cx-118;x<cx-60;x+=14) R(x,fy-17,10,16,'#7a4a2a');
+  R(cx-124,fy-26,68,5,ctr[0]); R(cx-122,fy-21,64,24,ctr[1]); for(let x=cx-118;x<cx-60;x+=14) R(x,fy-17,10,16,ctr[2]);
   R(cx-112,fy-36,16,10,'#5b5b6b'); R(cx-110,fy-34,12,3,'#9fe8ff'); R(cx-86,fy-34,8,8,'#bfe3e0'); R(cx-84,fy-31,4,4,'#f2c14e');
   actors.filter(a=>!a.behind).sort((a,b)=>a.y-b.y).forEach(drawActor);
   if(F.active) drawFloorOverlay(t);
@@ -1718,7 +1801,7 @@ async function ending(){
   await shopScene([{ch:'dee',x:cx-90,y:fy-12,behind:true},{ch:'you',x:cx-30,y:fy+16,flip:true}]);
   await say('dee',"Seven clients. Seven people walking around with your work on them.");
   await say('dee',"You're not an apprentice anymore. I'm stepping back to run the counter. The shop floor is yours: rent, staff, all of it.");
-  await say('dee',"Save up. There are other shops in town that could use a new owner.");
+  await say('dee',"Save up. There are shops all over Neon Springs that could use a new owner. The Strip if you're rich, Eastside if you're brave.");
   hideDlg(); busy=false;
   const avg=save.scores.length?Math.round(save.scores.reduce((a,b)=>a+b,0)/save.scores.length):0;
   $('#endStats').innerHTML=`<dt>Customers inked</dt><dd>${save.scores.length}</dd><dt>Average score</dt><dd>${avg}</dd><dt>Tips earned</dt><dd><i class="coin"></i> ${save.coins}</dd><dt>Reputation</dt><dd>${save.rep}</dd>`;
@@ -1752,8 +1835,12 @@ function ensureCareerSave(){
   save.up={...d.up,...(save.up||{})};
   ['staff','shops','reviews'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
   if(save.cday==null) save.cday=1; if(save.clock==null) save.clock=600;
+  // city shops: per-shop state. Shops bought on the old town map earned money by themselves, so they keep a caretaker manager
+  if(!save.shopState||typeof save.shopState!=='object') save.shopState={};
+  save.shops=save.shops.filter(id=>SHOPS.some(s=>s.id===id));
+  save.shops.forEach(id=>{ if(!save.shopState[id]) save.shopState[id]={mgr:{kind:'care',id:'care_'+id,name:'A caretaker',skill:.75,wage:0},lose:0}; });
+  if(!save.workAt||(save.workAt!=='dee'&&!save.shops.includes(save.workAt))) save.workAt='dee';
 }
-ensureCareerSave();
 
 /* ---------- supplies ---------- */
 const SUPPLY=[
@@ -1920,12 +2007,31 @@ const UPGRADES=[
   {id:'neon',name:'Window neon sign',desc:'People notice the shop. More walk-ins.',lvl:()=>save.up.neon?1:0,max:1,price:()=>150,buy:()=>{ save.up.neon=true; }},
   {id:'light',name:'Ring light',desc:'Stencils show up clearer at your station.',lvl:()=>save.up.light?1:0,max:1,price:()=>120,buy:()=>{ save.up.light=true; }},
   {id:'rotary',name:'Rotary machine',desc:'Smoother, steadier lines for your own work.',lvl:()=>save.up.rotary?1:0,max:1,price:()=>300,buy:()=>{ save.up.rotary=true; }}];
+/* ---------- Neon Springs: a made-up desert city. Shops for sale, each in a district with its own crowd ---------- */
+// safe: 1 (rough) to 5 (calm), used for robberies later. Popular districts cost more and pay more.
+const DISTRICTS={strip:{name:'The Strip',safe:4},downtown:{name:'Downtown',safe:3},arts:{name:'Arts District',safe:3},
+  suburbs:{name:'Suburbs',safe:5},eastside:{name:'Eastside',safe:1},lakeside:{name:'Lakeside',safe:4}};
+// traffic = how many customers come in, payMul = how much they pay. ids harbor/mill/alley/hill are from the old town map (old saves own them)
 const SHOPS=[
-  {id:'harbor',name:'Harborside Ink',price:800,income:45,x:.2,y:.8,desc:'A small shop by the docks. Sailors love anchors.'},
-  {id:'mill',name:'Old Mill Studio',price:2000,income:110,x:.34,y:.3,desc:'Exposed beams and a loyal crowd.'},
-  {id:'alley',name:'Neon Alley Tattoo',price:4500,income:250,x:.74,y:.66,desc:'Open late and always busy.'},
-  {id:'hill',name:'Hilltop Atelier',price:9000,income:500,x:.86,y:.24,desc:'The fanciest studio in town. Fine-line clients only.'}];
-const HOME={x:.53,y:.56};
+  {id:'eastink',name:'Eastside Ink',district:'eastside',theme:'graffiti',price:600,rent:25,traffic:.9,payMul:.8,x:.82,y:.74,desc:'Bars on the windows, tags on the walls. Cheap rent on a rough block.'},
+  {id:'block',name:'Block Party Tattoo',district:'eastside',theme:'garage',price:1200,rent:35,traffic:1,payMul:.85,x:.7,y:.86,desc:'An old garage with the roll-up door still on. Open late, loud crowd.'},
+  {id:'harbor',name:'Harborside Ink',district:'lakeside',theme:'nautical',price:1500,rent:45,traffic:.9,payMul:1,x:.86,y:.33,desc:'A little shop on the lake docks. Boaters love anchors.'},
+  {id:'mill',name:'Old Mill Studio',district:'arts',theme:'mural',price:2500,rent:60,traffic:1.1,payMul:1.1,x:.22,y:.3,desc:'Murals on every wall and a loyal crowd of artists.'},
+  {id:'alley',name:'Neon Alley Tattoo',district:'downtown',theme:'brick',price:4500,rent:80,traffic:1.3,payMul:1.2,x:.42,y:.13,desc:'Brick walls and a checkered floor, two blocks from Dee. Always busy.'},
+  {id:'hill',name:'Hilltop Atelier',district:'suburbs',theme:'pastel',price:7000,rent:90,traffic:1,payMul:1.4,x:.17,y:.72,desc:'Quiet, bright and calm. Fine-line clients who pay well.'},
+  {id:'jackpot',name:'Jackpot Ink',district:'strip',theme:'casino',price:14000,rent:160,traffic:1.8,payMul:1.6,x:.5,y:.5,desc:'Black and gold on the Strip. Tourists all night, big tips.'},
+  {id:'highroller',name:'High Roller Tattoo',district:'strip',theme:'marble',price:22000,rent:220,traffic:2,payMul:1.9,x:.62,y:.72,desc:'Marble floors and VIP clients. The best address in Neon Springs.'}];
+const DEE_SHOP={id:'dee',name:"Dee's shop",district:'downtown',x:.6,y:.24,rent:20,traffic:1,payMul:1};
+const shopById=id=>id==='dee'?DEE_SHOP:SHOPS.find(s=>s.id===id);
+// veteran artists you can hire to run a shop for you
+const VETERANS=[
+  {id:'vet_hank',name:'Hank "Hammer" Doyle',skill:.82,wage:50,fee:500},
+  {id:'vet_omar',name:'Omar Vega',skill:.86,wage:60,fee:800},
+  {id:'vet_rosa',name:'Rosa Quill',skill:.9,wage:70,fee:1100},
+  {id:'vet_mei',name:'Mei Tran',skill:.95,wage:90,fee:1600}];
+const managerOf=id=>(save.shopState[id]||{}).mgr||null;
+const isManaging=pid=>Object.values(save.shopState).some(s=>s.mgr&&s.mgr.id===pid);
+ensureCareerSave(); // (needs SHOPS, so it runs here)
 
 /* ---------- floor state ---------- */
 const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:null,targetAct:null,padMove:[0,0],keys:{},
@@ -1982,14 +2088,16 @@ function enterFloor(){
     F.arrivalAt=Math.max(F.arrivalAt,save.clock+10);
   }
   save.staff.forEach(st=>{ if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:true}; } });
-  actors.length=0; actors.push(F.dee,F.player,...Object.values(F.staffActs),...F.custs);
+  // Dee is only behind the counter in Dee's shop
+  const deeHere=F.appr||save.workAt==='dee';
+  actors.length=0; actors.push(...(deeHere?[F.dee]:[]),F.player,...Object.values(F.staffActs),...F.custs);
   F.busy=false; F.target=null; F.targetAct=null; F.hot=null; F.hotLabel='';
   show('floor'); renderFloorHud(); $('#fPrompt').classList.add('hide');
   if(F.appr){ F.spawnAt=performance.now()+1200; if(!save.toured&&!F.tour) deeTour(); return; }
   if(save.clock>=CLOSE&&!F.closing){ F.closing=true; setTimeout(endDay,400); }
 }
 function renderFloorHud(){
-  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`Day ${save.cday} · ${clockText()}`}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
+  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`${shopById(save.workAt).name} · Day ${save.cday} · ${clockText()}`}</span><span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span><span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
 }
 function clampPlayer(p){
   const {cx,fy}=sceneGeo();
@@ -2044,7 +2152,7 @@ $('#scr-floor').addEventListener('pointerdown',e=>{
 });
 
 function freeSeat(){ for(let i=0;i<save.up.seats;i++) if(!F.custs.some(c=>c.seat===i)) return i; return -1; }
-function arrivalGap(){ const base=58*(save.up.neon?.75:1)*Math.max(.45,1-Math.max(0,save.rep)/70); return base*(.6+Math.random()*.8); }
+function arrivalGap(){ const base=58*(save.up.neon?.75:1)*Math.max(.45,1-Math.max(0,save.rep)/70)/shopById(save.workAt).traffic; return base*(.6+Math.random()*.8); } // busier districts send customers faster
 function spawnCustomer(){
   const seat=freeSeat(); if(seat<0) return;
   const id='cu'+(F.nextId++), sh=pickR(SHIRTS);
@@ -2055,7 +2163,7 @@ function spawnCustomer(){
   const info=DES_INFO[design], sp=seatPos(seat), pat=150+Math.random()*110;
   const shade=DESIGNS[design].shade&&Math.random()<.6?randomShade():null; // most customers want some color; it pays more and takes longer
   const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,
-    spot:pickR(SPOTS),pay:Math.round(info.pay*(shade?1.25:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:info.time+(shade?90:0),
+    spot:pickR(SPOTS),pay:Math.round(info.pay*shopById(save.workAt).payMul*(shade?1.25:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:info.time+(shade?90:0),
     patience:pat,patience0:pat,arrived:save.clock,skin:CH[id].skin};
   F.custs.push(c); actors.push(c);
 }
@@ -2203,19 +2311,51 @@ function endDay(){
   F.closing=true;
   save.staff.forEach(st=>{ const s=F.sst[st.id]; if(s&&s.busy){ s.busy.until=0; staffTick(st); } });
   F.custs.slice().forEach(removeCust);
-  const rent=20+(save.up.seats-2)*5+save.up.chairs*15;
+  // where you worked today: its rent plus your bench seats and chairs, and your crew's wages
+  const here=shopById(save.workAt), rent=here.rent+(save.up.seats-2)*5+save.up.chairs*15;
   const wages=save.staff.reduce((a,st)=>a+STAFF_POOL.find(x=>x.id===st.id).wage,0);
-  const income=save.shops.reduce((a,id)=>a+SHOPS.find(x=>x.id===id).income,0);
+  const T=F.today, sg=n=>(n>=0?'+':'−')+Math.abs(n);
+  // every other shop you own: run by a manager, or closed (rent still due). Five losing days in a row and it goes under
+  const lines=[], gone=[]; let others=0;
+  save.shops.slice().forEach(id=>{
+    const sh=shopById(id), s=save.shopState[id]||(save.shopState[id]={mgr:null,lose:0});
+    let net, how;
+    if(id===save.workAt){ net=T.you+T.staff-rent-wages; how='you worked here'; }
+    else if(s.mgr){ const r=autoDay(sh,s.mgr); net=r.gross-sh.rent-s.mgr.wage; others+=net; how=`${s.mgr.name}: ${r.cust} tattoos`; }
+    else { net=-sh.rent; others+=net; how='closed, no manager'; }
+    s.lose=net<0?(s.lose||0)+1:0;
+    let warn=''; if(s.lose>=5){ gone.push(sh.name); releaseManager(id); save.shops=save.shops.filter(x=>x!==id); delete save.shopState[id]; if(save.workAt===id) save.workAt='dee'; }
+    else if(s.lose>=3) warn=` ⚠ losing money ${s.lose} days in a row`;
+    lines.push(`<li>${sh.name} (${how}): ${sg(net)}${warn}</li>`);
+  });
   const due=save.reviews.filter(r=>r.due<=save.cday); save.reviews=save.reviews.filter(r=>r.due>save.cday);
   const repR=due.reduce((a,r)=>a+r.rep,0);
-  save.coins+=income-rent-wages; save.rep+=repR; persist();
-  const T=F.today, sg=n=>(n>=0?'+':'−')+Math.abs(n);
+  save.coins+=others-rent-wages; save.rep+=repR; persist();
   $('#deTitle').textContent=`Day ${save.cday} complete`;
   $('#deStats').innerHTML=`<dt>Your tattoos (${T.jobs})</dt><dd>${sg(T.you)}</dd><dt>Staff tattoos (${T.sjobs})</dt><dd>${sg(T.staff)}</dd>`+
-    (save.shops.length?`<dt>Other shops you own</dt><dd>${sg(income)}</dd>`:'')+`<dt>Rent</dt><dd>${sg(-rent)}</dd>`+(wages?`<dt>Staff wages</dt><dd>${sg(-wages)}</dd>`:'')+
+    `<dt>Rent at ${here.name}</dt><dd>${sg(-rent)}</dd>`+(wages?`<dt>Staff wages</dt><dd>${sg(-wages)}</dd>`:'')+
+    (save.shops.length||gone.length?`<dt>Your other shops</dt><dd>${sg(others)}</dd>`:'')+
     `<dt>Customers who walked out</dt><dd>${T.lost}</dd><dt>Coins now</dt><dd><i class="coin"></i> ${save.coins}</dd><dt>Reputation</dt><dd>${save.rep}${repR?` (${sg(repR)} from healed reviews)`:''}</dd>`;
-  $('#deReviews').innerHTML=due.length?`<b>Healed reviews</b><ul class="revs">${due.map(r=>`<li>${r.name}'s ${r.design}: ${r.label} (${sg(r.rep)} rep)</li>`).join('')}</ul>`:'';
+  $('#deReviews').innerHTML=(lines.length?`<b>Your shops</b><ul class="revs">${lines.join('')}</ul>`:'')+
+    (gone.length?`<p class="failtag"><b>${gone.join(' and ')} went under after five losing days. ${gone.length>1?'They are':'It is'} gone.</b></p>`:'')+
+    (due.length?`<b>Healed reviews</b><ul class="revs">${due.map(r=>`<li>${r.name}'s ${r.design}: ${r.label} (${sg(r.rep)} rep)</li>`).join('')}</ul>`:'');
   show('dayend');
+}
+// a day at a shop run by a manager: customers depend on the district and your reputation, pay on the manager's skill
+function autoDay(sh,m){
+  const repF=.6+Math.min(40,Math.max(0,save.rep))/100, cust=Math.max(0,Math.round(6*sh.traffic*repF*(.8+Math.random()*.4)));
+  return {cust,gross:Math.round(cust*42*sh.payMul*(.5+.5*m.skill))};
+}
+// a manager leaves a shop: a veteran goes back to the hiring list, a promoted staff member rejoins your crew if there's a chair
+function releaseManager(id){
+  const s=save.shopState[id]; if(!s||!s.mgr) return; const m=s.mgr; s.mgr=null;
+  if(m.kind==='staff'){ if(save.staff.length<save.up.chairs){ save.staff.push({id:m.id,chair:save.staff.length+1}); toast(`${m.name} is back on your crew`); } else toast(`${m.name} left: no free chair on your crew`); }
+}
+// go and work at another shop: the floor there starts fresh (anyone waiting here goes home)
+function workAt(id){
+  save.workAt=id; F.custs.slice().forEach(removeCust); F.custs=[]; F.player=null; F.staffActs={}; F.sst={}; F.jobCust=null;
+  if(save.career) advanceTime(30);
+  persist(); enterFloor(); toast(`Now working at ${shopById(id).name}`);
 }
 $('#bNextDay').onclick=async()=>{
   save.cday++; save.clock=OPEN; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+20; F.sst={}; F.player=null; persist();
@@ -2225,11 +2365,12 @@ async function startCareer(){
   save.career=true; ensureCareerSave(); save.cday=1; save.clock=OPEN;
   save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5); save.sup.ointment=Math.max(save.sup.ointment,5);
   F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=OPEN+15; persist();
-  await dayCard('Your shop','Day 1 on your own'); enterFloor(); await fade(false);
+  save.workAt='dee'; persist();
+  await dayCard('On your own','Day 1 running the floor'); enterFloor(); await fade(false);
   const how=inputMode==='pad'?'Move with the left stick or D-pad. Walk up to someone and press A to talk. Start opens the menu.'
     :inputMode==='touch'?'Tap the floor to walk. Tap a customer, the counter or the door to walk over and use it.'
     :'Move with WASD or the arrow keys, or click the floor. Walk up to someone and press E to talk. Esc opens the menu.';
-  await modal(`${how} Customers wait on the bench, and their bar drains while they wait. The counter sells supplies, upgrades and staff. The door opens the town map.`,[["Let's go",true,true]]);
+  await modal(`${how} You run Dee's floor for now and keep what you earn. The counter sells supplies, upgrades and staff. The door opens the map of Neon Springs: save up, buy your own shops, and work wherever you like.`,[["Let's go",true,true]]);
 }
 
 /* ---------- counter store ---------- */
@@ -2246,8 +2387,8 @@ function renderStore(focusKey){
   let rows='';
   if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id)).join('');
   if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(); return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):null); }).join('');
-  if(storeTab==='staff') rows=STAFF_POOL.map(st=>{ const hired=save.staff.some(x=>x.id===st.id);
-      return itemRow(`${st.name} · skill ${Math.round(st.skill*100)}`,`${st.desc} Wage ${st.wage} coins a day.`,st.fee,'hire:'+st.id,hired?'On your team':null); }).join('')
+  if(storeTab==='staff') rows=STAFF_POOL.map(st=>{ const hired=save.staff.some(x=>x.id===st.id), mg=isManaging(st.id);
+      return itemRow(`${st.name} · skill ${Math.round(st.skill*100)}`,`${st.desc} Wage ${st.wage} coins a day.`,st.fee,'hire:'+st.id,hired?'On your team':mg?'Running a shop':null); }).join('')
     +`<p class="hint">Free chairs for staff: ${save.up.chairs-save.staff.length}. Buy extra chairs under Upgrades.</p>`;
   $('#stItems').innerHTML=rows;
   document.querySelectorAll('#stTabs [data-tab]').forEach(b=>b.onclick=()=>{ storeTab=b.dataset.tab; renderStore('tab:'+storeTab); });
@@ -2268,33 +2409,116 @@ $('#stBack').onclick=()=>{ if(storeBack) storeBack(); else show('title'); };
 
 /* ---------- town map ---------- */
 let mapSel=null, mapBack=null;
+// Neon Springs, drawn on a 320x180 canvas: desert, mountains, a lake, the Strip and the districts around it
 function drawTownMap(){
   const c=$('#mapC'), x=c.getContext('2d'); x.imageSmoothingEnabled=false;
   const Rm=(a,b,w,h,col)=>{ x.fillStyle=col; x.fillRect(Math.round(a),Math.round(b),Math.round(w),Math.round(h)); };
-  Rm(0,0,320,180,'#5d9a4a');
-  for(let i=0;i<260;i++) Rm((i*73)%320,(i*41)%180,1,1,'#6fae58');
-  for(let px=0;px<320;px++){ const y=30+px*.36+8*Math.sin(px/22); Rm(px,y-6,1,13,'#4a8fc2'); if(px%9===0) Rm(px,y-2,3,1,'#9fd3f2'); }
-  Rm(0,96,320,6,'#c9b48a'); Rm(108,0,6,180,'#c9b48a'); Rm(232,0,6,180,'#c9b48a'); Rm(0,150,140,5,'#c9b48a');
-  [[108,66],[232,110]].forEach(([bx])=>{ const y=30+bx*.36+8*Math.sin(bx/22); Rm(bx-2,y-8,10,17,'#8a5532'); for(let k=0;k<17;k+=3) Rm(bx-2,y-8+k,10,1,'#6b3a1f'); });
-  for(let i=0;i<70;i++){ const tx=(i*97+13)%320, ty=(i*53+7)%180; if(Math.abs(ty-99)<8||Math.abs(tx-111)<8||Math.abs(tx-235)<8) continue;
-    const ry=30+tx*.36+8*Math.sin(tx/22); if(Math.abs(ty-ry)<10) continue; Rm(tx,ty,5,5,'#3f7a35'); Rm(tx+1,ty-1,3,1,'#4f8a40'); Rm(tx+2,ty+5,1,2,'#5a3520'); }
-  [[60,80],[150,120],[180,80],[270,140],[40,130],[200,40],[290,60],[140,40]].forEach(([hx,hy])=>{ Rm(hx,hy,12,8,'#e8d8b8'); Rm(hx-1,hy-4,14,4,'#a8323c'); Rm(hx+5,hy+4,3,4,'#5a3520'); });
+  Rm(0,0,320,180,'#d9b77a');
+  for(let i=0;i<300;i++) Rm((i*73)%320,(i*41)%180,1,1,i%3?'#cfa86a':'#e6c88e');
+  // mountains along the top
+  for(let px=0;px<320;px++){ const h=8+6*Math.sin(px/17)+4*Math.sin(px/7+1); Rm(px,0,1,h,'#9a6a4a'); Rm(px,h-2,1,2,'#b0805a'); }
+  // the lake (Lakeside), with docks
+  x.fillStyle='#3a8fc2'; x.beginPath(); x.ellipse(300,40,52,30,0,0,7); x.fill(); x.fillStyle='#6ab8e2'; x.beginPath(); x.ellipse(306,34,36,18,0,0,7); x.fill();
+  [[262,50],[270,60]].forEach(([a,b])=>{ Rm(a,b,14,3,'#8a5532'); for(let k=0;k<14;k+=3) Rm(a+k,b,1,3,'#6b3a1f'); });
+  // highway across town and the Strip running south
+  Rm(0,88,320,7,'#4a4a4e'); for(let px=0;px<320;px+=10) Rm(px,91,5,1,'#e8c25a');
+  Rm(168,24,9,156,'#3a3a3e'); for(let py=26;py<180;py+=9) Rm(172,py,1,4,'#e8c25a');
+  // the Strip: neon towers on both sides
+  const neon=['#ff6fa8','#ffd84a','#9fe8ff','#b58cff','#7fff7f'];
+  for(let i=0;i<10;i++){ const by=100+i*8, side=i%2?180:150, h=10+(i*7)%12, w=14;
+    Rm(side,by-h+8,w,h,'#2a1d3a'); for(let k=0;k<h-3;k+=3) Rm(side+2,by-h+10+k,w-4,1,neon[(i+k)%5]); }
+  // downtown: brick blocks at the north end of the Strip
+  for(let i=0;i<8;i++){ const bx=118+(i%4)*14, by=30+((i/4)|0)*16; Rm(bx,by,11,12,'#8a4632'); Rm(bx+2,by+2,7,2,'#e8c25a'); Rm(bx+2,by+7,7,2,'#e8c25a'); }
+  // arts district: colorful blocks in the west
+  const art=['#e85a8a','#4ab0e8','#f2c14e','#6fc06a','#9b5de5'];
+  for(let i=0;i<9;i++){ const bx=40+(i%3)*18, by=34+((i/3)|0)*16; Rm(bx,by,14,12,art[i%5]); Rm(bx+3,by+3,8,3,'#f4efe6'); }
+  // suburbs: little houses with pools in the south-west
+  for(let i=0;i<10;i++){ const bx=18+(i%5)*20, by=110+((i/5)|0)*26; Rm(bx-2,by+8,18,10,'#7ab06a'); Rm(bx,by,12,8,'#f4efe6'); Rm(bx-1,by-3,14,3,'#c0504a'); Rm(bx+3,by+11,8,4,'#4ab0e8'); }
+  // eastside: warehouses with graffiti
+  for(let i=0;i<8;i++){ const bx=212+(i%4)*24, by=112+((i/4)|0)*26; Rm(bx,by,20,14,'#6a6a70'); Rm(bx,by,20,2,'#55555a'); for(let k=0;k<16;k+=4) Rm(bx+2+k,by+8,3,2,art[(i+k)%5]); }
+  // cacti in the open desert
+  [[100,64],[150,170],[200,60],[245,96],[120,150],[30,90],[290,100],[205,170]].forEach(([a,b])=>{ Rm(a,b,2,7,'#4f8a40'); Rm(a-2,b+2,2,3,'#4f8a40'); Rm(a+2,b+1,2,3,'#4f8a40'); });
+  // district names
+  [['THE STRIP',150,170,'#ff6fa8'],['DOWNTOWN',116,62,'#f4efe6'],['ARTS',50,82,'#f4efe6'],['SUBURBS',30,164,'#f4efe6'],['EASTSIDE',236,166,'#f4efe6'],['LAKESIDE',262,72,'#f4efe6']].forEach(([s,a,b,col])=>{
+    Rm(a-2,b-2,pixW(s,1)+4,9,'rgba(30,20,30,.55)'); pixText(s,a,b,1,col,null,x); });
+}
+// storefront preview for the map panel: each shop has its own front
+function drawShopFront(cv,sh){
+  const x=cv.getContext('2d'), Wc=cv.width, Hc=cv.height; x.imageSmoothingEnabled=false;
+  const Rm=(a,b,w,h,col)=>{ x.fillStyle=col; x.fillRect(Math.round(a),Math.round(b),Math.round(w),Math.round(h)); };
+  const t=sh.id==='dee'?'dee':sh.theme, night=sh.district==='strip'||t==='graffiti'||t==='garage';
+  const sky=night?['#120c22','#1e1438','#2c1e50']:['#5a3a6a','#b05a63','#e98a5f'];
+  sky.forEach((c,i)=>Rm(0,i*Hc/6,Wc,Hc/6+1,c)); Rm(0,Hc/2,Wc,Hc/2,night?'#2a2a30':'#c9a878');
+  const FR={dee:['#9a6440','#5a2533','#2a1a2a'],casino:['#1a1a1a','#c9a24a','#2a1d3a'],marble:['#ece6dc','#b8323c','#c9a24a'],brick:['#8a4632','#2a2220','#1a1a1a'],
+    mural:['#e4ddd0','#4ab0e8','#3a3a3a'],pastel:['#bfe0d0','#e8a8b8','#f4efe6'],graffiti:['#5c5c60','#2a2a2e','#151515'],garage:['#7a8088','#d9a12b','#2a2a2a'],nautical:['#2e6f8e','#f4efe6','#1e4a60']}[t];
+  const bx=14, by=18, bw=Wc-28, bh=Hc-28;
+  Rm(bx,by,bw,bh,FR[0]);
+  if(t==='brick') for(let y=by;y<by+bh;y+=4) Rm(bx,y,bw,1,'#6e3424');
+  if(t==='mural'){ ['#e85a8a','#f2c14e','#6fc06a','#9b5de5'].forEach((c,i)=>Rm(bx+6+i*22,by+bh-26,16,14,c)); }
+  if(t==='graffiti') ['#ff5a46','#4ab0e8','#f2c14e'].forEach((c,i)=>{ for(let k=0;k<20;k++) Rm(bx+10+i*40+k,by+bh-22+Math.round(Math.sin(k/2+i)*3),2,2,c); });
+  if(t==='nautical') for(let y=by;y<by+bh;y+=4) Rm(bx,y,bw,1,'#245a74');
+  if(t==='casino'||t==='marble') for(let px=bx;px<bx+bw;px+=6) Rm(px,by-3,3,3,((px/6)|0)%2?'#ffd84a':'#ff6fa8'); // marquee lights
+  // awning and sign
+  Rm(bx-4,by+14,bw+8,6,FR[1]); for(let px=bx-4;px<bx+bw+4;px+=8) Rm(px,by+14,4,6,'rgba(255,255,255,.25)');
+  Rm(bx+6,by+2,bw-12,11,FR[2]); const name=sh.name.toUpperCase();
+  pixText(name,bx+(bw-pixW(name,1))/2,by+5,1,night?'#ffd7e6':'#ffe08a','rgba(255,111,168,.35)',x);
+  // window and door
+  Rm(bx+10,by+26,44,bh-34,'#1a1a1a'); Rm(bx+12,by+28,40,bh-38,night?'#ffd77a':'#a9dcef');
+  if(t==='graffiti') for(let px=bx+14;px<bx+52;px+=5) Rm(px,by+28,2,bh-38,'#2a2a2e');
+  if(t==='garage'){ Rm(bx+bw-58,by+24,50,bh-24,'#8a9098'); for(let y=by+26;y<by+bh;y+=4) Rm(bx+bw-58,y,50,1,'#6a7078'); }
+  else { Rm(bx+bw-36,by+26,20,bh-26,'#3a2214'); Rm(bx+bw-34,by+28,16,bh-28,'#5c3520'); Rm(bx+bw-20,by+bh-14,2,2,'#e8c25a'); }
+  if(t==='pastel'){ Rm(Wc-12,by+10,3,bh-10,'#8a5532'); [[-6,0],[0,-3],[5,0]].forEach(([a,b])=>Rm(Wc-12+a,by+8+b,8,3,'#4f8a40')); } // palm tree
 }
 function renderMap(){
   $('#mapCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
   const box=$('#mapBox'); box.querySelectorAll('.pin').forEach(p=>p.remove());
   const mk=(label,cls,x,y,id)=>{ const b=document.createElement('button'); b.className='gbtn small pin '+cls; b.textContent=label;
     b.style.left=x*100+'%'; b.style.top=y*100+'%'; b.setAttribute('aria-pressed',mapSel===id); b.onclick=()=>{ mapSel=id; renderMap(); if(inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); }; b.dataset.id=id; box.appendChild(b); };
-  mk('Your shop','home',HOME.x,HOME.y,'home');
-  SHOPS.forEach(sh=>mk(sh.name+(save.shops.includes(sh.id)?' (owned)':''),save.shops.includes(sh.id)?'owned':'',sh.x,sh.y,sh.id));
+  const here=id=>save.workAt===id?' ★':'';
+  // short names on the pins so they don't cover each other; the full name is in the panel
+  const SHORT={eastink:'Eastside Ink',block:'Block Party',harbor:'Harborside',mill:'Old Mill',alley:'Neon Alley',hill:'Hilltop',jackpot:'Jackpot',highroller:'High Roller'};
+  mk("Dee's"+here('dee'),'home',DEE_SHOP.x,DEE_SHOP.y,'dee');
+  SHOPS.forEach(sh=>mk(SHORT[sh.id]+here(sh.id),save.shops.includes(sh.id)?'owned':'',sh.x,sh.y,sh.id));
   const info=$('#mapInfo');
-  if(mapSel==='home'||!mapSel){ const inc=save.shops.reduce((a,id)=>a+SHOPS.find(x=>x.id===id).income,0);
-    info.innerHTML=`<div class="grow"><b>Your shop</b><br>Day ${save.cday} · Rep ${save.rep}${inc?` · Other shops earn you ${inc} coins a day`:''}. Pick a shop on the map to see if it's for sale.</div>`; return; }
-  const sh=SHOPS.find(x=>x.id===mapSel), owned=save.shops.includes(sh.id);
-  info.innerHTML=`<div class="grow"><b>${sh.name}</b><br>${sh.desc} Earns ${sh.income} coins a day once it's yours.</div>`+
-    (owned?`<span class="chip">Owned</span>`:`<span class="pr"><i class="coin"></i> ${sh.price}</span><button class="gbtn go" id="mapBuy" ${save.coins<sh.price?'disabled':''}>${save.coins<sh.price?`Need ${sh.price-save.coins} more`:'Buy this shop'}</button>`);
-  const bb=$('#mapBuy'); if(bb) bb.onclick=async()=>{ const ok=await modal(`Buy ${sh.name} for ${sh.price} coins?`,[['Not yet',false],['Buy it',true,true]]);
-    if(ok&&save.coins>=sh.price){ save.coins-=sh.price; save.shops.push(sh.id); persist(); blip(990); toast(`${sh.name} is yours!`); } renderMap(); };
+  if(!mapSel){ const own=save.shops.length;
+    info.innerHTML=`<div class="grow"><b>Neon Springs</b><br>Day ${save.cday} · Rep ${save.rep} · You're working at ${shopById(save.workAt).name} (★). ${own?`You own ${own} shop${own>1?'s':''}.`:'Pick a shop to see if it\'s for sale.'} Busy districts cost more and pay more.</div>`; return; }
+  const sh=shopById(mapSel), owned=save.shops.includes(sh.id), dee=sh.id==='dee', d=DISTRICTS[sh.district], st=save.shopState[sh.id], m=st&&st.mgr;
+  const dots=(n,max)=>'●'.repeat(Math.max(1,Math.round(n)))+'○'.repeat(Math.max(0,max-Math.max(1,Math.round(n))));
+  const facts=dee?`Dee's place. Dee runs the counter; you can always work here. Rent ${sh.rent} a day.`
+    :`${sh.desc}<br>${d.name} · Rent ${sh.rent}/day · Busy ${dots(sh.traffic*2.5,5)} · Pay ${dots(sh.payMul*2.5,5)} · Safety ${'★'.repeat(d.safe)}${'☆'.repeat(5-d.safe)}`+
+      (owned?`<br>${m?`Run by ${m.name} (skill ${Math.round(m.skill*100)}, wage ${m.wage}/day).`:'No manager: closed when you work elsewhere, but rent is still due.'}${st&&st.lose>=3?` <b class="failtag">Losing money ${st.lose} days in a row!</b>`:''}`:`<br>Price <i class="coin"></i> ${sh.price}`);
+  let btns='';
+  if(save.workAt!==sh.id&&(dee||owned)) btns+=`<button class="gbtn go small" id="mWork">Work here</button>`;
+  if(!dee&&!owned) btns+=`<button class="gbtn go small" id="mBuy" ${save.coins<sh.price?'disabled':''}>${save.coins<sh.price?`Need ${sh.price-save.coins} more`:'Buy this shop'}</button>`;
+  if(owned){ btns+=m?`<button class="gbtn small" id="mFire">Remove manager</button>`:`<button class="gbtn small" id="mHire">Get a manager</button>`;
+    btns+=`<button class="gbtn small" id="mSell">Sell (${Math.round(sh.price*.7)})</button>`; }
+  info.innerHTML=`<canvas id="mFront" width="160" height="90" class="front"></canvas><div class="grow"><b>${sh.name}</b>${owned?' <span class="chip">Yours</span>':''}<br>${facts}</div><div class="mbtns">${btns}</div>`;
+  drawShopFront($('#mFront'),sh);
+  const on=(id,f)=>{ const b=$('#'+id); if(b) b.onclick=f; };
+  on('mWork',async()=>{ const ok=F.custs.length?await modal(`Head over to ${sh.name}? Anyone waiting here goes home, and the trip takes half an hour.`,[['Stay',false],['Go',true,true]]):true; if(ok) workAt(sh.id); });
+  on('mBuy',async()=>{ const ok=await modal(`Buy ${sh.name} for ${sh.price} coins? Rent is ${sh.rent} a day. Without a manager it's only open when you work there.`,[['Not yet',false],['Buy it',true,true]]);
+    if(ok&&save.coins>=sh.price){ save.coins-=sh.price; save.shops.push(sh.id); save.shopState[sh.id]={mgr:null,lose:0}; persist(); blip(990); toast(`${sh.name} is yours!`);
+      const go=await modal(`${sh.name} is yours! Work there now?`,[['Later',false],['Go there',true,true]]); if(go){ workAt(sh.id); return; } } renderMap(); });
+  on('mSell',async()=>{ const val=Math.round(sh.price*.7), ok=await modal(`Sell ${sh.name} for ${val} coins (70% of what it cost)?`,[['Keep it',false],['Sell',true]]);
+    if(!ok) return; releaseManager(sh.id); save.shops=save.shops.filter(x=>x!==sh.id); delete save.shopState[sh.id]; save.coins+=val;
+    const wasHere=save.workAt===sh.id; persist(); toast(`Sold ${sh.name} for ${val} coins`); if(wasHere){ workAt('dee'); return; } renderMap(); });
+  on('mFire',async()=>{ const ok=await modal(`Take ${m.name} off ${sh.name}? It will be closed on days you work elsewhere.`,[['Keep them',false],['Remove',true]]); if(ok){ releaseManager(sh.id); persist(); } renderMap(); });
+  on('mHire',()=>pickManager(sh));
+}
+// choose who runs a shop: hire a veteran, or promote one of your own staff (they leave your crew)
+async function pickManager(sh){
+  const vets=VETERANS.filter(v=>!isManaging(v.id)), crew=save.staff.map(s=>STAFF_POOL.find(p=>p.id===s.id));
+  const opts=[['Cancel',null]];
+  vets.forEach(v=>opts.push([`Hire ${v.name} · skill ${Math.round(v.skill*100)} · ${v.fee} coins + ${v.wage}/day`,'vet:'+v.id]));
+  crew.forEach(p=>opts.push([`Promote ${p.name} · skill ${Math.round(p.skill*100)} · ${p.wage+10}/day`,'staff:'+p.id]));
+  if(opts.length===1){ await modal('Nobody is free to run it. Hire staff at the counter first, or wait until a veteran is free.',[['OK',null,true]]); return; }
+  const v=await modal(`Who should run ${sh.name}? Managers work every day you're not there.`,opts); if(!v) return;
+  const [kind,id]=v.split(':'), s=save.shopState[sh.id];
+  if(kind==='vet'){ const vet=VETERANS.find(x=>x.id===id); if(save.coins<vet.fee){ toast(`You need ${vet.fee-save.coins} more coins`); return; }
+    save.coins-=vet.fee; s.mgr={kind:'vet',id,name:vet.name,skill:vet.skill,wage:vet.wage}; }
+  else { const p=STAFF_POOL.find(x=>x.id===id); save.staff=save.staff.filter(x=>x.id!==id); save.staff.forEach((x,i)=>x.chair=i+1); delete F.staffActs[id]; delete F.sst[id];
+    s.mgr={kind:'staff',id,name:p.name,skill:p.skill,wage:p.wage+10}; }
+  persist(); blip(880); toast(`${s.mgr.name} now runs ${sh.name}`); renderMap();
 }
 function openMap(back){ mapBack=back||null; mapSel=null; drawTownMap(); renderMap(); show('map'); }
 $('#mapBack').onclick=()=>{ if(mapBack) mapBack(); else show('title'); };
