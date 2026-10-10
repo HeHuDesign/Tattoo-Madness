@@ -21,6 +21,14 @@ public class MainActivity extends BridgeActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         hideSystemBars();
 
+        // No pinch-to-zoom on the whole app (the city map does its own pinch zoom in the game).
+        WebView wv = getBridge() != null ? getBridge().getWebView() : null;
+        if (wv != null) {
+            wv.getSettings().setSupportZoom(false);
+            wv.getSettings().setBuiltInZoomControls(false);
+            wv.getSettings().setDisplayZoomControls(false);
+        }
+
         // Back button / back gesture (and a controller's B button, which Android turns into "back")
         // goes to the game first. The game returns true when it handled it (closing a menu, pausing, etc.).
         // Only on the title screen does back send the app to the background.
