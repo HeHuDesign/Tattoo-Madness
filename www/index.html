@@ -167,6 +167,23 @@ button{font:inherit;color:inherit}
 .item .pr{white-space:nowrap;display:inline-flex;gap:5px;align-items:center}
 .hint{color:var(--ink-soft);margin:8px 0 0;font-size:16px}
 .slotlist{display:flex;flex-direction:column;gap:8px}
+/* character maker */
+.maker{width:min(900px,100%)}
+.mkgrid{display:flex;gap:16px;align-items:flex-start}
+#mkPrev{width:120px;height:180px;flex:none;image-rendering:pixelated;background:linear-gradient(#f2e6cc,#d9ab78);border:3px solid var(--wood-d);border-radius:6px}
+#mkRows{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px}
+.mkrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:34px}
+.mklab{width:78px;font-weight:700;font-size:16px}
+.mkval{min-width:84px;text-align:center;font-size:16px}
+.mkrow .ink{width:24px;height:24px}
+.compact .maker{padding:8px 12px}
+.compact .maker h2{font-size:20px;margin-bottom:2px}
+.compact #mkPrev{width:84px;height:126px}
+.compact #mkRows{gap:0 12px}
+.compact .mkrow{min-height:28px;gap:4px}
+.compact .mklab{width:64px;font-size:13px}
+.compact .mkval{min-width:66px;font-size:13px}
+.compact .mkrow .ink{width:19px;height:19px;border-width:2px}
 .slotlist .item.empty .ds{font-style:italic}
 #tSkip{background:#c9b8ff}
 .mapwrap{display:flex;flex-direction:column;gap:10px;width:min(980px,100%);padding:14px;max-height:100%;overflow:auto}
@@ -474,6 +491,18 @@ button{font:inherit;color:inherit}
     </div>
   </div></section>
 
+  <!-- character maker: shown before a new game -->
+  <section class="screen" id="scr-maker"><div class="dim">
+    <div class="board wood maker">
+      <h2>Create your character</h2>
+      <div class="mkgrid">
+        <canvas id="mkPrev" width="120" height="180"></canvas>
+        <div id="mkRows"></div>
+      </div>
+      <div class="row"><button class="gbtn" id="mkBack">Back</button><button class="gbtn" id="mkRand">Random</button><button class="gbtn go" id="mkGo">Start</button></div>
+    </div>
+  </div></section>
+
   <section class="screen" id="scr-controls"><div class="dim">
     <div class="ctl wood">
       <h2>Controls</h2>
@@ -640,7 +669,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -680,19 +709,29 @@ function spriteRows(c,frame){
     "..cccccc..",".cccccccc.","sccccccccs","sccccccccs",".dddddddd.","..pppppp..",
     frame?".pp....pp.":"..pp..pp..", frame?".bb....bb.":"..bb..bb.."];
   const set=(i,j,k)=>{ r[i]=r[i].slice(0,j)+k+r[i].slice(j+1); };
+  // body shape: a female body has narrower shoulders
+  if(c.sex==='f'){ r[8]="...cccc..."; r[9]="..cccccc.."; }
+  // tops (the player's character maker): tank top, hoodie, jacket, dress; default is a tee
+  if(c.top==='tank'){ if(c.sex==='f') r[9]="..sccccs.."; else r[9]=".sccccccs."; }
+  if(c.top==='hoodie'){ set(8,c.sex==='f'?3:2,'d'); set(8,c.sex==='f'?6:7,'d'); for(let j=3;j<=6;j++) set(11,j,'d'); }
+  if(c.top==='jacket'){ for(let i=8;i<=11;i++){ set(i,4,'i'); set(i,5,'i'); } }
+  if(c.top==='dress'){ r[12]=".cccccccc."; r[13]=".dccccccd."; r[14]=frame?".ss....ss.":"..ss..ss.."; }
+  else if(c.legs==='shorts') r[14]=frame?".ss....ss.":"..ss..ss..";
   switch(c.style){
     case 'long': for(let i=3;i<=9;i++){ set(i,0,'h'); set(i,9,'h'); } break;
     case 'bun': r[0]="...hhhh.hh"; r[1]="..hhhhhhhh"; break;
     case 'bald': r[0]=".........."; r[1]="...ssss..."; r[2]="..ssssss.."; r[3]=".ssssssss."; break;
     case 'mohawk': r[0]="....hh...."; r[1]="....hh...."; r[2]="..sshhss.."; r[3]=".ssssssss."; break;
     case 'cap': r[0]="...kkkk..."; r[1]="..kkkkkk.."; r[2]=".kkkkkkkkk"; break;
+    case 'ponytail': for(let i=2;i<=7;i++) set(i,9,'h'); set(8,9,'h'); break;
+    case 'curly': r[0]="..hhhhhh.."; r[1]=".hhhhhhhh."; r[2]="hhhhhhhhhh"; r[3]="hhsssssshh"; set(4,0,'h'); set(4,9,'h'); set(5,0,'h'); set(5,9,'h'); break;
   }
   if(c.beard){ r[6]=".hhhmmhhh."; r[7]="..hhhhhh.."; }
   if(c.tattoos){ set(10,0,'T'); set(11,9,'T'); }
   if(c.apron){ for(let i=9;i<=12;i++) for(let j=3;j<=6;j++) set(i,j,'A'); }
   return r;
 }
-function palette(c){ return {h:c.hair,s:c.skin,e:'#2a1a14',m:'#9c4a44',c:c.shirt,d:c.shirtD,p:c.pants,b:c.boots,T:'#2e5866',A:c.apron,k:c.hat}; }
+function palette(c){ return {h:c.hair,s:c.skin,e:'#2a1a14',m:c.sex==='f'?'#c0506a':'#9c4a44',c:c.shirt,d:c.shirtD,p:c.pants,b:c.boots,T:'#2e5866',A:c.apron,k:c.hat||c.hair,i:'#e8e1d0'}; }
 function drawSprite(ctx,c,x,y,frame,flip,sc=2){
   const rows=spriteRows(c,frame), pal=palette(c), w=10*sc, h=16*sc, ox=Math.round(x-w/2), oy=Math.round(y-h);
   ctx.fillStyle='rgba(30,15,10,.28)'; ctx.fillRect(ox+2,oy+h-2,w-4,3);
@@ -926,7 +965,7 @@ function walk(id,tx,ty){ const a=actors.find(a=>a.ch===id); if(!a) return Promis
 
 /* =============== SCREENS / UI =============== */
 let current='title', modalOpen=false;
-const SCENE_FOR={title:'exterior',controls:'exterior',slots:'exterior',shop:'interior',fight:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
+const SCENE_FOR={title:'exterior',controls:'exterior',slots:'exterior',maker:'exterior',shop:'interior',fight:'interior',board:'interior',results:'interior',end:'interior',floor:'interior',store:'interior',dayend:'interior',map:'exterior'};
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+id));
   current=id; sceneMode=SCENE_FOR[id]||(id==='tattoo'?null:sceneMode);
@@ -1646,7 +1685,7 @@ $('#bReady').onclick=()=>save.graduated?nextCustomer():graduate();
 let busy=false;
 async function shopScene(list){ show('shop'); renderHud(); setActors(list); hideDlg(); }
 async function intro(){
-  busy=true; save=fresh(); save.started=true; persist();
+  busy=true; save=fresh(); save.started=true; save.look=newLook; applyLook(); persist();
   show('shop'); sceneMode='exterior'; setActors([]); $('#hud').innerHTML='';
   await fade(false);
   await say(null,"You are starting your apprenticeship.");
@@ -2516,10 +2555,14 @@ async function startCareer(){
   F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=DAY_START+15; F.open=false; F.lateToast=false; F.closing=false; persist();
   save.workAt='dee'; persist();
   await dayCard('On your own','Day 1 running the floor'); enterFloor(); await fade(false);
-  const how=inputMode==='pad'?'Move with the left stick or D-pad. Walk up to someone and press A to talk. Start opens the menu.'
-    :inputMode==='touch'?'Tap the floor to walk. Tap a customer, the counter or the door to walk over and use it.'
-    :'Move with WASD or the arrow keys, or click the floor. Walk up to someone and press E to talk. Esc opens the menu.';
-  await modal(`${how} You run Dee's floor for now and keep what you earn. The day starts at 9 with the doors closed: open them at the door when you're ready, and end the day there when you're done. The counter is your supply closet and office (upgrades, staff). Supplies come from the Supply Store across town (open 8 AM to 6 PM): walk out the door and find it on the city map, and don't leave customers waiting too long. Save up, buy your own shops on the city map, and work wherever you like.`,[["Let's go",true,true]]);
+  // Dee explains the job in the chat box, like the rest of the game (tap through it)
+  F.busy=true;
+  await say('dee',"Morning, kid. From today the floor is yours. I'll mind the counter, you do the rest, and you keep what you earn.");
+  await say('dee',"Every day starts at 9 with the doors closed. Open them at the front door when you're ready, and end the day there when you're done.");
+  await say('dee',"The counter is the supply closet and the office: check your stock, buy upgrades, hire staff.");
+  await say('dee',"Supplies come from the Supply Store across town, open 8 to 6. Walk out the door and find it on the map. Don't leave customers waiting while you shop.");
+  await say('dee',"Save your money. There are shops all over Neon Springs waiting for an owner. Now go open those doors.");
+  hideDlg(); F.busy=false;
 }
 
 /* ---------- counter store ---------- */
@@ -2915,7 +2958,7 @@ function slotSummary(i){
 }
 function useSlot(i){
   slot=i; try{ localStorage.setItem(SLOT_PICK,String(i)); }catch(_){}
-  save=loadSlot(i); ensureCareerSave();
+  save=loadSlot(i); ensureCareerSave(); applyLook();
   // forget the previous run's shop floor
   Object.assign(F,{player:null,dee:null,custs:[],sst:{},staffActs:{},today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},busy:false,jobCust:null,talking:null,arrivalAt:OPEN+20,closing:false,hot:null,hotLabel:'',starting:false});
   actors.length=0;
@@ -2936,7 +2979,7 @@ function openSlots(mode){
 async function pickSlot(i){
   if(slotMode==='load'){ useSlot(i); continueGame(); return; }
   if(slotSummary(i)){ const ok=await modal(`Slot ${i+1} already has a run in it. Erase it and start over?`,[['Cancel',false],['Erase and start',true,true]]); if(!ok) return; }
-  useSlot(i); await fade(true); intro();
+  useSlot(i); openMaker(async()=>{ await fade(true); intro(); }); // make your character first
 }
 async function eraseSlot(i){
   const ok=await modal(`Erase Slot ${i+1}? This run is gone for good.`,[['Cancel',false],['Erase it',true]]); if(!ok) return;
@@ -2946,6 +2989,55 @@ async function eraseSlot(i){
   if([0,1,2].some(slotSummary)) openSlots('load'); else show('title');
 }
 $('#slBack').onclick=()=>show('title');
+
+/* ---------- character maker (before a new game). The look is saved in save.look and turned into CH.you ---------- */
+const MK={
+  skin:['#f2c9a5','#eab894','#d9a07a','#c48a62','#93623f','#6a4430','#4a2c1d'],
+  hair:['#1a1414','#3a2a1a','#6b3d1f','#a0522d','#e7c35a','#d8d8d8','#8b2f2f','#9b5de5','#2e6f8e','#e85a8a'],
+  style:[['short','Short'],['long','Long'],['ponytail','Ponytail'],['bun','Bun'],['curly','Curly'],['mohawk','Mohawk'],['bald','Bald'],['cap','Cap']],
+  top:[['tee','T-shirt'],['tank','Tank top'],['hoodie','Hoodie'],['jacket','Jacket'],['dress','Dress']],
+  shirt:[['#4f7cac','#3a5d85'],['#6fb26a','#4f8a4b'],['#d97aa0','#b35a80'],['#e0a33a','#b57e22'],['#3d2b55','#2a1d3b'],['#b3263e','#861b2e'],['#2a2a2a','#151515'],['#e8e1d0','#b8b0a0']],
+  legs:[['pants','Pants'],['shorts','Shorts']],
+  pants:['#3b3950','#2b2b3a','#4a5b8c','#3b4a5c','#6a5a3a','#7a2f4f'],
+  boots:['#4a2c1d','#151515','#e8e8ee','#b8323c','#2e5866']
+};
+const YOU_DEFAULT={sex:'m',skin:'#eab894',hair:'#6b3d1f',style:'short',top:'tee',shirt:0,legs:'pants',pants:'#3b3950',boots:'#4a2c1d',beard:0};
+function lookToChar(L){ const sh=MK.shirt[L.shirt]||MK.shirt[0];
+  return {name:'You',sex:L.sex,hair:L.hair,style:L.style,skin:L.skin,shirt:sh[0],shirtD:sh[1],pants:L.pants,boots:L.boots,top:L.top,legs:L.legs,beard:L.sex==='m'&&L.beard?1:0}; }
+function applyLook(){ CH.you=lookToChar(save.look||YOU_DEFAULT); }
+applyLook();
+let mkLook=null, mkDone=null, newLook=null;
+function openMaker(done){ mkLook={...YOU_DEFAULT}; mkDone=done; renderMaker(); show('maker'); }
+function renderMaker(){
+  const L=mkLook, row=(lab,inner)=>`<div class="mkrow"><span class="mklab">${lab}</span>${inner}</div>`;
+  const cyc=(key,list)=>{ const i=list.findIndex(o=>o[0]===L[key]); return `<button class="gbtn small" data-cyc="${key}:-1" aria-label="Previous">◀</button><span class="mkval">${list[i][1]}</span><button class="gbtn small" data-cyc="${key}:1" aria-label="Next">▶</button>`; };
+  const sw=(key,list,isIdx)=>list.map((c,i)=>`<button class="ink" data-sw="${key}:${i}" style="background:${Array.isArray(c)?c[0]:c}" aria-label="${key} color ${i+1}" aria-pressed="${isIdx?L[key]===i:L[key]===c}"></button>`).join('');
+  $('#mkRows').innerHTML=
+    row('Body',`<button class="gbtn small" data-sex="m" aria-pressed="${L.sex==='m'}">Male</button><button class="gbtn small" data-sex="f" aria-pressed="${L.sex==='f'}">Female</button>`)+
+    row('Skin',sw('skin',MK.skin))+
+    row('Hair',cyc('style',MK.style))+row('Hair color',sw('hair',MK.hair))+
+    row('Top',cyc('top',MK.top))+row('Top color',sw('shirt',MK.shirt,true))+
+    (L.top==='dress'?'':row('Legs',cyc('legs',MK.legs))+row('Legs color',sw('pants',MK.pants)))+
+    row('Shoes',sw('boots',MK.boots))+
+    (L.sex==='m'?row('Beard',`<button class="gbtn small" data-beard="1" aria-pressed="${!!L.beard}">${L.beard?'Beard: on':'Beard: off'}</button>`):'');
+  const R=$('#mkRows');
+  R.querySelectorAll('[data-sex]').forEach(b=>b.onclick=()=>{ L.sex=b.dataset.sex; if(L.sex==='f'&&L.style==='short'&&!mkLook.touched) L.style='long'; renderMaker(); });
+  R.querySelectorAll('[data-cyc]').forEach(b=>b.onclick=()=>{ const [k,d]=b.dataset.cyc.split(':'), list=MK[k], i=list.findIndex(o=>o[0]===L[k]); L[k]=list[(i+ +d+list.length)%list.length][0]; L.touched=true; renderMaker(); refocusMaker(b.dataset.cyc); });
+  R.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{ const [k,i]=b.dataset.sw.split(':'); L[k]=k==='shirt'?+i:MK[k][+i]; renderMaker(); refocusMaker(null,b.dataset.sw); });
+  R.querySelectorAll('[data-beard]').forEach(b=>b.onclick=()=>{ L.beard=L.beard?0:1; renderMaker(); refocusMaker(null,null,true); });
+  drawMakerPreview();
+}
+// keep the controller highlight on the same control after the rows are redrawn
+function refocusMaker(cyc,sw,beard){ if(inputMode!=='pad') return; const sel=cyc?`[data-cyc="${cyc}"]`:sw?`[data-sw="${sw}"]`:beard?'[data-beard]':null; const el=sel&&document.querySelector('#mkRows '+sel); if(el) setPadFocus(el); }
+function drawMakerPreview(){
+  const cv=$('#mkPrev'), x=cv.getContext('2d'); x.imageSmoothingEnabled=false; x.clearRect(0,0,cv.width,cv.height);
+  drawSprite(x,lookToChar(mkLook),60,172,((tick/30)|0)%2,false,10);
+}
+$('#mkRand').onclick=()=>{ const p=a=>a[(Math.random()*a.length)|0];
+  mkLook={sex:p(['m','f']),skin:p(MK.skin),hair:p(MK.hair),style:p(MK.style)[0],top:p(MK.top)[0],shirt:(Math.random()*MK.shirt.length)|0,legs:p(MK.legs)[0],pants:p(MK.pants),boots:p(MK.boots),beard:Math.random()<.3?1:0,touched:true};
+  renderMaker(); };
+$('#mkBack').onclick=()=>openSlots('new');
+$('#mkGo').onclick=()=>{ const L={...mkLook}; delete L.touched; newLook=L; const f=mkDone; mkDone=null; f&&f(); };
 $('#bFree').onclick=startFree;
 $('#bCtl').onclick=()=>show('controls'); $('#bCtlBack').onclick=()=>show('title');
 $('#bSound').onclick=()=>{ save.sound=!save.sound; persist(); refreshTitle(); };
@@ -3079,7 +3171,7 @@ function pollPad(dt){
       if(!padFocusEl||!f.includes(padFocusEl)) setPadFocus(f.find(e=>e.classList.contains('go'))||f[0]);
       else padFocusEl.click();
     }
-    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board'||current==='slots') show('title'); else if(current==='map') $('#mapBack').click(); }
+    if(back){ if(modalOpen){ const bs=focusables(); bs[0]&&bs[0].click(); } else if(current==='controls'||current==='board'||current==='slots') show('title'); else if(current==='map') $('#mapBack').click(); else if(current==='maker') $('#mkBack').click(); }
     return;
   }
   // tattoo station: D-pad walks every button on screen, A presses the highlighted one
@@ -3121,6 +3213,7 @@ window.__tmBack=function(){
     case 'store': $('#stBack').click(); return true;
     case 'map': $('#mapBack').click(); return true;
     case 'controls': case 'board': case 'slots': show('title'); return true;
+    case 'maker': $('#mkBack').click(); return true;
     default: return true;
   }
 };
@@ -3180,6 +3273,7 @@ function loop(t){
   if(current==='floor') floorTick(dt);
   if(current==='fight'&&!modalOpen) fightTick(dt);
   if(current==='map') mapTick(dt);
+  if(current==='maker'&&tick%15===0) drawMakerPreview();
   if((current==='map'||current==='store')&&F.away) offFloorTick(dt);
   if(sceneMode&&current!=='tattoo'){ updateActors(); sceneMode==='exterior'?drawExterior(t):drawInterior(t); }
   tickDialogue();
