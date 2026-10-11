@@ -617,9 +617,53 @@ const DESIGNS = {
   rose:{name:'Rose',tol:5,d:'M300,200 C280,200 275,225 295,232 C320,240 332,210 312,197 C294,185 266,199 266,222 M250,240 C265,268 335,268 350,240 M220,232 C215,302 385,302 380,232 M220,232 C200,180 250,150 278,172 M380,232 C400,180 350,150 322,172 M262,178 C272,138 330,138 340,178 M300,292 C294,360 312,420 300,525 M302,382 C340,352 390,357 412,340 C396,382 350,400 302,388 M299,452 C260,427 215,432 194,416 C210,456 256,471 299,458 M301,330 L320,320 L304,342',
     shade:'M222,235 A78,55 0 1 0 378,235 A78,55 0 1 0 222,235 Z',shadeName:'the bloom'},
   moon:{name:'Crescent moon',tol:5,d:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9),
-    shade:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9),shadeName:'the moon and stars'}
+    shade:'M360,110 A200,200 0 1 0 360,490 A190,190 0 1 1 360,110 Z '+starP(470,200,34,14)+starP(455,385,22,9),shadeName:'the moon and stars'},
+  bolt:{name:'Lightning bolt',tol:6,d:'M330,80 L200,320 L290,320 L250,520 L410,250 L315,250 L370,80 Z',shade:'M330,80 L200,320 L290,320 L250,520 L410,250 L315,250 L370,80 Z',shadeName:'the bolt'},
+  gem:{name:'Diamond',tol:5,d:'M180,240 L240,150 L360,150 L420,240 L300,470 Z M180,240 L420,240 M240,150 L270,240 L300,470 M360,150 L330,240 L300,470',shade:'M180,240 L240,150 L360,150 L420,240 L300,470 Z',shadeName:'the diamond'},
+  cherry:{name:'Cherries',tol:5,d:circ(225,410,62)+circ(375,400,62)+'M225,348 C240,260 280,190 330,140 M375,338 C360,260 345,200 330,140 M330,140 C370,110 430,120 450,150 C410,175 360,170 330,140',shade:circ(225,410,62)+circ(375,400,62),shadeName:'the cherries'},
+  skull:{name:'Skull',tol:5,d:'M205,330 C170,200 230,110 300,110 C370,110 430,200 395,330 L370,350 L370,430 L230,430 L230,350 Z '+circ(252,268,36)+circ(348,268,36)+'M300,312 L282,350 L318,350 Z M262,430 L262,392 M300,430 L300,392 M338,430 L338,392'}
 };
 const PRACTICE = ['smiley','heart','star','anchor','dagger','rose'];
+/* lettering tattoos: words built from a simple stroke font (4 wide, 6 tall; pairs of digits are x,y points, | starts a new stroke), drawn in four styles */
+const LFONT={A:'06 20 46|14 34',B:'06 00 30 41 42 33 03|33 44 45 36 06',C:'41 30 10 01 05 16 36 45',D:'00 06 36 45 41 30 00',E:'40 00 06 46|03 33',
+  F:'40 00 06|03 33',G:'41 30 10 01 05 16 36 45 43 23',H:'00 06|40 46|03 43',I:'20 26|10 30|16 36',J:'40 45 36 16 05',K:'00 06|40 04|13 46',L:'00 06 46',
+  M:'06 00 23 40 46',N:'06 00 46 40',O:'10 30 41 45 36 16 05 01 10',P:'06 00 30 41 42 33 03',Q:'10 30 41 45 36 16 05 01 10|24 46',R:'06 00 30 41 42 33 03|23 46',
+  S:'41 30 10 01 02 13 33 44 45 36 16 05',T:'00 40|20 26',U:'00 05 16 36 45 40',V:'00 26 40',W:'00 16 23 36 40',X:'00 46|40 06',Y:'00 23 40|23 26',Z:'00 40 06 46'};
+// rep = reputation needed before customers ask for it, pay = pay multiplier
+const LSTYLES={typewriter:{rep:0,pay:1},script:{rep:4,pay:1.15},graffiti:{rep:8,pay:1.25},blackletter:{rep:12,pay:1.35}};
+const LWORDS=['LOVE','HOPE','MOM','FATE','LUCK','WILD','FREE','ZEN','RIDE','KARMA','BLESS','TRUST','FAITH','DREAM'];
+function letterD(word,style){
+  const n=word.length, adv=style==='blackletter'?4.2:style==='graffiti'?5.6:5.4, lw=style==='blackletter'?.75:1, slant=style==='script'?.32:0, flour=style==='script'||style==='graffiti';
+  const wu=(n-1)*adv+4*lw+6*slant, s=Math.min(440/wu,40), x0=300-wu*s/2, y0=300-(flour?4.2:3)*s;
+  const P=(x,y)=>(x0+x*s).toFixed(1)+','+(y0+y*s).toFixed(1);
+  let d='';
+  [...word].forEach((ch,i)=>{ const g=LFONT[ch]; if(!g) return;
+    const rot=style==='graffiti'?(i%2?.16:-.12):0, bob=style==='graffiti'?(i%2?-.5:.4):0;
+    g.split('|').forEach(str=>{
+      const pts=str.split(' ').map(q=>{ let x=+q[0], y=+q[1];
+        if(style==='blackletter'&&y<.5) y+=x*.08; x*=lw;
+        if(rot){ const cx=2*lw, dx=x-cx, dy=y-3; x=cx+dx*Math.cos(rot)-dy*Math.sin(rot); y=3+dx*Math.sin(rot)+dy*Math.cos(rot); }
+        return [i*adv+x+(6-y)*slant,y+bob]; });
+      if(style==='script'&&pts.length>2){ d+='M'+P(...pts[0]);
+        for(let k=1;k<pts.length-1;k++) d+=' Q'+P(...pts[k])+' '+P((pts[k][0]+pts[k+1][0])/2,(pts[k][1]+pts[k+1][1])/2);
+        d+=' L'+P(...pts[pts.length-1])+' '; }
+      else d+='M'+pts.map(p=>P(...p)).join(' L')+' ';
+      // typewriter: slab serifs on the ends of upright strokes; blackletter: a little hairline spur where each stroke starts
+      if(style==='typewriter') [[pts[0],pts[1]],[pts[pts.length-1],pts[pts.length-2]]].forEach(([p,q])=>{ if(Math.abs(q[0]-p[0])<Math.abs(q[1]-p[1])) d+='M'+P(p[0]-.6,p[1])+' L'+P(p[0]+.6,p[1])+' '; });
+      if(style==='blackletter'){ const p=pts[0]; d+='M'+P(p[0]-.45,p[1]+.45)+' L'+P(p[0],p[1])+' '; } });
+    // graffiti: paint drips under every other letter
+    if(style==='graffiti'&&i%2===0){ const dx=i*adv+1.3; d+='M'+P(dx,6+bob)+' L'+P(dx,7.2)+' '+circ(Math.round(x0+dx*s),Math.round(y0+7.2*s+.22*s),Math.round(.22*s))+' '; } });
+  if(style==='script') d+='M'+P(-.2,7.3)+' Q'+P(wu*.5,8.4)+' '+P(wu+.3,6.8);
+  if(style==='graffiti') d+='M'+P(-.4,8.3)+' Q'+P(wu*.5,7.4)+' '+P(wu+.2,8)+' M'+P(wu-.7,7.4)+' L'+P(wu+.2,8)+' L'+P(wu-.8,8.6);
+  return d.trim();
+}
+// a lettering design, made the first time someone asks for it
+function letterKey(word,style){ const k='lt_'+style+'_'+word;
+  if(!DESIGNS[k]) DESIGNS[k]={name:`${style[0].toUpperCase()+style.slice(1)} "${word}"`,say:`"${word}" in ${style} lettering`,tol:6,d:letterD(word,style),letter:true};
+  return k; }
+// one of each style for Free tattoo
+[['LOVE','script'],['HOPE','blackletter'],['WILD','graffiti'],['FATE','typewriter']].forEach(([w,s])=>letterKey(w,s));
+
 const pathCache = {}; const pathOf = k => pathCache[k] || (pathCache[k] = new Path2D(DESIGNS[k].d));
 const shadeCache = {}; const shadePath = k => shadeCache[k] || (shadeCache[k] = new Path2D(DESIGNS[k].shade));
 // Shading colors (simple palette for now). A shade spec is a list of parts: [{part:'all'|'left'|'right'|'top'|'bottom', color}]
@@ -697,7 +741,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[]});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -798,7 +842,7 @@ const GL={A:["010","101","111","101","101"],B:["110","101","110","101","110"],C:
   2:["111","001","111","100","111"],3:["111","001","011","001","111"],4:["101","101","111","001","001"],5:["111","100","111","001","111"],
   6:["111","100","111","101","111"],7:["111","001","010","010","010"],8:["111","101","111","101","111"],9:["111","101","111","001","111"],
   "'":["010","010","000","000","000"],'-':["000","000","111","000","000"],'&':["010","101","010","101","011"],'.':["000","000","000","000","010"],
-  '$':["011","110","010","011","110"],'!':["010","010","010","000","010"]};
+  '$':["011","110","010","011","110"],'!':["010","010","010","000","010"],'?':["111","001","010","000","010"]};
 const HEART=["01010","11111","11111","01110","00100"];
 // draws pixel text on the scene, or on another canvas when ctx is given
 function pixText(str,x,y,s,col,glow,ctx){
@@ -1776,9 +1820,10 @@ function pickShadeColor(n){ job.color=PALETTE[n]; document.querySelectorAll('#sI
 /* warm-up: practice a customer's design on fake skin before the one real shot */
 let warm=null; // {cust, design, start: begins the real tattoo, career}
 const aOrAn=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
+const wantText=k=>DESIGNS[k].say||aOrAn(DESIGNS[k].name.toLowerCase());
 async function offerWarmup(cust,design,start,career){
   warm={cust,design,start,career};
-  const v=await modal(`${CH[cust.ch].name} wants ${aOrAn(DESIGNS[design].name.toLowerCase())} on the ${cust.spot}${cust.shade&&DESIGNS[design].shade?`, shaded ${shadeText(cust.shade)}`:''}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
+  const v=await modal(`${CH[cust.ch].name} wants ${wantText(design)} on the ${cust.spot}${cust.shade&&DESIGNS[design].shade?`, shaded ${shadeText(cust.shade)}`:''}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
     [['Practice on fake skin','practice'],['Start the tattoo','go',true]]);
   if(v==='practice'){ await playerWalk(deskSpot()); startWarmup(); } else start();
 }
@@ -2075,7 +2120,9 @@ function ensureCareerSave(){
   if(save.sup&&save.sup.ointment==null&&save.graduated) save.sup.ointment=5;
   save.sup={...d.sup,...(save.sup||{})};
   save.up={...d.up,...(save.up||{})};
-  ['staff','shops','reviews'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
+  ['staff','shops','reviews','applicants'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
+  // staff from before levels and mood: Mika, Bo and Sage become full records
+  save.staff=save.staff.map(x=>x.name?x:poolStaff(x.id,x.chair)); save.staff.forEach(regStaff);
   if(save.cday==null) save.cday=1; if(save.clock==null) save.clock=600;
   // city shops: per-shop state. Shops bought on the old town map earned money by themselves, so they keep a caretaker manager
   if(!save.shopState||typeof save.shopState!=='object') save.shopState={};
@@ -2238,7 +2285,12 @@ async function wrapUp(){
 // the day ends when you choose "End the day", or at midnight (DAY_END)
 const DAY_START=540, OPEN=600, CLOSE=1320, LAST_IN=1290, DAY_END=1440, CLOCK_RATE=4;
 const DES_INFO={smiley:{pay:25,dur:60,time:180,rep:0},heart:{pay:32,dur:75,time:200,rep:0},star:{pay:38,dur:75,time:200,rep:3},
-  anchor:{pay:48,dur:105,time:280,rep:6},dagger:{pay:52,dur:105,time:280,rep:10},moon:{pay:58,dur:120,time:300,rep:14},rose:{pay:80,dur:150,time:400,rep:18}};
+  anchor:{pay:48,dur:105,time:280,rep:6},dagger:{pay:52,dur:105,time:280,rep:10},moon:{pay:58,dur:120,time:300,rep:14},rose:{pay:80,dur:150,time:400,rep:18},
+  bolt:{pay:34,dur:70,time:200,rep:2},gem:{pay:45,dur:90,time:250,rep:5},cherry:{pay:50,dur:100,time:280,rep:8},skull:{pay:70,dur:135,time:360,rep:15}};
+// a lettering job: a random word in a style your reputation has unlocked
+function letterJob(){ const st=pickR(Object.keys(LSTYLES).filter(k=>save.rep>=LSTYLES[k].rep)), w=pickR(LWORDS), k=letterKey(w,st);
+  if(!DES_INFO[k]){ const dur=40+12*w.length; DES_INFO[k]={pay:Math.round((20+8*w.length)*LSTYLES[st].pay),dur,time:Math.round(dur*2.4+60),rep:0,letter:true}; }
+  return k; }
 const NAMES=['Ava','Bram','Cass','Dario','Enzo','Faye','Hollis','Ines','Jory','Kit','Lior','Mabel','Nico','Odette','Priya','Quinn','Rafe','Sunny','Tamsin','Uri','Vida','Wren','Xavi','Yara','Zeke','Bea','Cole','Dot','Ezra','Gia'];
 const SPOTS=['forearm','wrist','ankle','calf','shoulder','upper arm','back','thigh','collarbone'];
 const HAIRS=['#1a1414','#3a2a1a','#6b3d1f','#a0522d','#e7c35a','#d8d8d8','#8b2f2f','#9b5de5','#2e6f8e'];
@@ -2261,6 +2313,68 @@ const CLERKS=[
   {id:'jade',name:'Jade',fee:360,wage:18,patience:.8,desc:'Friendly and chatty. Customers wait about 25% longer.',
    look:{hair:'#1a1414',style:'long',sex:'f',skin:'#eab894',shirt:'#9b5de5',shirtD:'#6a3fa0',pants:'#2b2b3a',boots:'#151515'}}];
 CLERKS.forEach(k=>{ CH['clerk_'+k.id]={name:k.name,...k.look}; });
+/* ---------- staff: levels, experience, mood and energy. New applicants at the register every morning ---------- */
+// level 1 Rookie .. 5 Veteran: skill (fewer mistakes), XP needed for the next level, the wage they expect, and the hiring fee
+const LVL_NAME=['','Rookie','Junior','Artist','Senior','Veteran'], LVL_SKILL=[0,.55,.66,.76,.86,.95], LVL_XP=[0,6,14,26,40,0];
+const FAIR_WAGE=[0,15,22,30,42,55], HIRE_FEE=[0,160,320,560,900,1400];
+const STAFF_NAMES=['Rex','Tia','Jonah','Luz','Remy','Nell','Otis','Pia','Dex','Ivy','Moe','Kai','Rue','Gus','Lena','Theo','Zia','Cruz','Fern','Hal'];
+const regStaff=st=>{ CH['st_'+st.id]={name:st.name,...st.look}; };
+// how good they are today: bad hires are worse, and so are tired or unhappy staff
+const staffSkill=st=>Math.max(.3,LVL_SKILL[st.lvl]-(st.bad?.15:0)-(st.energy<30?.12:0)-(st.mood<30?.1:0));
+const moodWord=m=>m>=70?'happy':m>=45?'okay':m>=25?'unhappy':'miserable';
+const energyWord=e=>e>=60?'rested':e>=30?'tired':'exhausted';
+const freeChair=()=>{ for(let k=1;k<=save.up.chairs;k++) if(!save.staff.some(s=>s.chair===k)) return k; return save.staff.length+1; };
+// Mika, Bo or Sage from an old save, as a full staff record
+function poolStaff(id,chair){ const p=STAFF_POOL.find(x=>x.id===id);
+  return {id,chair,name:p.name,look:p.look,lvl:{mika:1,bo:3,sage:5}[id]||1,xp:0,wage:p.wage,mood:70,energy:100,bad:false,known:true,off:0,raised:0,jobs:0}; }
+// a random applicant. About one in five is a bad hire, and the interview doesn't always give it away
+function newApplicant(){
+  const r=Math.random(), lvl=r<.45?1:r<.75?2:r<.92?3:4, bad=Math.random()<.22, sex=Math.random()<.5?'f':'m', sh=pickR(SHIRTS);
+  const used=[...save.staff,...(save.applicants||[])].map(s=>s.name), names=STAFF_NAMES.filter(n=>!used.includes(n));
+  const look={sex,hair:pickR(HAIRS),style:pickR(['short','long','ponytail','bun','curly','mohawk','bald']),skin:pickR(SKINS),shirt:sh[0],shirtD:sh[1],
+    pants:pickR(['#3b3950','#2b2b3a','#4a5b8c','#3b4a5c']),boots:pickR(['#151515','#2a1a14']),beard:sex==='m'&&Math.random()<.3?1:0,tattoos:Math.random()<.6?1:0};
+  const good=['Brought a strong portfolio.','Quiet, careful and focused.','Eager to learn and quick to listen.','Clean lines in every photo.'],
+    meh=['Talks a big game.','Says they can start today.','Charming, a little vague about past shops.','Showed up late, but full of ideas.'];
+  const desc=bad?(Math.random()<.65?pickR(meh):pickR(good)):(Math.random()<.75?pickR(good):pickR(meh));
+  return {id:'h'+Date.now().toString(36)+((Math.random()*1e5)|0),name:names.length?pickR(names):'Sam',look,lvl,xp:0,wage:FAIR_WAGE[lvl]+((Math.random()*5)|0)-2-(bad?2:0),fee:HIRE_FEE[lvl],
+    mood:65+((Math.random()*20)|0),energy:100,bad,known:false,off:0,raised:0,jobs:0,desc}; }
+function refreshApplicants(){ save.applicants=[]; for(let i=0;i<3;i++) save.applicants.push(newApplicant()); }
+function gainXp(st,n){ if(st.lvl>=5) return false; st.xp+=n; if(st.xp<LVL_XP[st.lvl]) return false; st.xp=0; st.lvl++; st.mood=Math.min(100,st.mood+10); return true; }
+// overnight: energy comes back, mood drifts (tiredness, pay, days off), and miserable staff may quit
+function staffNight(){
+  const notes=[];
+  save.staff.slice().forEach(st=>{
+    if(st.off===save.cday){ st.energy=100; st.mood+=15; }
+    else { st.mood+=st.energy<30?-10:2; st.energy=Math.min(100,st.energy+55); }
+    if(st.wage<FAIR_WAGE[st.lvl]) st.mood-=6;
+    if(st.bad) st.mood-=3;
+    st.mood=clamp(st.mood,0,100);
+    if(st.mood<20&&Math.random()<.4){ fireStaff(st,true); notes.push(`<li class="failtag">${st.name} quit. They were miserable.</li>`); return; }
+    notes.push(`<li>${st.name} (${LVL_NAME[st.lvl]}): ${moodWord(st.mood)}, ${energyWord(st.energy)}${st.mood<35?' ⚠ might quit':''}</li>`); });
+  return notes.length?`<b>Your crew</b><ul class="revs">${notes.join('')}</ul>`:''; }
+function fireStaff(st,quit){
+  save.staff=save.staff.filter(x=>x!==st);
+  if(!quit&&!(st.bad&&st.known)) save.staff.forEach(x=>{ x.mood=Math.max(0,x.mood-6); }); // the crew doesn't like seeing a good one go
+  const a=F.staffActs[st.id]; if(a){ const i=actors.indexOf(a); if(i>=0) actors.splice(i,1); }
+  delete F.staffActs[st.id]; delete F.sst[st.id]; }
+// talk to a staff member: level, mood and energy, plus a raise, a day off, or letting them go
+async function manageStaff(st,after){
+  if(!save.staff.includes(st)) return;
+  const busy=!!(F.sst[st.id]&&F.sst[st.id].busy), offT=st.off===save.cday+1;
+  const v=await modal(`${st.name}, ${LVL_NAME[st.lvl]} (level ${st.lvl}${st.lvl<5?`, ${st.xp}/${LVL_XP[st.lvl]} XP`:''})${st.known&&st.bad?', a bad hire':''}. Mood ${Math.round(st.mood)} (${moodWord(st.mood)}), energy ${Math.round(st.energy)} (${energyWord(st.energy)}). Paid ${st.wage} coins a day${st.wage<FAIR_WAGE[st.lvl]?`, less than ${aOrAn(LVL_NAME[st.lvl].toLowerCase())} usually makes`:''}.`,
+    [['Back',null,true],['Give a raise (+5 a day)','raise',false,st.raised===save.cday],[offT?'Cancel tomorrow off':'Give tomorrow off (paid)','off'],[`Let ${st.name} go`,'fire',false,busy]]);
+  if(v==='raise'){ st.wage+=5; st.raised=save.cday; st.mood=Math.min(100,st.mood+15); toast(`${st.name} got a raise: ${st.wage} coins a day`); }
+  if(v==='off'){ st.off=offT?0:save.cday+1; toast(offT?`${st.name} works tomorrow after all`:`${st.name} has tomorrow off`); }
+  if(v==='fire'&&await modal(`Let ${st.name} go? They leave right away.`,[['Keep them',false,true],['Let them go',true]])){ fireStaff(st); toast(`${st.name} packed up and left`); }
+  persist(); if(current==='floor') renderFloorHud(); if(after) after(); }
+// the Staff tab: your crew first, then today's applicants
+function staffRows(){
+  if(!save.applicants||!save.applicants.length) refreshApplicants();
+  return (save.staff.length?'<p class="hint"><b>Your crew</b></p>':'')
+    +save.staff.map(st=>`<div class="item"><div class="grow"><div class="nm">${st.name} · ${LVL_NAME[st.lvl]}${st.known&&st.bad?' · <span class="failtag">bad hire</span>':''}</div><div class="ds">Mood: ${moodWord(st.mood)} · energy: ${energyWord(st.energy)} · ${st.wage} coins a day${st.off===save.cday?' · off today':st.off===save.cday+1?' · off tomorrow':''}</div></div><button class="gbtn small" data-buy="crew:${st.id}">Talk</button></div>`).join('')
+    +'<p class="hint"><b>Applicants today</b> (new ones every morning)</p>'
+    +save.applicants.map(a=>itemRow(`${a.name} · ${LVL_NAME[a.lvl]}`,`${a.desc} Wants ${a.wage} coins a day.`,a.fee,'hire:'+a.id)).join(''); }
+
 // who's at the counter: Dee (at Dee's shop until Day 4), your clerk, or nobody (then waiting customers lose patience twice as fast)
 const deeAtCounter=()=>save.workAt==='dee'&&!save.deeDied;
 function patienceRate(){ if(F.appr||deeAtCounter()) return 1; const k=CLERKS.find(x=>x.id===save.clerk); return k?k.patience:2; }
@@ -2433,14 +2547,14 @@ function hotspots(){
   F.custs.forEach(c=>{ if(c.state==='waiting') hs.push(c.script
     ?{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}`,act:()=>talkScripted(c)}
     :{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
-  save.staff.forEach(st=>{ const a=F.staffActs[st.id]; if(a) hs.push({x:a.x,y:a.y,r:14,ax:a.x,ay:a.y,label:`${CH['st_'+st.id].name}: ${staffStatus(st)}`,act:()=>toast(`${CH['st_'+st.id].name}: ${staffStatus(st)}`)}); });
+  save.staff.forEach(st=>{ const a=F.staffActs[st.id]; if(a) hs.push({x:a.x,y:a.y,r:14,ax:a.x,ay:a.y,label:`${st.name} (${LVL_NAME[st.lvl]}): ${staffStatus(st)}`,act:()=>manageStaff(st)}); });
   // furniture: the supply closet opens your stock; anything not in use can be moved (career only)
   furnList().forEach(p=>{ const inf=FURN_INFO[p.type], mx=p.x+inf.c[0], my=p.y+inf.fp[3];
     if(p.type==='closet') hs.push({x:mx,y:my+10,r:16,ax:mx,ay:p.y-6,label:'Supply closet (your stock)',act:()=>openStore('stock',enterFloor)});
     else if(save.career&&!F.appr&&!pieceBusy(p)) hs.push({x:mx,y:my+6,r:11,ax:mx,ay:p.y-6,label:`Move the ${inf.name}`,act:()=>pickUp(p)}); });
   return hs;
 }
-function staffStatus(st){ const s=F.sst[st.id]; if(!s) return 'ready for a client'; if(s.busy) return `tattooing a ${DESIGNS[s.busy.c.design].name}`; if(s.noSup) return 'out of supplies!'; return 'waiting for a client'; }
+function staffStatus(st){ const s=F.sst[st.id]; if(st.off===save.cday) return 'day off'; if(!s) return 'ready for a client'; if(s.busy) return `tattooing ${wantText(s.busy.c.design)}`; if(s.noSup) return 'out of supplies!'; if(s.tired) return 'too tired to work'; return 'waiting for a client'; }
 
 function enterFloor(){
   ensureCareerSave(); F.appr=!save.career; FCAM.snap=true; furnChanged();
@@ -2451,7 +2565,7 @@ function enterFloor(){
     F.dee={ch:'dee',x:cx-90,y:fy-12,tx:cx-90,ty:fy-12,behind:true};
     F.arrivalAt=Math.max(F.arrivalAt,save.clock+10);
   }
-  save.staff.forEach(st=>{ if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:true}; } });
+  save.staff.forEach(st=>{ regStaff(st); if(st.off===save.cday){ delete F.staffActs[st.id]; return; } if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:true}; } });
   // Dee is behind the counter in Dee's shop (until Day 4); otherwise your counter clerk, if you've hired one
   const deeHere=F.appr||(save.workAt==='dee'&&!save.deeDied);
   if(deeHere){ F.dee.behind=true; F.dee.fallBack=false; F.dee.down=false; F.dee.dead=false; F.dee.x=F.dee.tx=cx-90; F.dee.y=F.dee.ty=fy-12; }
@@ -2511,7 +2625,8 @@ function floorTick(dt){
     const dx=F.target.x-p.x, dy=F.target.y-p.y, d=Math.hypot(dx,dy);
     if(d>1.2){ p.x+=dx/d*Math.min(d,sp); p.y+=dy/d*Math.min(d,sp); moved=true; if(Math.abs(dx)>.5) p.flip=dx<0; } else F.target=null;
   }
-  clampPlayer(p); if(!F.busy) unblock(p,ox,oy); p.moving=moved; // walking on your own bumps into furniture; being walked somewhere passes through it p.tx=p.x; p.ty=p.y;
+  // walking on your own bumps into furniture; being walked somewhere passes through it
+  clampPlayer(p); if(!F.busy) unblock(p,ox,oy); p.moving=moved; p.tx=p.x; p.ty=p.y;
   if(F.targetAct&&!F.busy){ const h=F.targetAct; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r||!F.target){ F.targetAct=null; F.target=null; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r+6){ h.act(); return; } } }
   passiveTick(dt);
   // Dee's shop: the next scripted customer walks in once the floor is clear
@@ -2519,6 +2634,7 @@ function floorTick(dt){
   if(F.appr&&save.toured&&!save.runAsk&&!save.runTut&&save.cust>=2&&!F.busy&&!dlg.active) deeRunCheck();
   // a body on the floor: customers react, and the paramedics come after a while
   if(F.bodies&&F.bodies.length){ bodyReactions(); if(F.ambCalled&&(F.ambT-=dt/1000)<=0&&!F.ambBusy){ F.ambBusy=true; paramedics(F.bodies.slice()).then(()=>{ F.ambBusy=false; F.ambCalled=false; }); } }
+  if(!F.appr&&save.career&&!F.deathRunning&&!F.takeRunning&&!(F.bodies&&F.bodies.length)) shopChatter(dt);
   // Day 4 (career): the robbery that kills Dee, after 12:30 at Dee's shop with the doors open and nothing in progress
   if(!F.appr&&save.career&&!save.deeDied&&save.workAt==='dee'&&F.open&&save.clock>=750&&!F.busy&&!F.jobCust&&!F.suspended&&!dlg.active&&!F.deathRunning&&!modalOpen) deeDeath();
   // Day 10 (career): the gang Dee owed money comes for the shop
@@ -2604,8 +2720,9 @@ function spawnCustomer(){
   const id='cu'+(F.nextId++), sh=pickR(SHIRTS);
   CH[id]={name:pickR(NAMES),hair:pickR(HAIRS),style:pickR(STYLES),beard:Math.random()<.2?1:0,hat:pickR(['#2c3e66','#7a2f4f','#3f6b33']),
     skin:pickR(SKINS),shirt:sh[0],shirtD:sh[1],pants:pickR(['#3b3950','#2b2b3a','#4a5b8c','#3b4a5c']),boots:'#2a1a14',tattoos:Math.random()<.3?1:0};
-  const pool=Object.keys(DES_INFO).filter(k=>save.rep>=DES_INFO[k].rep);
-  const design=Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
+  const pool=Object.keys(DES_INFO).filter(k=>!DES_INFO[k].letter&&save.rep>=DES_INFO[k].rep).sort((a,b)=>DES_INFO[a].rep-DES_INFO[b].rep);
+  // some customers want lettering (half of them on the Eastside)
+  const design=Math.random()<(shopById(save.workAt).district==='eastside'?.5:.2)?letterJob():Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
   const info=DES_INFO[design], sp=seatPos(seat), pat=pickR([[110,150],[160,230],[240,340]]).reduce((a,b)=>a+Math.random()*(b-a));
   const shade=DESIGNS[design].shade&&Math.random()<.6?randomShade():null; // most customers want some color; it pays more and takes longer
   const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,
@@ -2678,6 +2795,33 @@ async function phoneCall(){
   if(v==='911'){ F.ambCalled=true; F.ambT=15+Math.random()*3; toast('911: an ambulance is on the way.'); }
   if(v==='priv'){ save.coins-=250; persist(); renderFloorHud(); F.ambCalled=true; F.ambT=0; toast('Private transport is here.'); }
 }
+// customers (and unhappy staff) say things about the shop in a little bubble over their heads, one at a time
+function shopChatter(dt){
+  if((F.chatT=(F.chatT==null?5:F.chatT)-dt/1000)>0) return; F.chatT=6+Math.random()*7;
+  if(actors.some(a=>a.sayT>0)) return;
+  const sad=save.staff.filter(st=>F.staffActs[st.id]&&!(F.sst[st.id]&&F.sst[st.id].busy)&&(st.energy<30||st.mood<35));
+  if(sad.length&&Math.random()<.35){ const st=pickR(sad), a=F.staffActs[st.id];
+    a.say=st.energy<30?pickR(['SO TIRED...','NEED A BREAK','YAWN...']):pickR(['NEED A RAISE','UGH. THIS JOB.','SIGH...']); a.sayT=2.6; return; }
+  const waiting=F.custs.filter(c=>c.state==='waiting'&&!c.chatted); if(!waiting.length) return;
+  const c=pickR(waiting); c.chatted=Math.random()<.6; c.say=pickR(chatLines(c)); c.sayT=2.8; }
+function chatLines(c){
+  if(c.patience/c.patience0<.35) return ['TAKING FOREVER','HURRY UP!','STILL WAITING...'];
+  const sh=shopById(save.workAt), th=sceneTheme(), key=th?Object.keys(THEMES).find(k=>THEMES[k]===th):'dee', d=decorNow(), pcs=furnList(), L=[];
+  if(d.wall) L.push('LOVE THE WALLS!','NICE PAINT JOB!');
+  if(d.floor) L.push('NICE FLOOR!');
+  if(d.chair||d.counter) L.push('COOL COLORS!');
+  if(pcs.some(p=>p.type==='sofa')) L.push('COMFY COUCH!');
+  if(pcs.some(p=>p.type==='plant')) L.push('CUTE PLANT!');
+  L.push(...({dee:['COZY LITTLE SHOP','CLASSIC!'],casino:['SO FANCY!','FEELS LIKE VEGAS!'],marble:['SO CLASSY!','IS THAT MARBLE?'],brick:['COOL BRICK!'],mural:['LOVE THE MURALS!'],
+    pastel:['SO CALM IN HERE'],graffiti:['COOL TAGS!','EDGY PLACE'],garage:['IS THIS A GARAGE?'],nautical:['AHOY!','SMELLS LIKE THE LAKE'],penthouse:['WHAT A VIEW!'],
+    gallery:['LIKE A MUSEUM!'],diner:['GOT ANY COFFEE?','SO RETRO!'],adobe:['SO COZY!']}[key]||[]));
+  L.push(...({eastside:['SKETCHY AREA...','IS IT SAFE HERE?'],strip:['VEGAS BABY!','SO MANY LIGHTS'],suburbs:['NICE AND QUIET'],uptown:['CLASSY BLOCK'],
+    downtown:['BUSY STREET!'],arts:['ARTSY VIBES'],lakeside:['NICE BREEZE'],northside:['GOOD COFFEE NEARBY']}[sh.district]||[]));
+  if(save.rep>=20) L.push('HEARD GOOD THINGS!'); if(save.rep<0) L.push('HEARD BAD REVIEWS...');
+  if(patienceRate()>=2) L.push('ANYONE WORKING?');
+  if(F.custs.filter(x=>x.state==='waiting').length>=save.up.seats) L.push('SO CROWDED');
+  L.push('FIRST TATTOO!','SO NERVOUS...','CAN\'T WAIT!');
+  return L; }
 // customers react to a body on the floor: a bubble over their head, and some walk out (Dee's scripted customers only react)
 function bodyReactions(){
   if(!F.bodies||!F.bodies.length) return;
@@ -2908,27 +3052,36 @@ function advanceTime(mins){
   save.staff.forEach(staffTick);
 }
 function staffTick(st){
-  const s=F.sst[st.id]||(F.sst[st.id]={busy:null,noSup:false}), def=STAFF_POOL.find(x=>x.id===st.id);
+  if(st.off===save.cday) return; // day off
+  const s=F.sst[st.id]||(F.sst[st.id]={busy:null,noSup:false});
   if(s.busy){
     if(save.clock>=s.busy.until){
-      const c=s.busy.c, pay=Math.round(c.pay*(.5+.5*def.skill)*deeKeep());
-      save.coins+=pay; F.today.staff+=pay; F.today.sjobs++; if(Math.random()<def.skill-.55) save.rep++;
-      custLeave(c); s.busy=null; if(current==='floor') toast(`${def.name} finished a ${DESIGNS[c.design].name}: +${pay} coins`);
+      // low levels, bad hires and tired or unhappy staff mess up more: the customer pays less and you lose reputation
+      const c=s.busy.c, sk=staffSkill(st), oops=Math.random()<Math.min(.7,(1-sk)*.7), pay=Math.round(c.pay*(.5+.5*sk)*(oops?.4:1)*deeKeep());
+      save.coins+=pay; F.today.staff+=pay; F.today.sjobs++;
+      if(oops){ save.rep--; c.say=pickR(['UGH!','MY TATTOO!','IT\'S CROOKED!','NOT PAYING FULL!']); c.sayT=2.6; st.mood=Math.max(0,st.mood-4); }
+      else { if(Math.random()<sk-.55) save.rep++; if(Math.random()<.4){ c.say=pickR(['LOVE IT!','SO GOOD!','THANKS!']); c.sayT=2.2; } }
+      st.jobs=(st.jobs||0)+1; st.energy=Math.max(0,st.energy-Math.round(c.dur/8)); const up=gainXp(st,oops||st.bad?1:2);
+      custLeave(c); s.busy=null;
+      if(current==='floor'){ toast(oops?`${st.name} messed up ${wantText(c.design)}: +${pay} coins, −1 rep`:`${st.name} finished ${wantText(c.design)}: +${pay} coins`);
+        if(up) setTimeout(()=>toast(`${st.name} leveled up: ${LVL_NAME[st.lvl]}!`),1800); }
+      if(st.bad&&!st.known&&st.jobs>=3){ st.known=true; if(current==='floor') setTimeout(()=>toast(`Turns out ${st.name} is a bad hire: sloppy and moody.`),3600); }
     }
     return;
   }
+  if(st.energy<12){ s.tired=true; return; } s.tired=false; // too tired to take anyone
   if(save.clock>=CLOSE) return;
   if(F.carry&&F.carry.key==='chair'+st.chair) return; // you're carrying their chair
   const c=F.custs.filter(c=>c.state==='waiting'&&c!==F.talking).sort((a,b)=>a.arrived-b.arrived)[0]; if(!c) return;
   if(save.sup.needles<1||save.sup.ink<5){ s.noSup=true; return; } s.noSup=false;
   save.sup.needles--; save.sup.ink=Math.max(0,save.sup.ink-6); if(save.sup.ointment>0) save.sup.ointment--; if(save.sup.wraps>0) save.sup.wraps--;
   c.state='toChair'; c.by=st.id; c.seat=null; const sp=chairSit(st.chair); c.tx=sp.x; c.ty=sp.y;
-  const len=Math.round(DES_INFO[c.design].dur*(1.7-def.skill)); s.busy={c,until:save.clock+len,len};
+  const len=Math.round(DES_INFO[c.design].dur*(1.7-staffSkill(st))); s.busy={c,until:save.clock+len,len};
 }
 async function talkCustomer(c){
   if(F.busy) return; if(F.suspended){ toast('Finish your client in the chair first'); return; } F.talking=c;
   const hrs=c.dur/60, ht=Number.isInteger(hrs)?hrs:hrs.toFixed(1);
-  const v=await modal(`${CH[c.ch].name} wants ${/^[aeiou]/i.test(DESIGNS[c.design].name)?'an':'a'} ${DESIGNS[c.design].name.toLowerCase()} on the ${c.spot}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
+  const v=await modal(`${CH[c.ch].name} wants ${wantText(c.design)} on the ${c.spot}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
     [['Not now','later'],['Send away','away'],['Start tattoo','go',true]]);
   F.talking=null;
   if(!F.custs.includes(c)||c.state!=='waiting') return;
@@ -2991,7 +3144,7 @@ function endDay(){
   // (no rent while it's still Dee's shop, including the day Dee died)
   const here=shopById(save.workAt), rent=rentToday();
   const clerk=CLERKS.find(x=>x.id===save.clerk);
-  const wages=save.staff.reduce((a,st)=>a+STAFF_POOL.find(x=>x.id===st.id).wage,0)+(clerk?clerk.wage:0);
+  const wages=save.staff.reduce((a,st)=>a+st.wage,0)+(clerk?clerk.wage:0), crewNotes=staffNight();
   const T=F.today, sg=n=>(n>=0?'+':'−')+Math.abs(n);
   // every other shop you own: run by a manager, or closed (rent still due). Five losing days in a row and it goes under
   const lines=[], gone=[]; let others=0;
@@ -3014,7 +3167,7 @@ function endDay(){
     `<dt>Rent at ${here.name}</dt><dd>${sg(-rent)}</dd>`+(wages?`<dt>Staff wages</dt><dd>${sg(-wages)}</dd>`:'')+
     (save.shops.length||gone.length?`<dt>Your other shops</dt><dd>${sg(others)}</dd>`:'')+
     `<dt>Customers who walked out</dt><dd>${T.lost}</dd><dt>Coins now</dt><dd><i class="coin"></i> ${save.coins}</dd><dt>Reputation</dt><dd>${save.rep}${repR?` (${sg(repR)} from healed reviews)`:''}</dd>`;
-  $('#deReviews').innerHTML=(lines.length?`<b>Your shops</b><ul class="revs">${lines.join('')}</ul>`:'')+
+  $('#deReviews').innerHTML=crewNotes+(lines.length?`<b>Your shops</b><ul class="revs">${lines.join('')}</ul>`:'')+
     (gone.length?`<p class="failtag"><b>${gone.join(' and ')} went under after five losing days. ${gone.length>1?'They are':'It is'} gone.</b></p>`:'')+
     (due.length?`<b>Healed reviews</b><ul class="revs">${due.map(r=>`<li>${r.name}'s ${r.design}: ${r.label} (${sg(r.rep)} rep)</li>`).join('')}</ul>`:'');
   show('dayend');
@@ -3027,7 +3180,7 @@ function autoDay(sh,m){
 // a manager leaves a shop: a veteran goes back to the hiring list, a promoted staff member rejoins your crew if there's a chair
 function releaseManager(id){
   const s=save.shopState[id]; if(!s||!s.mgr) return; const m=s.mgr; s.mgr=null;
-  if(m.kind==='staff'){ if(save.staff.length<save.up.chairs){ save.staff.push({id:m.id,chair:save.staff.length+1}); toast(`${m.name} is back on your crew`); } else toast(`${m.name} left: no free chair on your crew`); }
+  if(m.kind==='staff'){ if(save.staff.length<save.up.chairs){ const r=m.rec||poolStaff(m.id,0); r.chair=freeChair(); save.staff.push(r); regStaff(r); toast(`${m.name} is back on your crew`); } else toast(`${m.name} left: no free chair on your crew`); }
 }
 // go and work at another shop: the floor there starts fresh (anyone waiting here goes home)
 function workAt(id){
@@ -3036,8 +3189,8 @@ function workAt(id){
   persist(); enterFloor(); toast(`Now working at ${shopById(id).name}`);
 }
 $('#bNextDay').onclick=async()=>{
-  F.carry=null; F.mustEnd=false; F.tourAt=null; save.cday++; save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.bodies=[]; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
-  await dayCard(`Day ${careerDay()}`,(save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now. ":'')+(save.coins<0?'Money is tight. Get to work. ':'9 AM. Open the doors when you\'re ready. ')+(rentToday()?`Rent due tonight: ${rentToday()}`:'')); F.closing=false; enterFloor(); await fade(false);
+  F.carry=null; F.mustEnd=false; F.tourAt=null; save.cday++; refreshApplicants(); save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.bodies=[]; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
+  await dayCard(`Day ${careerDay()}`,(save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now. ":'')+(save.coins<0?'Money is tight. Get to work. ':'9 AM. Open the doors when you\'re ready. ')+(rentToday()?`Rent due tonight: ${rentToday()}`:'')+save.staff.filter(x=>x.off===save.cday).map(x=>` ${x.name} has the day off.`).join('')); F.closing=false; enterFloor(); await fade(false);
   // the first morning without Dee
   if(save.deeDied&&save.cday===save.deeDied+1&&!save.clerk){ F.busy=true;
     await say(null,"The shop is quiet without Dee. Your rose still hangs on Dee's wall.");
@@ -3116,8 +3269,7 @@ function renderStore(focusKey){
     +(storeMode==='stock'&&save.career?'<div class="row"><button class="gbtn small" id="stMoveCloset">Move this closet</button></div>':'');
   if(storeTab==='decor') rows=decorRows();
   if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(); return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):null); }).join('');
-  if(storeTab==='staff') rows=STAFF_POOL.map(st=>{ const hired=save.staff.some(x=>x.id===st.id), mg=isManaging(st.id);
-      return itemRow(`${st.name} · skill ${Math.round(st.skill*100)}`,`${st.desc} Wage ${st.wage} coins a day.`,st.fee,'hire:'+st.id,hired?'On your team':mg?'Running a shop':null); }).join('')
+  if(storeTab==='staff') rows=staffRows()
     +`<p class="hint">Free chairs for staff: ${save.up.chairs-save.staff.length}. Buy extra chairs under Upgrades.</p>`
     // counter clerk: only needed once Dee isn't behind the counter
     +(save.deeDied||save.workAt!=='dee'?CLERKS.map(k=>itemRow(`${k.name} · counter clerk`,`${k.desc} Wage ${k.wage} coins a day.`,k.fee,'clerk:'+k.id,save.clerk===k.id?'At your counter':null)).join('')
@@ -3132,6 +3284,7 @@ function renderStore(focusKey){
 }
 function buyItem(key){
   const [kind,id]=key.split(':');
+  if(kind==='crew'){ const st=save.staff.find(x=>x.id===id); if(st) manageStaff(st,()=>renderStore(key)); return; }
   if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; save.runTut=true; toast(`Bought ${it.name.toLowerCase()}`); }
   if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy();
     if((id==='chairs'||id==='seats')&&F.player&&save.career){ // new furniture comes out in your hands
@@ -3143,9 +3296,10 @@ function buyItem(key){
         hideDlg(); F.busy=false; })(); }
       return; }
     toast(`${u.name} installed`); }
-  if(kind==='hire'){ const st=STAFF_POOL.find(x=>x.id===id);
+  if(kind==='hire'){ const a=(save.applicants||[]).find(x=>x.id===id); if(!a) return;
     if(save.staff.length>=save.up.chairs){ toast('Buy an extra tattoo chair first (Upgrades)'); return; }
-    if(save.coins<st.fee) return; save.coins-=st.fee; save.staff.push({id,chair:save.staff.length+1}); toast(`${st.name} joined the shop!`); }
+    if(save.coins<a.fee) return; save.coins-=a.fee; save.applicants=save.applicants.filter(x=>x!==a);
+    const st={...a,chair:freeChair()}; delete st.fee; delete st.desc; save.staff.push(st); regStaff(st); toast(`${a.name} joined the shop!`); }
   if(kind==='clerk'){ const k=CLERKS.find(x=>x.id===id); if(save.coins<k.fee) return; save.coins-=k.fee; save.clerk=id; toast(`${k.name} is behind the counter now`); }
   persist(); blip(880); renderStore(key);
 }
@@ -3440,17 +3594,17 @@ function renderMap(){
 }
 // choose who runs a shop: hire a veteran, or promote one of your own staff (they leave your crew)
 async function pickManager(sh){
-  const vets=VETERANS.filter(v=>!isManaging(v.id)), crew=save.staff.map(s=>STAFF_POOL.find(p=>p.id===s.id));
+  const vets=VETERANS.filter(v=>!isManaging(v.id)), crew=save.staff;
   const opts=[['Cancel',null]];
   vets.forEach(v=>opts.push([`Hire ${v.name} · skill ${Math.round(v.skill*100)} · ${v.fee} coins + ${v.wage}/day`,'vet:'+v.id]));
-  crew.forEach(p=>opts.push([`Promote ${p.name} · skill ${Math.round(p.skill*100)} · ${p.wage+10}/day`,'staff:'+p.id]));
+  crew.forEach(p=>opts.push([`Promote ${p.name} · ${LVL_NAME[p.lvl]} · ${p.wage+10}/day`,'staff:'+p.id]));
   if(opts.length===1){ await modal('Nobody is free to run it. Hire staff at the counter first, or wait until a veteran is free.',[['OK',null,true]]); return; }
   const v=await modal(`Who should run ${sh.name}? Managers work every day you're not there.`,opts); if(!v) return;
   const [kind,id]=v.split(':'), s=save.shopState[sh.id];
   if(kind==='vet'){ const vet=VETERANS.find(x=>x.id===id); if(save.coins<vet.fee){ toast(`You need ${vet.fee-save.coins} more coins`); return; }
     save.coins-=vet.fee; s.mgr={kind:'vet',id,name:vet.name,skill:vet.skill,wage:vet.wage}; }
-  else { const p=STAFF_POOL.find(x=>x.id===id); save.staff=save.staff.filter(x=>x.id!==id); save.staff.forEach((x,i)=>x.chair=i+1); delete F.staffActs[id]; delete F.sst[id];
-    s.mgr={kind:'staff',id,name:p.name,skill:p.skill,wage:p.wage+10}; }
+  else { const p=save.staff.find(x=>x.id===id); save.staff=save.staff.filter(x=>x.id!==id); save.staff.forEach((x,i)=>x.chair=i+1); delete F.staffActs[id]; delete F.sst[id];
+    s.mgr={kind:'staff',id,name:p.name,skill:Math.max(.4,LVL_SKILL[p.lvl]-(p.bad?.15:0)),wage:p.wage+10,rec:p}; }
   persist(); blip(880); toast(`${s.mgr.name} now runs ${sh.name}`); renderMap();
 }
 // the hospital: you lie in a bed; treatment costs HEAL_COST and puts you back to full health
