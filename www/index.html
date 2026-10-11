@@ -168,6 +168,11 @@ button{font:inherit;color:inherit}
 .item .nm{font-weight:700;font-size:19px}
 .item .ds{color:var(--ink-soft);font-size:15px}
 .item .pr{white-space:nowrap;display:inline-flex;gap:5px;align-items:center}
+.swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.swatch{width:30px;height:30px;padding:0;border:3px solid var(--wood-d);border-radius:4px;cursor:pointer}
+.swatch[aria-pressed="true"]{outline:3px solid #fff;outline-offset:1px}
+.swatch:disabled{opacity:.35;cursor:default}
+.compact .swatch{width:24px;height:24px}
 .hint{color:var(--ink-soft);margin:8px 0 0;font-size:16px}
 .slotlist{display:flex;flex-direction:column;gap:8px}
 /* character maker */
@@ -692,7 +697,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -857,7 +862,8 @@ const THEMES={
 // the theme of the shop you're working in right now (null = Dee's shop)
 function sceneTheme(){ if(!F.active||!save.career||!save.workAt||save.workAt==='dee') return null; const sh=SHOPS.find(s=>s.id===save.workAt); return sh?THEMES[sh.theme]:null; }
 function drawThemeRoom(th,t,cx,wb,fy){
-  const st=Object.keys(THEMES).find(k=>THEMES[k]===th);
+  const W=roomW(); // the whole room, not just the screen
+  const st=th._key||Object.keys(THEMES).find(k=>THEMES[k]===th);
   R(0,0,W,wb,th.wall);
   if(st==='casino'){ for(let x=6;x<W;x+=40){ R(x,0,8,wb,th.wall2); R(x+3,0,2,wb,th.trim); } }
   if(st==='marble'){ for(let i=0;i<46;i++) R((i*53)%W,(i*29)%(wb-12),10+(i%3)*6,1,th.wall2); for(let x=4;x<W;x+=50) R(x,0,4,wb,th.trim); }
@@ -925,14 +931,16 @@ function skyNow(){
 }
 function drawInterior(t){
   SKY=skyNow();
-  const cx=W>>1, wb=Math.round(H*0.55), fy=wb+22, th=sceneTheme();
-  if(th){ drawThemeRoom(th,t,cx,wb,fy); drawShopFurniture(t,cx,wb,fy,th); return; }
-  R(0,0,W,wb,'#7b4a5c'); for(let x=0;x<W;x+=10) R(x,0,4,wb,'#835264');
-  for(let y=6;y<wb-26;y+=12) for(let x=((y/12)|0)%2*5+2;x<W;x+=10) R(x,y,1,1,'#a0687a');
-  R(0,wb-22,W,22,'#6a3f25'); R(0,wb-24,W,3,'#a2683c'); for(let x=4;x<W;x+=16) R(x,wb-20,1,18,'#57331e');
-  R(0,wb,W,H-wb,'#b07a46');
-  for(let y=wb,row=0;y<H;y+=8,row++){ R(0,y,W,1,'#8f5d33'); for(let x=(row%2)*20;x<W;x+=40) R(x,y,1,8,'#8f5d33'); }
-  R(0,wb,W,2,'#5a3520');
+  const cx=W>>1, wb=Math.round(H*0.55), fy=wb+22, th=decorTheme(sceneTheme());
+  if(th){ drawThemeRoom(th,t,cx,wb,fy); drawBackRoom(th,cx,wb,fy); drawShopFurniture(t,cx,wb,fy,th); return; }
+  const RW=roomW(); // Dee's shop: the whole room, including the back room once Dee expands
+  const dd=decorNow(), dw=dd.wall||'#7b4a5c', dfl=dd.floor||'#b07a46';
+  R(0,0,RW,wb,dw); for(let x=0;x<RW;x+=10) R(x,0,4,wb,dd.wall?hexMix(dw,'#ffffff',.08):'#835264');
+  for(let y=6;y<wb-26;y+=12) for(let x=((y/12)|0)%2*5+2;x<RW;x+=10) R(x,y,1,1,dd.wall?hexMix(dw,'#ffffff',.25):'#a0687a');
+  R(0,wb-22,RW,22,'#6a3f25'); R(0,wb-24,RW,3,'#a2683c'); for(let x=4;x<RW;x+=16) R(x,wb-20,1,18,'#57331e');
+  R(0,wb,RW,H-wb,dfl); const fl=dd.floor?hexMix(dfl,'#000000',.18):'#8f5d33';
+  for(let y=wb,row=0;y<H;y+=8,row++){ R(0,y,RW,1,fl); for(let x=(row%2)*20;x<RW;x+=40) R(x,y,1,8,fl); }
+  R(0,wb,RW,2,'#5a3520');
   // window
   const wy=Math.round(wb*0.16), wh=Math.round(wb*0.42); R(cx-27,wy-3,54,wh+6,'#4a2c1d'); R(cx-24,wy,48,wh,SKY.b); R(cx-24,wy,48,wh/3,SKY.t); if(SKY.n>.6) [[-18,4],[-8,9],[6,3],[15,12]].forEach(([dx,dy])=>R(cx+dx,wy+dy,1,1,'#f4efe6'));
   R(cx-1,wy,2,wh,'#4a2c1d'); R(cx-24,wy+wh/2,48,2,'#4a2c1d'); R(cx-30,wy+wh+3,60,3,'#a2683c');
@@ -952,11 +960,12 @@ function drawInterior(t){
   pixText('♥',nx+5,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
   pixText('INK',nx+19,fwY+5,2,on?'#9fe8ff':'#3a5a66',on?'rgba(159,232,255,.3)':null);
   pixText('♥',nx+45,fwY+5,2,on?'#ff6fa8':'#7a3a55',on?'rgba(255,111,168,.35)':null);
+  if(roomW()>W) drawBackRoom({trim:'#4a2c1d'},cx,wb,fy);
+  if(F.wallUp) drawOldWall(cx,wb,fy);
   drawShopFurniture(t,cx,wb,fy,null);
 }
 // practice desk for fake skin, bottom right of the shop: tabletop, legs, a pink pad, a little lamp and a stool
-function drawDesk(cx,fy){
-  const L=layout(), dk=cx+L.desk[0], dy=fy+L.desk[1]; R(dk,dy,38,5,'#a2683c'); R(dk,dy,38,1,'#c98a52'); R(dk+2,dy+5,3,12,'#5a3520'); R(dk+33,dy+5,3,12,'#5a3520');
+function drawDesk(dk,dy){ R(dk,dy,38,5,'#a2683c'); R(dk,dy,38,1,'#c98a52'); R(dk+2,dy+5,3,12,'#5a3520'); R(dk+33,dy+5,3,12,'#5a3520');
   R(dk+8,dy-3,12,4,'#f1c3b0'); R(dk+9,dy-3,10,1,'#f8dccd'); R(dk+29,dy-11,2,10,'#333'); R(dk+25,dy-13,8,3,'#d8d0c0');
   R(dk+14,dy+18,10,3,'#6b3a2a'); R(dk+16,dy+21,2,5,'#4a2a18'); R(dk+20,dy+21,2,5,'#4a2a18');
 }
@@ -984,24 +993,39 @@ function drawPlant(kind,x,fy){
   if(kind==='fern'){ R(x-6,fy-22,26,8,'#4e8a3e'); R(x-3,fy-28,20,7,'#5fa04a'); R(x+1,fy-33,12,6,'#6fb258'); R(x-8,fy-18,6,3,'#4e8a3e'); R(x+16,fy-18,6,3,'#4e8a3e'); }
   if(kind==='palm'){ R(x+6,fy-48,3,34,'#8a6a3a'); R(x-6,fy-52,28,4,'#4e8a3e'); R(x-2,fy-56,20,4,'#5fa04a'); R(x-8,fy-48,8,3,'#4e8a3e'); R(x+14,fy-48,8,3,'#4e8a3e'); }
 }
+// the old wall between Dee's shop and next door (only during the Day 4 morning, until Dee knocks it down)
+function drawOldWall(cx,wb,fy){ const x0=cx+165+(F.wallShake>0?((tick%4)<2?-1:1):0), w=roomW()-x0;
+  R(x0,0,w,H,'#6a4048'); for(let y=0,r=0;y<H;y+=6,r++){ R(x0,y,w,1,'#5a3640'); for(let x=x0+(r%2)*8;x<x0+w;x+=16) R(x,y,1,6,'#5a3640'); }
+  R(x0,0,3,H,'#4a2c32'); const cr=F.wallCracks||0; for(let i=0;i<cr*3;i++) R(x0+3+(i*7)%14,fy-50+(i*13)%60,1+(i%2),4,'#2a1418'); }
+// dust and rubble flying when the wall comes down
+const DUST=[];
+function drawDust(){ for(let i=DUST.length-1;i>=0;i--){ const d=DUST[i]; d.x+=d.vx; d.y+=d.vy; d.vy+=.08; d.life--; if(d.y>d.floor){ d.y=d.floor; d.vx*=.6; d.vy=0; }
+  R(Math.round(d.x),Math.round(d.y),d.s,d.s,d.c); if(d.life<=0) DUST.splice(i,1); } }
+// the back room of a bought shop: a wall pillar where the rooms meet, a window and a couple of frames
+function drawBackRoom(th,cx,wb,fy){
+  const x0=cx+170; R(x0-5,0,10,wb,th.trim); R(x0-3,0,2,wb,'rgba(0,0,0,.25)'); R(x0-5,wb-3,10,5,th.trim);
+  const wy=Math.round(wb*.16), wh=Math.round(wb*.42), wx=x0+150; R(wx-27,wy-3,54,wh+6,th.trim); R(wx-24,wy,48,wh,SKY.b); R(wx-24,wy,48,wh/3,SKY.t); R(wx-1,wy,2,wh,th.trim);
+  [[x0+40,'#b8432f'],[x0+235,'#2e5866']].forEach(([x,c])=>{ R(x,Math.round(wb*.22),20,26,th.trim); R(x+2,Math.round(wb*.22)+2,16,22,'#f2e6cc'); R(x+6,Math.round(wb*.22)+8,8,8,c); });
+}
 // furniture and people, shared by every shop (colors come from the theme; null = Dee's colors)
 function drawShopFurniture(t,cx,wb,fy,th){
-  const rug=th?th.rug:['#7a2f4f','#9c4467','#e0a33a'], chair=th?th.chair:['#a8323c','#d0505a'], ctr=th?th.counter:['#d39a5a','#8a5532','#7a4a2a'];
+  const dd=decorNow(), rug=th?th.rug:['#7a2f4f','#9c4467','#e0a33a'], chair=th?th.chair:dd.chair?[dd.chair,hexMix(dd.chair,'#ffffff',.25)]:['#a8323c','#d0505a'], ctr=th?th.counter:dd.counter?[hexMix(dd.counter,'#ffffff',.3),dd.counter,hexMix(dd.counter,'#000000',.15)]:['#d39a5a','#8a5532','#7a4a2a'];
   // rug, chair, lamp, plant: where they go depends on the shop (layout())
   const L=layout(), c=cx+L.chair;
   if(L.rug==='center'){ R(cx-42,fy+2,84,26,rug[0]); R(cx-38,fy+5,76,20,rug[1]); for(let x=cx-34;x<cx+34;x+=8) R(x,fy+14,3,3,rug[2]); }
   if(L.rug==='chair'){ R(c-36,fy+4,64,22,rug[0]); R(c-32,fy+7,56,16,rug[1]); for(let x=c-26;x<c+20;x+=8) R(x,fy+14,3,3,rug[2]); }
-  R(c-10,fy-4,22,8,'#2b2b2b'); R(c-2,fy-10,6,8,'#555'); R(c-22,fy-18,44,10,chair[0]); R(c-22,fy-18,44,2,chair[1]);
-  R(c+14,fy-42,10,26,chair[0]); R(c+16,fy-40,2,22,chair[1]); R(c-24,fy-24,10,4,'#2b2b2b');
-  if(L.lamp!=null){ const l=cx+L.lamp; R(l,fy-62,2,60,'#333'); R(l-8,fy-66,16,6,'#d8d0c0'); R(l-6,fy-60,12,3,'rgba(255,240,200,.5)'); }
-  if(L.plant) drawPlant(L.plant,cx+L.px,fy);
   if(F.active) drawFloorFurniture(cx,fy);
+  const pieces=furnList().filter(p=>!(F.carry&&F.carry.key===p.key)&&(F.active||!/^chair[1-9]|^seat/.test(p.key)))
+    .map(p=>({piece:p,y:p.type==='desk'?p.y+8:p.y-.5}));
   // mentor behind counter, then counter, then others
   actors.filter(a=>a.behind).forEach(drawActor);
   R(cx-124,fy-26,68,5,ctr[0]); R(cx-122,fy-21,64,24,ctr[1]); for(let x=cx-118;x<cx-60;x+=14) R(x,fy-17,10,16,ctr[2]);
   R(cx-44,fy-46,9,13,'#2b2b2b'); R(cx-43,fy-45,7,4,'#b8323c'); R(cx-42,fy-40,5,5,'#d8d0c0'); R(cx-41,fy-33,1,8,'#2b2b2b'); // wall phone
   R(cx-112,fy-36,16,10,'#5b5b6b'); R(cx-110,fy-34,12,3,'#9fe8ff'); R(cx-86,fy-34,8,8,'#bfe3e0'); R(cx-84,fy-31,4,4,'#f2c14e');
-  actors.filter(a=>!a.behind).concat([{desk:true,y:fy+layout().desk[1]+8}]).sort((a,b)=>a.y-b.y).forEach(a=>a.desk?drawDesk(cx,fy):drawActor(a));
+  const inside=a=>{ if(a.piece||!(a===F.player||a.moving)) return null; const r=pieces.find(q=>{ const f=fpRect(q.piece.type,q.piece.x,q.piece.y); return a.x>f[0]&&a.x<f[2]&&a.y>f[1]&&a.y<f[3]; }); return r?r.y-1:null; };
+  actors.filter(a=>!a.behind).map(a=>{ const sy=inside(a); return sy==null?a:{wrap:a,y:sy}; }).concat(pieces).sort((a,b)=>a.y-b.y).forEach(a=>a.piece?drawPiece(a.piece,chair,L):drawActor(a.wrap||a)); // someone passing through furniture is drawn behind it
+  if(F.carry&&F.active) drawCarryGhost(chair,L);
+  if(DUST.length) drawDust();
   if(F.active) drawFloorOverlay(t);
   drawFx(t);
 }
@@ -1009,12 +1033,15 @@ function drawShopFurniture(t,cx,wb,fy,th){
 const HURT={};
 function hurtLook(id){ const c=CH[id]; if(!HURT[id]||HURT[id].src!==c){ const r={}; for(const k in c) r[k]=typeof c[k]==='string'&&c[k][0]==='#'?'#ff6a5a':c[k]; r.skin='#ffb0a0'; HURT[id]=r; r.src=c; } return HURT[id]; }
 // blood stains on your clothes: more of them the more you're hurt
-const BLOOD=[[-3,-19,3,2],[2,-15,2,3],[-1,-11,3,2],[3,-7,2,2],[-4,-5,2,3],[1,-22,2,2]];
-function drawBlood(a,h){ const n=h>75?1:h>50?3:h>25?4:6; for(let i=0;i<n;i++){ const [dx,dy,w,hh]=BLOOD[i]; R(Math.round(a.x+(a.flip?-dx-w:dx)),Math.round(a.y+dy),w,hh,i%2?'#8a1a1a':'#b3262a'); } }
+const BLOOD=[[-3,-19,3,2],[2,-15,2,3],[-1,-11,3,2],[3,-7,2,2],[-4,-5,2,3],[1,-22,2,2],[-2,-16,4,3],[0,-13,3,3]];
+function drawBlood(a,h){ const n=h>75?1:h>50?3:h>25?4:h>10?6:8; for(let i=0;i<n;i++){ const [dx,dy,w,hh]=BLOOD[i]; R(Math.round(a.x+(a.flip?-dx-w:dx)),Math.round(a.y+dy),w,hh,i%2?'#8a1a1a':'#b3262a'); } }
 function drawActor(a){
   if(a.down){ // knocked down: lie on the floor, then fade away
-    sx.save(); sx.globalAlpha=a.dead?1:clamp(1-(a.downT-.8)/.8); sx.translate(Math.round(a.x),Math.round(a.y)); sx.rotate(a.fallBack?-Math.PI/2:Math.PI/2); drawSprite(sx,CH[a.ch],0,0,0,false); sx.restore(); return; }
+    sx.save(); sx.globalAlpha=a.dead?1:clamp(1-(a.downT-.8)/.8); sx.translate(Math.round(a.x),Math.round(a.y)); sx.rotate(a.fallBack?-Math.PI/2:Math.PI/2); drawSprite(sx,CH[a.ch],0,0,0,false); if(a.dead) drawBlood({x:0,y:0,flip:false},5); sx.restore();
+    if(a.dead&&!a.carriedBy){ const dir=a.fallBack?-1:1, w=a.ch==='dee'?26:16; sx.globalAlpha=.85; R(Math.round(a.x)+(dir>0?6:-6-w),Math.round(a.y)+1,w,3,'#7a1414'); R(Math.round(a.x)+(dir>0?10:-10-w+8),Math.round(a.y)+3,w-8,2,'#5a0e0e'); sx.globalAlpha=1; } // a pool of blood
+    return; }
   drawSprite(sx,a.hurt>0?hurtLook(a.ch):CH[a.ch],a.x,a.y,a.moving?((tick/(a.run?5:9))|0)%2:0,a.flip); // runners swap legs faster; red flash when hit
+  if(a.hammer){ const up=a.hammerUp, hx=Math.round(a.x)+(a.flip?-6:6), hy=Math.round(a.y)-13; if(up){ R(hx,hy-14,2,14,'#8a6a3a'); R(hx-3,hy-18,8,5,'#555'); } else { R(hx,hy,12,2,'#8a6a3a'); R(hx+10,hy-3,5,8,'#555'); } }
   if(a.ch==='cop'){ const x=Math.round(a.x)+(a.flip?-1:0), y=Math.round(a.y)-31; R(x-1,y+1,3,1,'#ffd84a'); R(x,y,1,3,'#ffd84a'); }
   if(a.armed&&current!=='fight') drawHeld(a,a.flip); // a robber showing his weapon during the talking part
   if(a.ch==='you'&&save.career){ const h=current==='fight'&&FT.on?FT.hp:hpNow(); if(h<100) drawBlood(a,h); }
@@ -1026,12 +1053,25 @@ function updateActors(){
     if(a.carriedBy){ const [n1,n2]=a.carriedBy; a.x=(n1.x+n2.x)/2+(a.carryDx||0); a.y=(n1.y+n2.y)/2-6; return; } // a body being carried out by the paramedics
     if(a.ctrl) return;
     const dx=a.tx-a.x, dy=a.ty-a.y, d=Math.hypot(dx,dy);
-    if(d>0.6){ const s=Math.min(d,a.run?1.8:0.9); a.x+=dx/d*s; a.y+=dy/d*s; a.moving=true; if(Math.abs(dx)>0.5) a.flip=dx<0; }
+    if(d>0.6){ const s=Math.min(d,a.creep?0.05:a.run?1.8:0.9); a.x+=dx/d*s; a.y+=dy/d*s; a.moving=true; if(Math.abs(dx)>0.5) a.flip=dx<0; }
     else { a.x=a.tx; a.y=a.ty; if(a.moving){ a.moving=false; if(a.done){ const f=a.done; a.done=null; f(); } } }
   });
 }
 const sceneGeo=()=>{ const cx=W>>1, wb=Math.round(H*0.55); return {cx,fy:wb+22}; };
-const deskSpot=()=>{ const {cx,fy}=sceneGeo(), L=layout(); return {x:cx+L.desk[0]+19,y:fy+L.desk[1]+22}; }; // where you stand to work at the practice desk (bottom right)
+// shops you buy have a second room to the right (the floor is wider than the screen; the camera follows you). Dee's shop is one screen
+const ROOM2=300;
+const bigRoom=()=>!!sceneTheme()||(F.active&&save.career&&save.workAt==='dee'&&!!save.deeExpand);
+const roomW=()=>bigRoom()?(W>>1)+170+ROOM2:W;
+const FCAM={x:0,snap:true};
+function floorCamX(){
+  if(sceneMode!=='interior'||!F.active){ FCAM.x=0; return 0; }
+  const p=current==='fight'&&FT.on&&FT.you?FT.you:F.player; if(!p) return Math.round(FCAM.x);
+  const tgt=F.camAt!=null?clamp(F.camAt-W/2,0,Math.max(0,roomW()-W)):(F.deathRunning||F.takeRunning)&&F.busy&&current!=='fight'?0:clamp(p.x-W/2,0,Math.max(0,roomW()-W));
+  if(FCAM.snap){ FCAM.x=tgt; FCAM.snap=false; } else { FCAM.x+=(tgt-FCAM.x)*.15; if(Math.abs(tgt-FCAM.x)<.5) FCAM.x=tgt; }
+  return Math.round(FCAM.x);
+}
+const camX=()=>sceneMode==='interior'&&F.active?Math.round(FCAM.x):0;
+const deskSpot=()=>{ const d=piece('desk'); return {x:d.x+19,y:d.y+22}; }; // where you stand to work at the practice desk (bottom right)
 function setActors(list){ actors.length=0; list.forEach(a=>actors.push({...a,tx:a.tx??a.x,ty:a.ty??a.y,moving:false,flip:!!a.flip})); }
 function walk(id,tx,ty){ const a=actors.find(a=>a.ch===id); if(!a) return Promise.resolve(); a.tx=tx; a.ty=ty; return new Promise(r=>{ a.done=r; if(Math.hypot(tx-a.x,ty-a.y)<0.6){ a.done=null; r(); } }); }
 
@@ -1921,7 +1961,7 @@ function fightTick(dt){
     const weave=r.state==='grab'?0:Math.sin(FT.t*2.6+r.phase)*(r.state==='out'?12:22), sp=r.state==='grab'?0:r.state==='out'?r.speed*1.5:r.speed;
     let vx=dx/d*sp-dy/d*weave, vy=dy/d*sp+dx/d*weave;
     if(r.dodgeT>0){ r.dodgeT-=s; vx+=r.dodgeVx; vy+=r.dodgeVy; }
-    r.x=clamp(r.x+vx*s,8,W-8); r.y=clamp(r.y+vy*s,fy+2,H+30); r.flip=vx<0; r.moving=true; if(r.state==='hold'&&you){ r.flip=you.x<r.x; r.moving=d>3; }
+    r.x=clamp(r.x+vx*s,8,roomW()-8); r.y=clamp(r.y+vy*s,fy+2,H+30); r.flip=vx<0; r.moving=true; if(r.state==='hold'&&you){ r.flip=you.x<r.x; r.moving=d>3; }
     // shoot back at you every so often, not very accurately
     if(you&&r.y<H&&(r.fireT-=s)<=0){ r.fireT=(FT.lesson?1.7:1.2)+Math.random()*.9;
       const gx=r.x+(you.x<r.x?-8:8), gy=r.y-17, tx=you.x+(Math.random()-.5)*26, ty=you.y-16+(Math.random()-.5)*22, d=Math.hypot(tx-gx,ty-gy)||1;
@@ -1957,7 +1997,7 @@ function endFight(won){
   // robbers still standing leave the scene; the ones you dropped stay as bodies (FT.bodies) for the paramedics
   FT.bodies=FT.robbers.filter(r=>r.down);
   actors.splice(0,actors.length,...actors.filter(a=>!/^rob/.test(a.ch)||a.down));
-  if(FT.you){ FT.you.ctrl=FT.youCtrl; FT.you.moving=false; }
+  if(FT.you){ FT.you.ctrl=FT.youCtrl; FT.you.moving=false; FT.you.hurt=0; }
   show(FT.backTo); const f=FT.done; FT.done=null; f&&f(won);
 }
 function drawFx(t){
@@ -1981,7 +2021,7 @@ function drawFx(t){
   const a=FT.aim, c=inputMode==='touch'&&!FT.aiming?'rgba(255,90,70,.5)':'#ff5a46';
   R(a.x-5,a.y,3,1,c); R(a.x+3,a.y,3,1,c); R(a.x,a.y-5,1,3,c); R(a.x,a.y+3,1,3,c);
 }
-function sceneXY(e){ const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2; return {x:(e.clientX-r.left-ox)/s,y:(e.clientY-r.top-oy)/s}; }
+function sceneXY(e){ const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2; return {x:(e.clientX-r.left-ox)/s+camX(),y:(e.clientY-r.top-oy)/s}; }
 // touch / mouse: press and drag to aim (dotted line), let go to shoot
 const fightEl=$('#scr-fight');
 fightEl.addEventListener('pointerdown',e=>{ if(modalOpen||!FT.on||FT.noGun) return; FT.aiming=true; FT.aimId=e.pointerId; fightEl.setPointerCapture(e.pointerId); FT.aim=sceneXY(e); });
@@ -2267,26 +2307,102 @@ const managerOf=id=>(save.shopState[id]||{}).mgr||null;
 const isManaging=pid=>Object.values(save.shopState).some(s=>s.mgr&&s.mgr.id===pid);
 ensureCareerSave(); // (needs SHOPS, so it runs here)
 
+/* ---------- decor colors you buy at the register (per shop): walls, floor, tattoo chairs, counter ---------- */
+const DECOR={
+  wall:{name:'Wall paint',price:200,cols:['#7b4a5c','#3f5a6b','#4a6b4a','#6b5a3f','#2a2a34','#e4ddd0','#8a3a3a','#5a4a7a']},
+  floor:{name:'Flooring',price:200,cols:['#b07a46','#8a8a86','#5a4030','#c8b48a','#3a3a42','#7a3a2a','#2e5a5a','#d8d0c0']},
+  chair:{name:'Chair upholstery',price:120,cols:['#a8323c','#3a6ab0','#2a2a2a','#4a8a4a','#e8e8ee','#d08a2a','#8a4ab0','#e85a8a']},
+  counter:{name:'Counter finish',price:120,cols:['#8a5532','#3a3a3a','#e8e1d0','#2e5866','#6a2a2a','#5a6a3a']}};
+const decorNow=()=>{ if(!save.decor) save.decor={}; return save.decor[shopKey()]||{}; };
+// a theme with your paint jobs applied (the original theme object is never changed)
+function decorTheme(th){ const d=decorNow(); if(!th||!Object.keys(d).length) return th; const t={...th,_key:Object.keys(THEMES).find(k=>THEMES[k]===th)};
+  if(d.wall){ t.wall=d.wall; t.wall2=hexMix(d.wall,'#000000',.15); }
+  if(d.floor){ t.floor=d.floor; t.floor2=hexMix(d.floor,'#000000',.15); }
+  if(d.chair) t.chair=[d.chair,hexMix(d.chair,'#ffffff',.25)];
+  if(d.counter) t.counter=[hexMix(d.counter,'#ffffff',.3),d.counter,hexMix(d.counter,'#000000',.15)];
+  return t; }
+function decorRows(){
+  const d=decorNow();
+  return Object.entries(DECOR).map(([k,o])=>`<div class="item"><div class="grow"><div class="nm">${o.name}</div><div class="ds">${o.price} coins per color. Original is free.</div>
+    <div class="swatches"><button class="gbtn small" data-decor="${k}:" aria-pressed="${!d[k]}">Original</button>${o.cols.map(c=>`<button class="swatch" style="background:${c}" data-decor="${k}:${c}" aria-pressed="${d[k]===c}" aria-label="${o.name} ${c}" ${d[k]!==c&&save.coins<o.price?'disabled':''}></button>`).join('')}</div></div></div>`).join('')
+    +'<p class="hint">Colors apply to the shop you work in.</p>'; }
+function buyDecor(key){ const [k,c]=key.split(':'), o=DECOR[k], all=save.decor||(save.decor={}), d=all[shopKey()]||(all[shopKey()]={});
+  if((d[k]||'')===c) return;
+  if(c){ if(save.coins<o.price){ toast('Not enough coins'); return; } save.coins-=o.price; d[k]=c; toast(`${o.name}: done (−${o.price})`); }
+  else { delete d[k]; toast(`${o.name}: back to the original`); }
+  persist(); blip(880); renderStore('decor:'+key); }
+
+/* ---------- furniture: chairs, bench seats, desk, lamp, plant and (in bought shops) the supply closet ---------- */
+const FURN_INFO={chair:{name:'tattoo chair',fp:[-26,-14,26,12],c:[0,-1]},seat:{name:'bench seat',fp:[-8,-6,8,3],c:[0,-1]},desk:{name:'practice desk',fp:[-4,0,40,18],c:[18,9]},
+  lamp:{name:'floor lamp',fp:[-5,-16,8,2],c:[2,-7]},plant:{name:'plant',fp:[-14,-18,26,8],c:[6,-5]},closet:{name:'supply closet',fp:[-2,-12,24,4],c:[11,-4]},sofa:{name:'couch',fp:[-22,-10,22,4],c:[0,-3]}};
+const shopKey=()=>bigRoom()?save.workAt:'dee';
+const furnStore=()=>{ if(!save.furn) save.furn={}; return save.furn[shopKey()]||(save.furn[shopKey()]={}); };
+const fpRect=(type,x,y)=>{ const f=FURN_INFO[type].fp; return [x+f[0],y+f[1],x+f[2],y+f[3]]; };
+const hits=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
+// spots nothing may go: the counter and the lane behind it, the doorway, and the room's edges
+function placeOK(type,x,y,others){
+  const {cx,fy}=sceneGeo(), r=fpRect(type,x,y);
+  if(r[0]<4||r[2]>roomW()-4||r[1]<fy-20||r[3]>H-1) return false;
+  if(hits(r,[cx-128,fy-22,cx-48,fy+9])||hits(r,[cx-18,H-30,cx+18,H+5])) return false;
+  return !others.some(o=>hits(r,fpRect(o.type,o.x,o.y)));
+}
+let FURN_MEMO={k:null,list:null};
+function furnList(){
+  const {cx,fy}=sceneGeo(), L=layout(), st=furnStore(), big=bigRoom();
+  const memo=[shopKey(),W,H,save.up.chairs,save.up.seats,F.furnVer||0,F.active].join('|'); if(FURN_MEMO.k===memo) return FURN_MEMO.list;
+  const out=[];
+  const add=(key,type,dx,dy,k,free,kind)=>{ const sv=st[key]; if(sv&&sv.sold) return;
+    let x=sv?cx+sv.dx:cx+dx, y=sv?fy+sv.dy:fy+dy;
+    if(!sv&&free&&!placeOK(type,x,y,out)){ const f=findFree(type,out); if(f){ x=f.x; y=f.y; st[key]={dx:x-cx,dy:y-fy}; } }
+    out.push({key,type,x,y,k,kind}); };
+  add('chair0','chair',L.chair,-6,0);
+  if(L.lamp!=null) add('lamp','lamp',L.lamp,-2);
+  if(L.plant) add('plant','plant',L.px,0,undefined,false,L.plant);
+  // what Dee brought in for the new room
+  if(shopKey()==='dee'&&save.deeDecor){ add('sofa','sofa',290,-8,undefined,true); add('plant2','plant',196,0,undefined,true,'fern'); add('lamp2','lamp',440,-2,undefined,true); }
+  add('desk','desk',L.desk[0],L.desk[1]);
+  add('closet','closet',Math.max(-162,6-cx),-6);
+  for(let i=0;i<save.up.seats;i++) add('seat'+i,'seat',Math.max(14,cx-128)+i*16-cx,H-12-fy,i,true);
+  for(let k=1;k<=save.up.chairs;k++) add('chair'+k,'chair',big?170+82+(k-1)*64:50+(k-1)*56,big?-6:44,k,true);
+  FURN_MEMO={k:memo,list:out}; return out;
+}
+function findFree(type,others){ const {cx,fy}=sceneGeo(), x0=bigRoom()?cx+180:24; // bought shops: look in the back room first
+  for(const [a,b] of [[x0,roomW()-24],[24,x0]]) for(let y=fy-6;y<=H-8;y+=8) for(let x=a;x<b;x+=8) if(placeOK(type,x,y,others)) return {x,y};
+  return null; }
+const piece=key=>furnList().find(p=>p.key===key);
+const furnChanged=()=>{ F.furnVer=(F.furnVer||0)+1; };
+
 /* ---------- floor state ---------- */
 const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:null,targetAct:null,padMove:[0,0],keys:{},
   today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},busy:false,jobCust:null,talking:null,arrivalAt:OPEN+20,closing:false,nextId:1,hot:null,hotLabel:'',starting:false,
   appr:false,tour:false,tourAt:null,spawnAt:0}; // appr: Days 2-3 in Dee's shop (scripted customers, no clock)
 const KEYMOVE={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
-const seatPos=i=>{ const {cx}=sceneGeo(); return {x:Math.max(14,cx-128)+i*16,y:H-12}; };
-const chairBase=k=>{ const {cx,fy}=sceneGeo(); return k===0?{x:cx+layout().chair,y:fy-6}:{x:cx+34+(k-1)*44,y:fy+44}; };
-const chairSit=k=>{ const b=chairBase(k); return k===0?{x:b.x-6,y:b.y}:{x:b.x-2,y:b.y-4}; };
-const staffPos=k=>{ const b=chairBase(k); return {x:b.x-24,y:b.y+10}; };
-const artistPos=()=>{ const {cx,fy}=sceneGeo(); return {x:cx+layout().chair-32,y:fy+12}; };
+const seatPos=i=>{ const p=piece('seat'+i); if(p) return {x:p.x,y:p.y}; const {cx}=sceneGeo(); return {x:Math.max(14,cx-128)+i*16,y:H-12}; };
+const chairBase=k=>{ const p=piece('chair'+k); if(p) return {x:p.x,y:p.y}; const {cx,fy}=sceneGeo(); return {x:cx+layout().chair,y:fy-6}; };
+const chairSit=k=>{ const b=chairBase(k); return {x:b.x-6,y:b.y}; };
+const staffPos=k=>{ const b=chairBase(k); return {x:b.x-32,y:Math.min(H-4,b.y+18)}; };
+const artistPos=()=>staffPos(0);
 const doorOut=()=>({x:sceneGeo().cx,y:H+30});
 const clockText=()=>{ const t=save.clock|0, h=(t/60)|0, m=t%60; return `${((h+11)%12)+1}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
 
-function drawFloorFurniture(cx,fy){
-  for(let i=0;i<save.up.seats;i++){ const p=seatPos(i);
-    R(p.x-8,p.y-9,16,4,'#8a5532'); R(p.x-8,p.y-9,16,1,'#c58a52'); R(p.x-7,p.y-5,2,5,'#5a3520'); R(p.x+5,p.y-5,2,5,'#5a3520'); }
-  for(let k=1;k<=save.up.chairs;k++){ const b=chairBase(k);
-    R(b.x-12,b.y+2,24,4,'#2b2b2b'); R(b.x-2,b.y-4,4,6,'#555'); R(b.x-18,b.y-12,36,8,'#a8323c'); R(b.x-18,b.y-12,36,2,'#d0505a'); R(b.x+12,b.y-30,8,20,'#a8323c'); }
-  R(cx-13,H-5,26,5,'#6b3a2a'); R(cx-11,H-4,22,1,'#8a5a3a');
+function drawFloorFurniture(cx,fy){ R(cx-13,H-5,26,5,'#6b3a2a'); R(cx-11,H-4,22,1,'#8a5a3a'); }
+function drawPiece(p,chair,L){ const {x,y}=p;
+  if(p.type==='chair'){ R(x-10,y+2,22,8,'#2b2b2b'); R(x-2,y-4,6,8,'#555'); R(x-22,y-12,44,10,chair[0]); R(x-22,y-12,44,2,chair[1]); R(x+14,y-36,10,26,chair[0]); R(x+16,y-34,2,22,chair[1]); R(x-24,y-18,10,4,'#2b2b2b'); }
+  if(p.type==='seat'){ R(x-8,y-9,16,4,'#8a5532'); R(x-8,y-9,16,1,'#c58a52'); R(x-7,y-5,2,5,'#5a3520'); R(x+5,y-5,2,5,'#5a3520'); }
+  if(p.type==='lamp'){ R(x,y-60,2,60,'#333'); R(x-8,y-64,16,6,'#d8d0c0'); R(x-6,y-58,12,3,'rgba(255,240,200,.5)'); }
+  if(p.type==='plant') drawPlant(p.kind||L.plant||'cactus',x,y);
+  if(p.type==='sofa'){ R(x-20,y-22,40,12,'#3f6b6b'); R(x-20,y-22,40,2,'#5a8a8a'); R(x-20,y-10,40,8,'#4a7a7a'); R(x-20,y-10,40,1,'#6a9a9a'); R(x-23,y-16,5,14,'#355a5a'); R(x+18,y-16,5,14,'#355a5a'); R(x-18,y-2,3,3,'#2a1a10'); R(x+15,y-2,3,3,'#2a1a10'); R(x-1,y-21,2,11,'#355a5a'); }
+  if(p.type==='desk') drawDesk(x,y);
+  if(p.type==='closet'){ R(x-1,y-44,24,3,'#4a3020'); R(x,y-41,22,41,'#6a4a32'); R(x+2,y-39,8,37,'#8a6a46'); R(x+12,y-39,8,37,'#8a6a46'); R(x+9,y-22,1,3,'#e0c070'); R(x+12,y-22,1,3,'#e0c070'); R(x+5,y-50,12,6,'#c0a070'); R(x+5,y-50,12,1,'#d8bc88'); }
 }
+// the piece you're carrying: a see-through preview in front of you, outlined green (fits) or red (something's in the way)
+function carrySpot(){ const p=F.player, c=F.carry, inf=FURN_INFO[c.type], dir=p.flip?-1:1, half=(inf.fp[2]-inf.fp[0])/2;
+  const mx=p.x+dir*(half+10), my=p.y, x=Math.round((mx-inf.c[0])/4)*4, y=Math.round((my-inf.c[1])/4)*4;
+  return {x,y,ok:placeOK(c.type,x,y,furnList().filter(o=>o.key!==c.key))}; }
+function drawCarryGhost(chair,L){ const g=carrySpot(), r=fpRect(F.carry.type,g.x,g.y), col=g.ok?'#7fff7f':'#ff5a46';
+  sx.globalAlpha=.55; drawPiece({type:F.carry.type,x:g.x,y:g.y},chair,L); sx.globalAlpha=1;
+  R(r[0],r[3]-1,r[2]-r[0],1,col); R(r[0],r[1],r[2]-r[0],1,col); R(r[0],r[1],1,r[3]-r[1],col); R(r[2]-1,r[1],1,r[3]-r[1],col);
+  const p=F.player; R(p.x-5,p.y-46,10,6,'#c0a070'); R(p.x-5,p.y-46,10,1,'#d8bc88'); }
 function drawFloorOverlay(t){
   if(F.tourAt&&!(F.tourAt.near&&F.player&&Math.hypot(F.player.x-F.tourAt.x,F.player.y-F.tourAt.y)>48)){ const b=((t/220)|0)%2, x=F.tourAt.x, y=F.tourAt.y-b; // Dee's tour: "walk here" arrow
     R(x-4,y,9,3,'#9fe8ff'); R(x-3,y+3,7,2,'#9fe8ff'); R(x-2,y+5,5,1,'#9fe8ff'); R(x-1,y+6,3,1,'#9fe8ff'); R(x,y+7,1,1,'#9fe8ff'); }
@@ -2296,30 +2412,38 @@ function drawFloorOverlay(t){
     if(s.busy){ const f=clamp(1-(s.busy.until-save.clock)/s.busy.len); R(a.x-8,a.y-38,16,3,'#2a1a14'); R(a.x-7,a.y-37,Math.max(1,14*f),1,'#9fe8ff'); }
     else if(s.noSup){ R(a.x-3,a.y-46,7,10,'#fff'); R(a.x,a.y-44,1,4,'#c2453a'); R(a.x,a.y-39,1,1,'#c2453a'); } });
   const p=F.player; if(p){ R(p.x-2,p.y-40,5,1,'#ffe36e'); R(p.x-1,p.y-39,3,1,'#ffe36e'); R(p.x,p.y-38,1,1,'#ffe36e'); }
+  if(F.deathRunning&&F.bodies&&F.bodies.length&&!F.ambCalled&&!F.deathStage&&((t/300)|0)%2){ const {cx,fy}=sceneGeo(), x=cx-40, y=fy-52;
+    R(x-3,y,7,2,'#ff3a3a'); R(x-2,y+2,5,1,'#ff3a3a'); R(x-1,y+3,3,1,'#ff3a3a'); R(x,y+4,1,1,'#ff3a3a'); }
   if(F.hot&&!F.busy&&!F.hot.door){ const b=((t/260)|0)%2, x=F.hot.ax, y=F.hot.ay-46-b;
     R(x-3,y,7,2,'#ff6fa8'); R(x-2,y+2,5,1,'#ff6fa8'); R(x-1,y+3,3,1,'#ff6fa8'); R(x,y+4,1,1,'#ff6fa8'); }
 }
 
 function hotspots(){
   const {cx,fy}=sceneGeo();
-  const hs=[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:F.appr?'Supply closet':'Supply closet & office (upgrades, staff)',act:()=>openStore('closet',enterFloor)},
+  if(F.carry&&F.player) return [{x:F.player.x,y:F.player.y,r:9999,ax:F.player.x,ay:F.player.y,door:true,label:`Put down the ${FURN_INFO[F.carry.type].name}`,act:carryMenu}];
+  const hs=[...(F.appr?[]:[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:'Register (staff & upgrades)',act:()=>openStore('office',enterFloor)}]),
             F.appr?{x:cx,y:H-10,r:16,ax:cx,ay:H+6,door:true,label:'Door',
                 act:()=>{ if(save.runAsk||save.runTut){ F.away=true; openMap(enterFloor); } else toast('Dee: "Where are you going? Clients are on the way."'); }}
               :{x:cx,y:H-10,r:16,ax:cx,ay:H+6,door:true,label:'Door',act:doorMenu}];
   hs.push({x:cx-40,y:fy-12,r:14,ax:cx-40,ay:fy-6,label:F.bodies&&F.bodies.length?'Phone: call for help':'Phone',act:phoneCall});
   if(F.takeRunning) return [];
+  if(F.mustEnd) return [{x:cx,y:H-10,r:16,ax:cx,ay:H+6,door:true,label:'Door: end the day',act:endDayAsk}];
   if(F.deathRunning) return F.deathStage==='hosp'?[{x:cx,y:H-10,r:16,ax:cx,ay:H+6,door:true,label:'Door',act:()=>{ F.away=true; openMap(enterFloor); }}]:hs.slice(-1); // after Dee is shot: the phone, then the door to the hospital
   if(F.suspended){ const a=artistPos(); hs.push({x:a.x,y:a.y,r:16,ax:a.x+26,ay:a.y-14,label:'Back to your client',act:resumeJob}); }
   F.custs.forEach(c=>{ if(c.state==='waiting') hs.push(c.script
     ?{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}`,act:()=>talkScripted(c)}
     :{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
   save.staff.forEach(st=>{ const a=F.staffActs[st.id]; if(a) hs.push({x:a.x,y:a.y,r:14,ax:a.x,ay:a.y,label:`${CH['st_'+st.id].name}: ${staffStatus(st)}`,act:()=>toast(`${CH['st_'+st.id].name}: ${staffStatus(st)}`)}); });
+  // furniture: the supply closet opens your stock; anything not in use can be moved (career only)
+  furnList().forEach(p=>{ const inf=FURN_INFO[p.type], mx=p.x+inf.c[0], my=p.y+inf.fp[3];
+    if(p.type==='closet') hs.push({x:mx,y:my+10,r:16,ax:mx,ay:p.y-6,label:'Supply closet (your stock)',act:()=>openStore('stock',enterFloor)});
+    else if(save.career&&!F.appr&&!pieceBusy(p)) hs.push({x:mx,y:my+6,r:11,ax:mx,ay:p.y-6,label:`Move the ${inf.name}`,act:()=>pickUp(p)}); });
   return hs;
 }
 function staffStatus(st){ const s=F.sst[st.id]; if(!s) return 'ready for a client'; if(s.busy) return `tattooing a ${DESIGNS[s.busy.c.design].name}`; if(s.noSup) return 'out of supplies!'; return 'waiting for a client'; }
 
 function enterFloor(){
-  ensureCareerSave(); F.appr=!save.career;
+  ensureCareerSave(); F.appr=!save.career; FCAM.snap=true; furnChanged();
   if(save.career&&save.takeover&&save.workAt==='dee'){ leaveForStreet(); return; } // Dee's shop belongs to the gang now
   const {cx,fy}=sceneGeo();
   if(!F.player){
@@ -2347,7 +2471,7 @@ function setDoors(open){
 async function endDayAsk(){
   if(F.suspended){ toast('Finish the tattoo in the chair first'); return; }
   const ok=await modal(`End the day now${F.custs.some(c=>c.state==='waiting')?'? Anyone still waiting goes home':''}?`,[['Keep working',false],['End the day',true,true]]);
-  if(ok&&!F.closing){ F.closing=true; endDay(); }
+  if(ok&&!F.closing){ F.closing=true; F.mustEnd=false; F.tourAt=null; endDay(); }
 }
 function renderFloorHud(){
   $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`${shopById(save.workAt).name} · Day ${careerDay()} · ${clockText()}`}</span>`+
@@ -2362,16 +2486,13 @@ const hpNow=()=>save.hp==null?100:Math.max(0,Math.min(100,Math.round(save.hp)));
 const hpSpeed=h=>h>75?1:h>50?.86:h>25?.72:.56;
 function clampPlayer(p){
   const {cx,fy}=sceneGeo();
-  p.x=clamp(p.x,8,W-8); p.y=clamp(p.y,fy-16,H-4);
+  p.x=clamp(p.x,8,F.wallUp?cx+155:roomW()-8); p.y=clamp(p.y,fy-16,H-4);
   p.behind=p.y<fy-8&&p.x<cx-50; // behind the counter: drawn behind it, like Dee
 }
 // furniture your feet can't pass through: [x0,y0,x1,y1] in scene pixels
 function floorBlocks(){
-  const {cx,fy}=sceneGeo(), L=layout(), c=cx+L.chair, b=[[cx-128,fy-9,cx-52,fy+7],[c-26,fy-20,c+26,fy+6],[cx+L.desk[0]-4,fy+L.desk[1],cx+L.desk[0]+40,fy+L.desk[1]+18]];
-  if(L.lamp!=null) b.push([cx+L.lamp-4,fy-18,cx+L.lamp+8,fy]);
-  if(L.plant) b.push([cx+L.px-14,fy-18,cx+L.px+26,fy+8]);
-  if(save.up.seats){ const a=seatPos(0), z=seatPos(save.up.seats-1); b.push([a.x-9,H-18,z.x+9,H-9]); }
-  for(let k=1;k<=save.up.chairs;k++){ const c=chairBase(k); b.push([c.x-19,c.y-8,c.x+21,c.y+6]); }
+  const {cx,fy}=sceneGeo(), b=[[cx-128,fy-9,cx-52,fy+7]];
+  furnList().forEach(p=>{ if(F.carry&&F.carry.key===p.key) return; if(!F.active&&(p.key!=='chair0'&&/^chair|^seat/.test(p.key))) return; b.push(fpRect(p.type,p.x,p.y)); });
   return b;
 }
 const blockedAt=(x,y)=>floorBlocks().some(r=>x>r[0]&&x<r[2]&&y>r[1]&&y<r[3]);
@@ -2390,7 +2511,7 @@ function floorTick(dt){
     const dx=F.target.x-p.x, dy=F.target.y-p.y, d=Math.hypot(dx,dy);
     if(d>1.2){ p.x+=dx/d*Math.min(d,sp); p.y+=dy/d*Math.min(d,sp); moved=true; if(Math.abs(dx)>.5) p.flip=dx<0; } else F.target=null;
   }
-  clampPlayer(p); unblock(p,ox,oy); p.moving=moved; p.tx=p.x; p.ty=p.y;
+  clampPlayer(p); if(!F.busy) unblock(p,ox,oy); p.moving=moved; // walking on your own bumps into furniture; being walked somewhere passes through it p.tx=p.x; p.ty=p.y;
   if(F.targetAct&&!F.busy){ const h=F.targetAct; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r||!F.target){ F.targetAct=null; F.target=null; if(Math.hypot(h.x-p.x,h.y-p.y)<=h.r+6){ h.act(); return; } } }
   passiveTick(dt);
   // Dee's shop: the next scripted customer walks in once the floor is clear
@@ -2427,6 +2548,38 @@ function passiveTick(dt){
   else F.custs.slice().forEach(c=>{ if(c.script&&c.state==='waiting'&&!dlg.active&&c!==F.talking&&(c.patience-=dt/1000)<=0) scriptedWalkout(c); });
   if(F.suspended) job.elapsed+=dt/1000; // a client left waiting in the chair: their tattoo clock keeps running
 }
+// is anyone using this piece right now?
+function pieceBusy(p){
+  if(p.type==='seat') return F.custs.some(c=>c.seat===p.k&&c.state!=='leaving');
+  if(p.type==='chair'){ if(p.k===0) return !!(F.jobCust||F.suspended||F.custs.some(c=>c.by==='you'&&(c.state==='toChair'||c.state==='inChair')));
+    const st=save.staff.find(s=>s.chair===p.k); return !!(st&&F.sst[st.id]&&F.sst[st.id].busy); }
+  return false; }
+function pickUp(p){ if(pieceBusy(p)){ toast('Someone is using that right now'); return; }
+  F.carry={key:p.key,type:p.type,k:p.k}; furnChanged(); blip(520); toast(`Carrying the ${FURN_INFO[p.type].name}`); }
+function sellValue(c){
+  if(c.type==='chair'&&c.k>0) return Math.round(UPGRADES.find(u=>u.id==='chairs').price(save.up.chairs-1)/2);
+  if(c.type==='seat') return save.up.seats>2?Math.round(UPGRADES.find(u=>u.id==='seats').price(save.up.seats-3)/2):0;
+  if(c.type==='plant'||c.type==='lamp') return 15;
+  if(c.type==='sofa') return 40;
+  return 0; }
+async function carryMenu(){
+  const c=F.carry, g=carrySpot(), nm=FURN_INFO[c.type].name, val=sellValue(c);
+  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(val) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
+  const v=await modal(g.ok?`Put the ${nm} down here?`:`Something is in the way here. Find a free spot for the ${nm}.`,opts);
+  if(v==='put'){ const {cx,fy}=sceneGeo(), st=furnStore(); st[c.key]={dx:g.x-cx,dy:g.y-fy}; F.carry=null; furnChanged(); persist(); blip(700);
+    save.staff.forEach(s=>{ const a=F.staffActs[s.id]; if(a&&'chair'+s.chair===c.key){ const sp=staffPos(s.chair); a.x=a.tx=sp.x; a.y=a.ty=sp.y; } }); }
+  if(v==='sell'){ const ok=await modal(`Sell the ${nm} for ${val} coins? This can't be undone.`,[['Keep it',false,true],['Sell it',true]]); if(ok) sellCarried(val); }
+}
+function sellCarried(val){
+  const c=F.carry, st=furnStore();
+  if(c.type==='chair'){ if(save.staff.length>save.up.chairs-1){ toast('Every staff member needs a chair. Let someone go first.'); return; }
+    for(let j=c.k;j<save.up.chairs;j++){ if(st['chair'+(j+1)]) st['chair'+j]=st['chair'+(j+1)]; else delete st['chair'+j]; } delete st['chair'+save.up.chairs];
+    save.up.chairs--; save.staff.forEach((s,i)=>{ s.chair=i+1; }); F.staffActs={}; }
+  if(c.type==='seat'){ for(let j=c.k;j<save.up.seats-1;j++){ if(st['seat'+(j+1)]) st['seat'+j]=st['seat'+(j+1)]; else delete st['seat'+j]; } delete st['seat'+(save.up.seats-1)];
+    F.custs.forEach(cu=>{ if(cu.seat!=null&&cu.seat>c.k) cu.seat--; }); save.up.seats--; }
+  if(c.type==='plant'||c.type==='lamp'||c.type==='sofa') st[c.key]={sold:true};
+  save.coins+=val; F.carry=null; furnChanged(); persist(); blip(990); toast(`Sold for ${val} coins`); enterFloor();
+}
 function floorInteract(){ if(F.hot&&!F.busy) F.hot.act(); }
 $('#fPrompt').onclick=floorInteract;
 $('#fMenuBtn').onclick=()=>{ if(!devTap()) floorMenu(); };
@@ -2434,12 +2587,12 @@ $('#scr-floor').addEventListener('pointerdown',e=>{
   if(dlg.active&&!modalOpen){ advance(); return; }
   if(e.target.closest('button')||modalOpen||F.busy||!F.player) return;
   if(e.pointerType!=='mouse'){ // phones and tablets walk with the joystick; tapping right on a waiting customer walks you over to talk
-    const r0=sc.getBoundingClientRect(), s0=Math.max(r0.width/W,r0.height/H), x0=(e.clientX-r0.left-(r0.width-W*s0)/2)/s0, y0=(e.clientY-r0.top-(r0.height-H*s0)/2)/s0;
+    const r0=sc.getBoundingClientRect(), s0=Math.max(r0.width/W,r0.height/H), x0=(e.clientX-r0.left-(r0.width-W*s0)/2)/s0+camX(), y0=(e.clientY-r0.top-(r0.height-H*s0)/2)/s0;
     const c=F.custs.find(c=>c.state==='waiting'&&Math.abs(x0-c.x)<=7&&y0>=c.y-32&&y0<=c.y+1);
     if(c){ const h=hotspots().find(h=>h.x===c.x&&h.y===c.y); if(h){ F.targetAct=h; F.target={x:c.x,y:c.y+6}; } }
     return; }
   const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2;
-  const x=(e.clientX-r.left-ox)/s, y=(e.clientY-r.top-oy)/s;
+  const x=(e.clientX-r.left-ox)/s+camX(), y=(e.clientY-r.top-oy)/s;
   let hit=null, hd=22; hotspots().forEach(h=>{ const d=Math.min(Math.hypot(h.x-x,h.y-y),Math.hypot(h.ax-x,(h.ay-14)-y)); if(d<hd){ hd=d; hit=h; } });
   if(hit){ F.targetAct=hit; F.target={x:hit.x,y:hit.y+6}; } else { F.targetAct=null; F.target={x,y}; }
 });
@@ -2537,6 +2690,7 @@ const CAM={z:1,tz:1,fx:0,fy:0,red:0}, CUTSHOTS=[];
 let GROUNDGUN=null; // {x,y}: the gun waiting on the floor for you to pick up
 function camFocus(x,y,z){ CAM.fx=x; CAM.fy=y; CAM.tz=z; }
 async function deeDeath(){
+  if(F.player&&F.player.x>W-30){ F.player.x=F.player.tx=(W>>1)+60; F.player.y=F.player.ty=sceneGeo().fy+20; } // pull you into the front room for the scene
   F.busy=true; F.deathRunning=true; F.hot=null; F.hotLabel=''; F.target=null; $('#fPrompt').classList.add('hide');
   const {cx,fy}=sceneGeo(), dee=F.dee, p=F.player;
   // anyone waiting runs out the door
@@ -2597,10 +2751,10 @@ async function deeDeath(){
   hideDlg(); F.busy=false;
   await waitFor(()=>F.hospVisited&&current==='floor'&&F.at===save.workAt,1e9);
   F.busy=true; F.hot=null; F.hotLabel=''; F.target=null; F.tourAt=null; F.deathStage=null; $('#fPrompt').classList.add('hide'); await sleep(500);
-  await say(null,"Back at the shop, patched up. It's very quiet without Dee. End the day when you're ready.");
+  await say(null,"Back at the shop, patched up. It's very quiet without Dee. Walk to the door and close up for the night.");
   hideDlg();
   { const i=actors.indexOf(dee); if(i>=0) actors.splice(i,1); }
-  F.deathRunning=false; F.busy=false; CAM.z=CAM.tz=1; renderFloorHud();
+  F.deathRunning=false; F.mustEnd=true; F.tourAt={x:sceneGeo().cx,y:H-16,near:true}; F.busy=false; CAM.z=CAM.tz=1; renderFloorHud();
 }
 // Day 10: the people Dee owed take Dee's shop and everything in it. You leave with just enough to start over on the Eastside
 const FRESH_START=()=>shopById('eastink').price; // Dee's envelope: exactly enough for Eastside Ink
@@ -2619,15 +2773,22 @@ async function gangTakeover(){
   hideDlg();
   const mk=(ch,x,y)=>({ch,x,y,tx:x,ty:y,moving:false,flip:false,armed:true});
   actors.push(mk('boss',cx,H+26),mk('rob1',cx-10,H+36),mk('rob2',cx+10,H+36));
-  await Promise.all([walk('boss',cx-6,fy+32),walk('rob1',cx-44,fy+40),walk('rob2',cx+36,fy+40)]);
+  await Promise.all([walk('boss',cx-34,fy+34),walk('rob1',cx-44,fy+42),walk('rob2',cx+16,fy+22)]);
+  // you're grabbed and held next to a thug with his gun on you for the rest of it
+  await say('rob2',"You. Over here, nice and slow. Hands where I can see them.");
+  hideDlg(); await playerWalk({x:cx,y:fy+22}); F.busy=true;
+  { const g=actors.find(a=>a.ch==='rob2'); g.flip=true; F.player.flip=true; }
+  // the clerk, if you have one, starts sneaking toward the end of the counter, very slowly
+  const cl=save.clerk?actors.find(a=>a.ch==='clerk_'+save.clerk):null;
+  if(cl){ cl.behind=true; cl.creep=true; cl.tx=cx-124; cl.ty=fy-12; }
   await say('boss',"So you're Dee's kid. Nice little place. Shame about the old man.");
   await say('boss',"Dee owed us money. A lot of money. Dee's gone, so the debt comes with the shop.");
   await say('you',"Dee never said anything about a debt.");
   await say('boss',"Dee didn't say a lot of things. This shop is ours now. Everything in it.");
-  const cl=save.clerk?actors.find(a=>a.ch==='clerk_'+save.clerk):null, st=save.staff[0], victims=[];
+  const st=save.staff[0], victims=[];
   if(cl) victims.push({a:cl,id:cl.ch,clerk:true}); if(st&&F.staffActs[st.id]) victims.push({a:F.staffActs[st.id],id:'st_'+st.id});
   for(const v of victims){ const sa=v.a, vid=v.id, nm=CH[vid].name;
-    if(v.clerk){ await say(null,`${nm} edges along the back of the counter, trying to slip away...`); hideDlg(); sa.behind=true; sa.run=true; sa.moving=true; await walk(vid,cx-122,fy-12); sa.run=false; }
+    if(v.clerk){ await say('boss',`Hey. ${nm}. Where do you think you're going?`); hideDlg(); sa.creep=false; sa.tx=sa.x; sa.ty=sa.y; await sleep(300); }
     else { await say(vid,"You can't just walk in here and take—"); hideDlg(); await sleep(400); }
     const r=actors.find(a=>a.ch==='rob1'); r.flip=sa.x<r.x;
     const gx=r.x+(r.flip?-10:10), gy=r.y-17, tx=sa.x, ty=sa.y-18, ang=Math.atan2(ty-gy,tx-gx), dist=Math.hypot(tx-gx,ty-gy);
@@ -2725,11 +2886,12 @@ async function deeTour(){
   await sleep(500);
   await say('dee',"Morning. From today you walk the floor yourself.");
   await say('dee',inputMode==='pad'?"Left stick or D-pad to walk. Press A next to something to use it."
-    :inputMode==='touch'?"Tap the floor to walk. Tap a person or the counter to walk over and use it."
+    :inputMode==='touch'?"Use the stick on the left to walk. Walk up to something and tap the button to use it."
     :"WASD or the arrow keys to walk, or click the floor. Press E next to something to use it.");
-  await say('dee',"Come over to the counter.");
-  hideDlg(); F.busy=false; F.tourAt={x:cx-90,y:fy-46};
-  await waitFor(()=>F.player&&Math.hypot(F.player.x-(cx-88),F.player.y-(fy+10))<26&&!modalOpen&&current==='floor');
+  await say('dee',"Come over to the cabinet in the corner.");
+  const cl=piece('closet'), clx=cl.x+11, cly=cl.y+14;
+  hideDlg(); F.busy=false; F.tourAt={x:clx,y:cl.y-56};
+  await waitFor(()=>F.player&&Math.hypot(F.player.x-clx,F.player.y-cly)<22&&!modalOpen&&current==='floor');
   F.tourAt=null; F.busy=true; F.target=null;
   await say('dee',"This is the supply closet. Needles, ink, ointment, plastic wrap and film. Check it before you take a client.");
   await say('dee',"When it runs low, somebody makes a supply run across town. Usually that somebody is the new kid.");
@@ -2756,6 +2918,7 @@ function staffTick(st){
     return;
   }
   if(save.clock>=CLOSE) return;
+  if(F.carry&&F.carry.key==='chair'+st.chair) return; // you're carrying their chair
   const c=F.custs.filter(c=>c.state==='waiting'&&c!==F.talking).sort((a,b)=>a.arrived-b.arrived)[0]; if(!c) return;
   if(save.sup.needles<1||save.sup.ink<5){ s.noSup=true; return; } s.noSup=false;
   save.sup.needles--; save.sup.ink=Math.max(0,save.sup.ink-6); if(save.sup.ointment>0) save.sup.ointment--; if(save.sup.wraps>0) save.sup.wraps--;
@@ -2798,6 +2961,8 @@ async function doorMenu(){
   if(v==='end') endDayAsk();
 }
 async function floorMenu(){
+  if(F.mustEnd){ endDayAsk(); return; }
+  if(F.carry){ toast(`Put the ${FURN_INFO[F.carry.type].name} down first`); return; }
   if(F.deathRunning){ toast(F.deathStage==='hosp'?'Get to the hospital first.':'Call for help first.'); return; }
   if(F.takeRunning) return;
   const opts=F.appr?[['Supply closet','store'],['Save & quit','quit']]
@@ -2866,18 +3031,18 @@ function releaseManager(id){
 }
 // go and work at another shop: the floor there starts fresh (anyone waiting here goes home)
 function workAt(id){
-  save.workAt=id; if(id==='eastink') save.eastGuide=false; F.custs.slice().forEach(removeCust); F.custs=[]; F.player=null; F.staffActs={}; F.sst={}; F.jobCust=null; F.open=false; // a new shop starts with its doors closed
+  F.carry=null; save.workAt=id; if(id==='eastink') save.eastGuide=false; F.custs.slice().forEach(removeCust); F.custs=[]; F.player=null; F.staffActs={}; F.sst={}; F.jobCust=null; F.open=false; // a new shop starts with its doors closed
   if(save.career) advanceTime(30);
   persist(); enterFloor(); toast(`Now working at ${shopById(id).name}`);
 }
 $('#bNextDay').onclick=async()=>{
-  save.cday++; save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.bodies=[]; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
+  F.carry=null; F.mustEnd=false; F.tourAt=null; save.cday++; save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.bodies=[]; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
   await dayCard(`Day ${careerDay()}`,(save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now. ":'')+(save.coins<0?'Money is tight. Get to work. ':'9 AM. Open the doors when you\'re ready. ')+(rentToday()?`Rent due tonight: ${rentToday()}`:'')); F.closing=false; enterFloor(); await fade(false);
   // the first morning without Dee
   if(save.deeDied&&save.cday===save.deeDied+1&&!save.clerk){ F.busy=true;
     await say(null,"The shop is quiet without Dee. Your rose still hangs on Dee's wall.");
     if(hpNow()<100) await say(null,`You're still hurt (health ${hpNow()}%), so you walk slower. Head out the door and find the hospital on the map to get patched up.`);
-    await say(null,"Nobody's behind the counter now. Hire a clerk at the counter (Staff tab), or waiting customers get impatient twice as fast.");
+    await say(null,"Nobody's behind the counter now. Hire a clerk at the register (Staff tab), or waiting customers get impatient twice as fast.");
     hideDlg(); F.busy=false; }
 };
 async function startCareer(){
@@ -2891,15 +3056,48 @@ async function startCareer(){
   await say('dee',"Morning, kid. From today you work my floor. I'll mind the counter, you do the rest.");
   await say('dee',"It's still my shop, so the shop keeps 60% of what you make. Save the rest if you ever want a place of your own.");
   await say('dee',"Every day starts at 9 with the doors closed. Open them at the front door when you're ready, and end the day there when you're done.");
-  await say('dee',"The counter is the supply closet and the office: check your stock, buy upgrades, hire staff.");
+  await say('dee',"The cabinet in the corner is the supply closet: that's your stock. The counter is the register: buy upgrades and hire staff there.");
   await say('dee',"Supplies come from the Supply Store across town, open 8 to 6. Walk out the door and find it on the map. Don't leave customers waiting while you shop.");
-  await say('dee',"Save your money. There are shops all over Neon Springs waiting for an owner. Now go open those doors.");
+  await say('dee',"Save your money. There are shops all over Neon Springs waiting for an owner.");
+  if(!save.deeExpand) await deeExpands();
+  await say('dee',"Now go open those doors.");
   hideDlg(); F.busy=false;
+}
+// Dee bought next door: walks over, knocks the wall down with a sledgehammer, brings in furniture, and you place a new bench
+async function deeExpands(){
+  const {cx,fy}=sceneGeo(), dee=F.dee, x0=cx+165;
+  await say('dee',"Oh, and one more thing. With the money you've been bringing in, I bought the space next door.");
+  await say('dee',"Watch this.");
+  hideDlg();
+  save.deeExpand=true; F.wallUp=true; F.wallCracks=0; furnChanged(); F.camAt=x0-30;
+  await walk('dee',cx-48,fy-12); dee.behind=false; await walk('dee',x0-12,fy+14); dee.flip=false; dee.hammer=true;
+  for(let i=0;i<4;i++){ dee.hammerUp=true; await sleep(380); dee.hammerUp=false; blip(70); blip(110); F.wallShake=1; F.wallCracks=i+1;
+    for(let k=0;k<6;k++) DUST.push({x:x0+2,y:fy-30+Math.random()*30,vx:Math.random()*-1.2,vy:-Math.random()*1.5,floor:fy+20+Math.random()*20,life:60,s:1+(Math.random()<.4?1:0),c:Math.random()<.5?'#c8b8a8':'#6a4048'});
+    await sleep(260); F.wallShake=0; }
+  F.wallUp=false; blip(60); blip(90);
+  for(let k=0;k<40;k++) DUST.push({x:x0+Math.random()*30,y:fy-60+Math.random()*60,vx:Math.random()*2-.5,vy:-Math.random()*2,floor:fy+10+Math.random()*30,life:90,s:Math.random()<.5?2:1,c:pickR(['#c8b8a8','#6a4048','#5a3640','#a89888'])});
+  dee.hammer=false; await sleep(900);
+  await say('dee',"There. This will soon be a bigger part of the shop.");
+  await say('dee',"This is the start of something new, kid.");
+  hideDlg();
+  // Dee brings in a couch, a fern and a lamp for the new room, and hands you a new bench seat to place
+  save.deeDecor=true; if(save.up.seats<6) save.up.seats++; furnChanged(); persist();
+  await say('dee',"I brought in some furniture for it too. Here's another bench seat for the waiting area. Put it wherever you think it works.");
+  hideDlg(); F.camAt=null;
+  F.carry={key:'seat'+(save.up.seats-1),type:'seat',k:save.up.seats-1}; furnChanged(); F.busy=false;
+  if(!save.seenFurn){ save.seenFurn=true; persist();
+    await say(null,"You're carrying the bench seat. Find a free spot: the outline turns green where it fits, red where it doesn't.");
+    await say(null,"Press the button to put it down. Later, anything that isn't in use can be moved: walk up to it and pick it up.");
+    hideDlg(); }
+  await waitFor(()=>!F.carry,1e9);
+  F.busy=true; await walk('dee',cx-48,fy-12); await walk('dee',cx-90,fy-12); dee.behind=true; dee.flip=false;
+  await say('dee',"Looks good.");
 }
 
 /* ---------- counter store ---------- */
 let storeTab='supplies', storeBack=null;
-function openStore(tab,back){ storeTab=tab||'supplies'; storeBack=back||null; renderStore(); show('store'); }
+let storeMode='all';
+function openStore(tab,back){ storeMode=tab==='stock'?'stock':tab==='office'?'office':'all'; storeTab=tab==='stock'?'closet':tab==='office'?'upgrades':tab||'supplies'; storeBack=back||null; renderStore(); show('store'); }
 function itemRow(name,desc,price,key,doneLabel){
   return `<div class="item"><div class="grow"><div class="nm">${name}</div><div class="ds">${desc}</div></div>`+
     (doneLabel?`<span class="pr">${doneLabel}</span>`:`<span class="pr"><i class="coin"></i>${price}</span><button class="gbtn small go" data-buy="${key}" ${save.coins<price?'disabled':''}>Buy</button>`)+`</div>`;
@@ -2907,14 +3105,16 @@ function itemRow(name,desc,price,key,doneLabel){
 // two kinds of store screen: the Supply Store across town (buy supplies), and your own closet & office (see stock, buy upgrades and staff)
 function renderStore(focusKey){
   const supplier=storeTab==='supplies';
-  const tabs=supplier?['supplies']:save.career?['closet','upgrades','staff']:['closet'];
-  $('#stTitle').textContent=supplier?SUPPLIER.name:save.career?'Supply closet & office':'Supply closet';
-  $('#stTabs').innerHTML=tabs.length<2?'':tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{closet:'Closet',upgrades:'Upgrades',staff:'Staff'}[t]}</button>`).join('');
+  const tabs=supplier?['supplies']:storeMode==='stock'?['closet']:storeMode==='office'?['upgrades','staff','decor']:save.career?['closet','upgrades','staff']:['closet'];
+  $('#stTitle').textContent=supplier?SUPPLIER.name:storeMode==='stock'?'Supply closet':storeMode==='office'?'Register & office':save.career?'Supply closet & office':'Supply closet';
+  $('#stTabs').innerHTML=tabs.length<2?'':tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{closet:'Closet',upgrades:'Upgrades',staff:'Staff',decor:'Decor'}[t]}</button>`).join('');
   $('#stCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
   let rows='';
   if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id)).join('');
   if(storeTab==='closet') rows=SUPPLY.map(it=>`<div class="item"><div class="grow"><div class="nm">${it.name}</div><div class="ds">${it.desc}</div></div><span class="pr ${save.sup[it.id]<(it.id==='ink'?10:2)?'failtag':''}">${save.sup[it.id]}${it.unit}</span></div>`).join('')
-    +`<p class="hint">Running low? Walk out the front door and find the Supply Store on the city map${save.career?' (open 8 AM to 6 PM)':''}.</p>`;
+    +`<p class="hint">Running low? Walk out the front door and find the Supply Store on the city map${save.career?' (open 8 AM to 6 PM)':''}.</p>`
+    +(storeMode==='stock'&&save.career?'<div class="row"><button class="gbtn small" id="stMoveCloset">Move this closet</button></div>':'');
+  if(storeTab==='decor') rows=decorRows();
   if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(); return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):null); }).join('');
   if(storeTab==='staff') rows=STAFF_POOL.map(st=>{ const hired=save.staff.some(x=>x.id===st.id), mg=isManaging(st.id);
       return itemRow(`${st.name} · skill ${Math.round(st.skill*100)}`,`${st.desc} Wage ${st.wage} coins a day.`,st.fee,'hire:'+st.id,hired?'On your team':mg?'Running a shop':null); }).join('')
@@ -2923,15 +3123,26 @@ function renderStore(focusKey){
     +(save.deeDied||save.workAt!=='dee'?CLERKS.map(k=>itemRow(`${k.name} · counter clerk`,`${k.desc} Wage ${k.wage} coins a day.`,k.fee,'clerk:'+k.id,save.clerk===k.id?'At your counter':null)).join('')
       +`<p class="hint">${save.clerk?'Your clerk works the counter at whichever shop you run.':'Nobody at the counter means waiting customers lose patience twice as fast.'}</p>`:'');
   $('#stItems').innerHTML=rows;
+  { const mv=$('#stMoveCloset'); if(mv) mv.onclick=()=>{ const back=storeBack; storeBack=null; (back||enterFloor)(); const p=piece('closet'); if(p) pickUp(p); }; }
   document.querySelectorAll('#stTabs [data-tab]').forEach(b=>b.onclick=()=>{ storeTab=b.dataset.tab; renderStore('tab:'+storeTab); });
   document.querySelectorAll('#stItems [data-buy]').forEach(b=>b.onclick=()=>buyItem(b.dataset.buy));
+  document.querySelectorAll('#stItems [data-decor]').forEach(b=>b.onclick=()=>buyDecor(b.dataset.decor));
   if(inputMode==='pad'&&focusKey){ const [kind,id]=focusKey.split(':');
-    setPadFocus((kind==='tab'?document.querySelector(`#stTabs [data-tab="${id}"]`):document.querySelector(`[data-buy="${focusKey}"]`))||focusables()[0]); }
+    setPadFocus((kind==='tab'?document.querySelector(`#stTabs [data-tab="${id}"]`):kind==='decor'?document.querySelector(`[data-decor="${focusKey.slice(6)}"]`):document.querySelector(`[data-buy="${focusKey}"]`))||focusables()[0]); }
 }
 function buyItem(key){
   const [kind,id]=key.split(':');
   if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; save.runTut=true; toast(`Bought ${it.name.toLowerCase()}`); }
-  if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy(); toast(`${u.name} installed`); }
+  if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy();
+    if((id==='chairs'||id==='seats')&&F.player&&save.career){ // new furniture comes out in your hands
+      F.carry=id==='chairs'?{key:'chair'+save.up.chairs,type:'chair',k:save.up.chairs}:{key:'seat'+(save.up.seats-1),type:'seat',k:save.up.seats-1};
+      persist(); blip(880); const back=storeBack; storeBack=null; (back||enterFloor)(); furnChanged();
+      if(!save.seenFurn){ save.seenFurn=true; persist(); (async()=>{ F.busy=true;
+        await say(null,"You're carrying your new "+FURN_INFO[F.carry.type].name+". Walk to a free spot: the outline turns green where it fits.");
+        await say(null,"Press the button to put it down, or sell it. Any furniture that isn't in use can be moved: walk up to it and pick it up.");
+        hideDlg(); F.busy=false; })(); }
+      return; }
+    toast(`${u.name} installed`); }
   if(kind==='hire'){ const st=STAFF_POOL.find(x=>x.id===id);
     if(save.staff.length>=save.up.chairs){ toast('Buy an extra tattoo chair first (Upgrades)'); return; }
     if(save.coins<st.fee) return; save.coins-=st.fee; save.staff.push({id,chair:save.staff.length+1}); toast(`${st.name} joined the shop!`); }
@@ -3654,7 +3865,8 @@ function loop(t){
   if(sceneMode&&current!=='tattoo'){ updateActors();
     // cinematic camera: zoom smoothly toward CAM.focus (used for Dee's last moments)
     CAM.z+=(CAM.tz-CAM.z)*.06; const cz=CAM.z;
-    if(cz>1.01){ sx.setTransform(cz,0,0,cz,Math.round(W/2-CAM.fx*cz),Math.round(H/2-CAM.fy*cz)); }
+    const cmx=floorCamX();
+    if(cz>1.01){ sx.setTransform(cz,0,0,cz,Math.round(W/2-CAM.fx*cz),Math.round(H/2-CAM.fy*cz)); } else if(cmx) sx.setTransform(1,0,0,1,-cmx,0);
     sceneMode==='exterior'?drawExterior(t):sceneMode==='hospital'?drawHospital(t):drawInterior(t);
     sx.setTransform(1,0,0,1,0,0);
     if(CAM.red>0){ CAM.red-=dt/1000; sx.fillStyle=`rgba(200,20,20,${(Math.min(1,CAM.red)*.45).toFixed(3)})`; sx.fillRect(0,0,W,H); } }
