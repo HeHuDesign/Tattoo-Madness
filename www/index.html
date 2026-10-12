@@ -8,6 +8,8 @@
 @font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/pixelify-sans-latin-400-normal.woff2) format("woff2")}
 @font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/pixelify-sans-latin-500-normal.woff2) format("woff2")}
 @font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/pixelify-sans-latin-600-normal.woff2) format("woff2")}
+/* TMDigits: only "2" and "5" (unicode-range), drawn on Pixelify's pixel grid so they can't be mistaken for Z and S */
+@font-face{font-family:"TMDigits";font-style:normal;font-weight:100 900;src:url(data:font/ttf;base64,AAEAAAAKAIAAAwAgT1MvMmAJWpwAAACsAAAAYGNtYXAASgBsAAABDAAAADRnbHlmGXEVGgAAAUAAAAF4aGVhZGFfQ1wAAAK4AAAANmhoZWEFkwGHAAAC8AAAACRobXR4Bt4AeAAAAxQAAAAMbG9jYQAAAjQAAAMgAAAAEG1heHAADAAiAAADMAAAACBuYW1lDzkmrgAAA1AAAADicG9zdAADAAAAAAQ0AAAAIAAEAkoBkAAFAAACigK8AAAAjAKKArwAAAHgADIA+gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOT05FAEAAMgA1A4T+/AAAA4QBBAAAAAEAAAAAAcICdgAAACAAAQAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACADIANf//AAAAMgA1////z//NAAEAAAAAAAAACAA8AAACDQJ2AAMABwALAA8AEwAXABsAHwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAmQAAARcAAP6MAAAAXQAAARcAAABdAAD/owAAAF0AAP9GAAAAXQAA/0YAAABdAAD/RgAAAF0AAP9GAAAB0QAAAhwAWgAA/6b/pgBaAAD/pgAAAFoAAP+m/6YAWgAA/6b/pgBaAAD/pv+mAFoAAP+m/6YAWgAA/6b/pgBaAAD/pgAIADwAAAINAnYAAwAHAAsADwATABcAGwAfAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQA8AAAB0QAA/i8AAABdAAD/owAAAXQAAAAAAAAAXQAA/6MAAABdAAD+LwAAAF0AAAEXAAAAXQAA/owAAAEXAAACHABaAAD/pv+mAFoAAP+m/6YAWgAA/6b/pgBaAAD/pv+mAFoAAP+m/6YAWgAA/6YAAABaAAD/pv+mAFoAAP+mAAEAAAABAAC33tL9Xw889QADA+gAAAAAAAAAAAAAAAAAAAAAADwAAAINAnYAAAAIAAIAAQAAAAAAAQAAA4T+/AAAAkoAAAA9Ag0AAQAAAAAAAAAAAAAAAAAAAAMCSgAAAkoAPAJKADwAAAAAAAAAAAAAALwAAAF4AAEAAAADACAACAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAGAE4AAwABBAkAAQAQAAAAAwABBAkAAgAOABAAAwABBAkAAwAgAB4AAwABBAkABAAgAD4AAwABBAkABQAWAF4AAwABBAkABgAgAHQAVABNAEQAaQBnAGkAdABzAFIAZQBnAHUAbABhAHIAVABNAEQAaQBnAGkAdABzACAAUgBlAGcAdQBsAGEAcgBUAE0ARABpAGcAaQB0AHMAIABSAGUAZwB1AGwAYQByAFYAZQByAHMAaQBvAG4AIAAxAC4AMABUAE0ARABpAGcAaQB0AHMALQBSAGUAZwB1AGwAYQByAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==) format("truetype");unicode-range:U+0032,U+0035}
 @font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/pixelify-sans-latin-700-normal.woff2) format("woff2")}
 :root{
   --night:#1b1424; --parch:#f6dcaa; --parch-2:#e9c48a; --wood:#8a4b22; --wood-d:#5a2e14; --wood-l:#c98a3f;
@@ -26,7 +28,7 @@
 *,*::before,*::after{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);touch-action:none} /* no pinch-zoom or swipe-scroll of the whole page; the game handles its own touches */
 body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;
-  font-family:"Pixelify Sans","Courier New",ui-monospace,monospace;font-size:18px;line-height:1.3;font-variant-ligatures:none;-webkit-user-select:none;user-select:none}
+  font-family:"TMDigits","Pixelify Sans","Courier New",ui-monospace,monospace;font-size:18px;line-height:1.3;font-variant-ligatures:none;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit}
 #game{position:relative;width:100%;height:100%;overflow:hidden}
 #scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;image-rendering:crisp-edges}
@@ -121,7 +123,7 @@ button{font:inherit;color:inherit}
 .inkm .bar{width:90px}
 #tInkMl{min-width:48px;font-variant-numeric:tabular-nums}
 .inputchip{font-size:15px;padding:2px 8px;border:2px solid var(--wood-d);border-radius:3px;background:var(--parch-2)}
-.twork{flex:1;min-height:0;display:grid;place-items:center;position:relative;overflow:hidden}
+.twork{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);place-items:center;position:relative;overflow:hidden}
 .pad{position:relative;border-radius:22px;box-shadow:0 0 0 6px #e9d7c4,0 0 0 9px var(--wood-d),8px 10px 0 9px rgba(0,0,0,.3);touch-action:none;cursor:crosshair;overflow:hidden}
 .pad::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:22px;
   background-image:radial-gradient(rgba(120,60,40,.07) 1px,transparent 1.4px);background-size:7px 7px;mix-blend-mode:multiply}
@@ -133,6 +135,27 @@ button{font:inherit;color:inherit}
 /* real customers: the skin is a drawn body part (bigger than the pad so limbs run off screen), not a framed pad */
 .pad canvas.body{inset:-50%;width:200%;height:200%;display:none}
 .pad.body{border-radius:0;box-shadow:none;overflow:visible}
+.pad.viewing{cursor:grab}
+.tmisplash{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 45%,#1d1d24 0%,#060608 70%);display:flex;align-items:center;justify-content:center;transition:opacity .6s;touch-action:none}
+.tmisplash.out{opacity:0;pointer-events:none}
+.tmisplash .lgbox{text-align:center;font-family:"Arial Black","Roboto Black","Helvetica Neue",Impact,sans-serif;font-weight:900;font-variant-ligatures:none}
+.tmisplash .lgbox.shake{animation:lgshake .26s}
+.tmisplash .lgtm{font-size:min(32vh,24vw);line-height:1;font-style:italic;letter-spacing:.02em;opacity:0;transform:scale(.85);transition:opacity .5s,transform .5s;
+  filter:drop-shadow(0 .03em 0 #8a0f1a) drop-shadow(0 .06em .04em rgba(0,0,0,.7))}
+.tmisplash .lgtm.on{opacity:1;transform:none}
+.tmisplash .lgtm span{display:inline-block;background:linear-gradient(180deg,#ffffff 0%,#d8dde6 38%,#7d8796 52%,#e9edf2 70%,#9aa3b0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tmisplash #lgI{transform-origin:40% 96%}
+.tmisplash #lgI.lean{animation:lglean 1.2s ease-out forwards}
+.tmisplash .lgwords{margin-top:2.5vh;font-size:min(9vh,6vw);font-style:italic;text-transform:uppercase;letter-spacing:.08em;display:flex;gap:.45em;justify-content:center;align-items:center;
+  filter:drop-shadow(1px 0 0 #2a1600) drop-shadow(-1px 0 0 #2a1600) drop-shadow(0 -1px 0 #2a1600) drop-shadow(0 1px 0 #2a1600) drop-shadow(0 .05em 0 #8a5a10) drop-shadow(0 .05em 0 #5a3608) drop-shadow(0 .1em .08em rgba(0,0,0,.75))}
+.tmisplash .lgwords span{display:inline-block;opacity:0;background:linear-gradient(180deg,#fff6c8 0%,#ffd75a 35%,#e0a020 55%,#fff0a0 72%,#c88a18 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tmisplash .lgwords::before,.tmisplash .lgwords::after{content:"";width:min(9vw,70px);height:.14em;background:linear-gradient(90deg,transparent,#ffd75a 40%,#fff3b0);opacity:0;transition:opacity .4s}
+.tmisplash .lgwords::after{background:linear-gradient(270deg,transparent,#ffd75a 40%,#fff3b0)}
+.tmisplash .lgwords.on::before,.tmisplash .lgwords.on::after{opacity:1}
+.tmisplash .lgwords span.slam{animation:lgslam .3s cubic-bezier(.3,1.5,.6,1) forwards}
+@keyframes lgslam{0%{opacity:0;transform:scale(3.2) translateY(-25%)}65%{opacity:1;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
+@keyframes lgshake{0%,100%{transform:none}20%{transform:translate(-5px,4px)}45%{transform:translate(5px,-3px)}70%{transform:translate(-3px,2px)}}
+@keyframes lglean{0%{transform:rotate(0)}25%{transform:rotate(18deg)}50%{transform:rotate(8deg)}72%{transform:rotate(14deg)}100%{transform:rotate(12deg)}}
 .pad.body::after{display:none}
 .pad.body canvas.body{display:block}
 .pad.body.danger{box-shadow:none}
@@ -158,7 +181,9 @@ button{font:inherit;color:inherit}
 .joy i{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:rgba(255,255,255,.3);border:2px solid rgba(255,255,255,.55);pointer-events:none}
 .compact .joy{width:96px;height:96px;left:12px;bottom:12px}
 .compact .joy i{width:40px;height:40px;margin:-20px}
-.store{width:min(780px,100%);padding:18px 20px;max-height:100%;overflow:auto}
+.store{width:min(780px,100%);padding:18px 20px;max-height:100%;overflow:hidden;display:flex;flex-direction:column}
+.store .items{flex:1 1 auto;min-height:0;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding:2px 4px 2px 0}
+.store .sthead,.store .tabs,.store>.row{flex:none}
 .sthead{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sthead h2{margin:0;font-size:30px}
 .tabs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
@@ -216,9 +241,12 @@ button{font:inherit;color:inherit}
 .blip.lost{background:#151515;border-color:#555;box-shadow:0 0 0 2px rgba(0,0,0,.5);animation:none}
 .blip.east.guide::after{content:"Eastside Ink"}
 .blip.supply{background:#4ab0e8;border-radius:5px;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 10px 3px rgba(74,176,232,.75)}
-.blip.guide::after{content:"Supply Store";position:absolute;left:50%;bottom:130%;transform:translateX(-50%);white-space:nowrap;font:13px "Pixelify Sans",sans-serif;
+.blip.guide::after{content:"Supply Store";position:absolute;left:50%;bottom:130%;transform:translateX(-50%);white-space:nowrap;font:13px "TMDigits","Pixelify Sans",sans-serif;
   color:#fff;background:#1f4fa0;border:2px solid #fff;border-radius:4px;padding:2px 6px;animation:guidebob .5s steps(2) infinite}
 @keyframes guidebob{50%{transform:translate(-50%,-4px)}}
+.blip.furn{background:#c8813a;border-radius:5px;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 10px 3px rgba(230,150,70,.7)}
+.blip.furn.guide::after{content:"Furniture Store"}
+.blip.furn.shut{background:#8a8a96;box-shadow:0 0 0 2px rgba(0,0,0,.5);animation:none}
 .blip.supply.shut{background:#8a8a96;box-shadow:0 0 0 2px rgba(0,0,0,.5);animation:none}
 .blip[aria-pressed="true"]{width:30px;height:30px;border-color:#ffe36e}
 .blip.offmap{display:none}
@@ -234,7 +262,7 @@ button{font:inherit;color:inherit}
 .mapcard .mbtns.row{flex-direction:row;flex-wrap:wrap;margin:5px 0}
 .mapcard .facts{margin-top:2px}
 .blip.here{outline:3px solid #fff;outline-offset:3px}
-.blip.here:not(.pad-focus)::before{content:"You are here";position:absolute;left:50%;top:135%;transform:translateX(-50%);white-space:nowrap;font:11px "Pixelify Sans",sans-serif;
+.blip.here:not(.pad-focus)::before{content:"You are here";position:absolute;left:50%;top:135%;transform:translateX(-50%);white-space:nowrap;font:11px "TMDigits","Pixelify Sans",sans-serif;
   color:#3d1f0e;background:#fff3b0;border:2px solid #3d1f0e;border-radius:3px;padding:1px 4px;pointer-events:none}
 .compact .mapcard{padding:7px 9px;gap:8px}
 .compact .mapcard .front{width:96px;height:54px}
@@ -268,6 +296,7 @@ button{font:inherit;color:inherit}
 .res{width:min(640px,100%);padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:6px 20px;align-items:start}
 .res h2{grid-column:1 / -1}
 .res canvas{width:180px;height:180px;border-radius:16px;border:3px solid var(--wood-d)}
+.hstar{background:linear-gradient(90deg,#b8432f 50%,rgba(0,0,0,.2) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .bigstars{font-size:40px;color:#b8432f;letter-spacing:4px;font-family:system-ui,sans-serif;line-height:1}
 .stats{display:grid;grid-template-columns:auto auto;gap:2px 14px;margin:8px 0;font-size:19px;justify-content:start}
 .stats dt{color:var(--ink-soft)}
@@ -295,7 +324,8 @@ button{font:inherit;color:inherit}
 #fade{position:fixed;inset:0;background:var(--night);opacity:0;pointer-events:none;transition:opacity .45s steps(6);z-index:30;display:grid;place-items:center;color:#ffe08a;text-align:center}
 #fade.on{opacity:1;pointer-events:auto}
 #fade h2{margin:0;font-size:56px;text-shadow:4px 4px 0 #b8432f}
-#fade p{margin:6px 0 0;font-size:22px;color:#ffd7e6}
+#fade>div{max-width:min(620px,86vw);padding:0 20px}
+#fade p{margin:12px 0 0;font-size:22px;color:#ffd7e6;line-height:1.45;white-space:pre-line}
 #toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);padding:6px 14px;z-index:25;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){.pad-focus,.pad-focus::before,#dlg .more{animation:none}#fade{transition:none}}
@@ -400,6 +430,12 @@ button{font:inherit;color:inherit}
 <div id="game">
   <canvas id="scene" width="320" height="180"></canvas>
 
+  <div class="tmisplash" id="tmiSplash">
+    <div class="lgbox" id="lgBox">
+      <div class="lgtm" id="lgTm"><span>T</span><span>.</span><span>M</span><span>.</span><span id="lgI">I</span></div>
+      <div class="lgwords"><span>Tee</span><span>&amp;</span><span>Milton</span><span>Inc.</span></div>
+    </div>
+  </div>
   <section class="screen" id="scr-title">
     <div class="tfit" id="tfit">
     <div class="logo"><h1>Tattoo Madness</h1></div>
@@ -455,6 +491,8 @@ button{font:inherit;color:inherit}
     </div>
     <div class="tfloat" id="tFloat">
       <button class="gbtn small" id="tShow" title="Show the tools and menu again (F)">☰ Tools</button>
+      <button class="gbtn small" id="tView2" aria-pressed="false" title="Move the view without inking (V)">Move view</button>
+      <button class="gbtn small hide" id="tFit2" title="Zoom back out (0)">Fit</button>
       <span class="chip wood" id="tMini"></span>
     </div>
     <div class="twork" id="twork">
@@ -483,6 +521,8 @@ button{font:inherit;color:inherit}
       <button class="gbtn small" id="szUp" title="Bigger needle (])">+</button>
       </span>
       <span class="sep"></span>
+      <button class="gbtn small" id="tView" aria-pressed="false" title="Move the view without inking: drag to pan, pinch or scroll to zoom (V)">Move view</button>
+      <button class="gbtn small hide" id="tFit" title="Zoom back out (0)">Fit</button>
       <button class="gbtn small hide" id="tSten" disabled>Stencil</button>
       <span class="free-only hide" id="shadeInks"><span class="sep"></span><span class="inks" id="sInks"></span></span>
       <span class="free-only hide" id="freeTools">
@@ -547,8 +587,6 @@ button{font:inherit;color:inherit}
       <dl class="stats" id="endStats" style="justify-content:center"></dl>
       <div class="row" style="justify-content:center">
         <button class="gbtn go" id="bEndCareer">Keep working for Dee</button>
-        <button class="gbtn" id="bEndFree">Free tattoo</button>
-        <button class="gbtn" id="bEndTitle">Title menu</button>
       </div>
     </div>
   </div></section>
@@ -741,7 +779,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[]});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[],letterIntro:false,apprDay:null,deeDecorFix:false,furnGuide:false,extraFurn:{},furnInv:{},expanded:{},inked:[]});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -805,6 +843,9 @@ function spriteRows(c,frame){
   return r;
 }
 function palette(c){ return {h:c.hair,s:c.skin,e:'#2a1a14',m:c.sex==='f'?'#c0506a':'#9c4a44',c:c.shirt,d:c.shirtD,p:c.pants,b:c.boots,T:'#2e5866',A:c.apron,k:c.hat||c.hair,i:'#e8e1d0'}; }
+// someone sitting in the tattoo chair: the top half of the sprite on the seat, legs stretched out along the chair
+function drawSeated(a){ const c=CH[a.ch], x=Math.round(a.x), y=Math.round(a.y);
+  sx.save(); sx.translate(x-14,y-22); sx.rotate(Math.PI/2); drawSprite(sx,c,0,0,0,false); sx.restore(); }
 function drawSprite(ctx,c,x,y,frame,flip,sc=2){
   const rows=spriteRows(c,frame), pal=palette(c), w=10*sc, h=16*sc, ox=Math.round(x-w/2), oy=Math.round(y-h);
   ctx.fillStyle='rgba(30,15,10,.28)'; ctx.fillRect(ox+2,oy+h-2,w-4,3);
@@ -836,10 +877,10 @@ const GL={A:["010","101","111","101","101"],B:["110","101","110","101","110"],C:
   E:["111","100","110","100","111"],F:["111","100","110","100","100"],G:["011","100","101","101","011"],H:["101","101","111","101","101"],
   I:["111","010","010","010","111"],J:["001","001","001","101","010"],K:["101","110","100","110","101"],L:["100","100","100","100","111"],
   M:["101","111","101","101","101"],N:["101","111","111","101","101"],O:["111","101","101","101","111"],P:["111","101","111","100","100"],
-  Q:["111","101","101","111","001"],R:["110","101","110","101","101"],S:["111","100","111","001","111"],T:["111","010","010","010","010"],
+  Q:["111","101","101","111","001"],R:["110","101","110","101","101"],S:["011","100","010","001","110"],T:["111","010","010","010","010"],
   U:["101","101","101","101","111"],V:["101","101","101","101","010"],W:["101","101","111","111","101"],X:["101","101","010","101","101"],
   Y:["101","101","010","010","010"],Z:["111","001","010","100","111"],0:["111","101","101","101","111"],1:["010","110","010","010","111"],
-  2:["111","001","111","100","111"],3:["111","001","011","001","111"],4:["101","101","111","001","001"],5:["111","100","111","001","111"],
+  2:["110","001","010","100","111"],3:["111","001","011","001","111"],4:["101","101","111","001","001"],5:["111","100","110","001","110"],
   6:["111","100","111","101","111"],7:["111","001","010","010","010"],8:["111","101","111","101","111"],9:["111","101","111","001","111"],
   "'":["010","010","000","000","000"],'-':["000","000","111","000","000"],'&':["010","101","010","101","011"],'.':["000","000","000","000","010"],
   '$':["011","110","010","011","110"],'!':["010","010","010","000","010"],'?':["111","001","010","000","010"]};
@@ -976,7 +1017,7 @@ function skyNow(){
 function drawInterior(t){
   SKY=skyNow();
   const cx=W>>1, wb=Math.round(H*0.55), fy=wb+22, th=decorTheme(sceneTheme());
-  if(th){ drawThemeRoom(th,t,cx,wb,fy); drawBackRoom(th,cx,wb,fy); drawShopFurniture(t,cx,wb,fy,th); return; }
+  if(th){ drawThemeRoom(th,t,cx,wb,fy); if(bigRoom()) drawBackRoom(th,cx,wb,fy); else { const sw=sideWallX(); if(sw) drawSideWall(sw,th); } drawShopFurniture(t,cx,wb,fy,th); return; }
   const RW=roomW(); // Dee's shop: the whole room, including the back room once Dee expands
   const dd=decorNow(), dw=dd.wall||'#7b4a5c', dfl=dd.floor||'#b07a46';
   R(0,0,RW,wb,dw); for(let x=0;x<RW;x+=10) R(x,0,4,wb,dd.wall?hexMix(dw,'#ffffff',.08):'#835264');
@@ -1054,6 +1095,7 @@ function drawBackRoom(th,cx,wb,fy){
 // furniture and people, shared by every shop (colors come from the theme; null = Dee's colors)
 function drawShopFurniture(t,cx,wb,fy,th){
   const dd=decorNow(), rug=th?th.rug:['#7a2f4f','#9c4467','#e0a33a'], chair=th?th.chair:dd.chair?[dd.chair,hexMix(dd.chair,'#ffffff',.25)]:['#a8323c','#d0505a'], ctr=th?th.counter:dd.counter?[hexMix(dd.counter,'#ffffff',.3),dd.counter,hexMix(dd.counter,'#000000',.15)]:['#d39a5a','#8a5532','#7a4a2a'];
+  drawWallItems(t,wb);
   // rug, chair, lamp, plant: where they go depends on the shop (layout())
   const L=layout(), c=cx+L.chair;
   if(L.rug==='center'){ R(cx-42,fy+2,84,26,rug[0]); R(cx-38,fy+5,76,20,rug[1]); for(let x=cx-34;x<cx+34;x+=8) R(x,fy+14,3,3,rug[2]); }
@@ -1067,7 +1109,7 @@ function drawShopFurniture(t,cx,wb,fy,th){
   R(cx-44,fy-46,9,13,'#2b2b2b'); R(cx-43,fy-45,7,4,'#b8323c'); R(cx-42,fy-40,5,5,'#d8d0c0'); R(cx-41,fy-33,1,8,'#2b2b2b'); // wall phone
   R(cx-112,fy-36,16,10,'#5b5b6b'); R(cx-110,fy-34,12,3,'#9fe8ff'); R(cx-86,fy-34,8,8,'#bfe3e0'); R(cx-84,fy-31,4,4,'#f2c14e');
   const inside=a=>{ if(a.piece||!(a===F.player||a.moving)) return null; const r=pieces.find(q=>{ const f=fpRect(q.piece.type,q.piece.x,q.piece.y); return a.x>f[0]&&a.x<f[2]&&a.y>f[1]&&a.y<f[3]; }); return r?r.y-1:null; };
-  actors.filter(a=>!a.behind).map(a=>{ const sy=inside(a); return sy==null?a:{wrap:a,y:sy}; }).concat(pieces).sort((a,b)=>a.y-b.y).forEach(a=>a.piece?drawPiece(a.piece,chair,L):drawActor(a.wrap||a)); // someone passing through furniture is drawn behind it
+  actors.filter(a=>!a.behind).map(a=>{ if(a.sit) return {wrap:a,y:a.y+.5}; const sy=inside(a); return sy==null?a:{wrap:a,y:sy}; }).concat(pieces).sort((a,b)=>a.y-b.y).forEach(a=>a.piece?drawPiece(a.piece,chair,L):drawActor(a.wrap||a)); // someone passing through furniture is drawn behind it
   if(F.carry&&F.active) drawCarryGhost(chair,L);
   if(DUST.length) drawDust();
   if(F.active) drawFloorOverlay(t);
@@ -1084,7 +1126,8 @@ function drawActor(a){
     sx.save(); sx.globalAlpha=a.dead?1:clamp(1-(a.downT-.8)/.8); sx.translate(Math.round(a.x),Math.round(a.y)); sx.rotate(a.fallBack?-Math.PI/2:Math.PI/2); drawSprite(sx,CH[a.ch],0,0,0,false); if(a.dead) drawBlood({x:0,y:0,flip:false},5); sx.restore();
     if(a.dead&&!a.carriedBy){ const dir=a.fallBack?-1:1, w=a.ch==='dee'?26:16; sx.globalAlpha=.85; R(Math.round(a.x)+(dir>0?6:-6-w),Math.round(a.y)+1,w,3,'#7a1414'); R(Math.round(a.x)+(dir>0?10:-10-w+8),Math.round(a.y)+3,w-8,2,'#5a0e0e'); sx.globalAlpha=1; } // a pool of blood
     return; }
-  drawSprite(sx,a.hurt>0?hurtLook(a.ch):CH[a.ch],a.x,a.y,a.moving?((tick/(a.run?5:9))|0)%2:0,a.flip); // runners swap legs faster; red flash when hit
+  if(a.sit) drawSeated(a);
+  else drawSprite(sx,a.hurt>0?hurtLook(a.ch):CH[a.ch],a.x,a.y,a.moving?((tick/(a.run?5:9))|0)%2:0,a.flip); // runners swap legs faster; red flash when hit
   if(a.hammer){ const up=a.hammerUp, hx=Math.round(a.x)+(a.flip?-6:6), hy=Math.round(a.y)-13; if(up){ R(hx,hy-14,2,14,'#8a6a3a'); R(hx-3,hy-18,8,5,'#555'); } else { R(hx,hy,12,2,'#8a6a3a'); R(hx+10,hy-3,5,8,'#555'); } }
   if(a.ch==='cop'){ const x=Math.round(a.x)+(a.flip?-1:0), y=Math.round(a.y)-31; R(x-1,y+1,3,1,'#ffd84a'); R(x,y,1,3,'#ffd84a'); }
   if(a.armed&&current!=='fight') drawHeld(a,a.flip); // a robber showing his weapon during the talking part
@@ -1104,7 +1147,7 @@ function updateActors(){
 const sceneGeo=()=>{ const cx=W>>1, wb=Math.round(H*0.55); return {cx,fy:wb+22}; };
 // shops you buy have a second room to the right (the floor is wider than the screen; the camera follows you). Dee's shop is one screen
 const ROOM2=300;
-const bigRoom=()=>!!sceneTheme()||(F.active&&save.career&&save.workAt==='dee'&&!!save.deeExpand);
+const bigRoom=()=>(!!sceneTheme()&&!!(save.expanded||{})[save.workAt])||(F.active&&save.career&&save.workAt==='dee'&&!!save.deeExpand);
 const roomW=()=>bigRoom()?(W>>1)+170+ROOM2:W;
 const FCAM={x:0,snap:true};
 function floorCamX(){
@@ -1152,6 +1195,7 @@ function renderHud(){
 /* ---------- dialogue ---------- */
 const dlg={active:false,full:'',shown:0,resolve:null};
 function say(who,text){
+  if(!['floor','shop','fight'].includes(current)) return Promise.resolve();
   return new Promise(res=>{
     const box=$('#dlg'); box.classList.remove('hide'); box.classList.toggle('narrator',!who);
     if(who){ const c=CH[who]; $('#dlgWho').textContent=c.name; drawPortrait($('#dlgPortrait'),c); }
@@ -1259,6 +1303,12 @@ function layoutPad(){
     const cx=bb.x+bb.w/2, cy=bb.y+bb.h/2;
     dx=(DOC/2-cx)*s/DOC; dy=(DOC/2-cy)*s/DOC-r.height*.02;
   }
+  // the player's own zoom (pinch / wheel / Move view) on top of the automatic fit; pan keeps part of the skin on screen
+  VZ.d0=[dx,dy]; s*=VZ.z;
+  if(VZ.z<=1.001){ VZ.z=1; VZ.px=VZ.py=0; }
+  const lim=s/2; VZ.px=clamp(dx*VZ.z+VZ.px,-lim,lim)-dx*VZ.z; VZ.py=clamp(dy*VZ.z+VZ.py,-lim,lim)-dy*VZ.z;
+  dx=dx*VZ.z+VZ.px; dy=dy*VZ.z+VZ.py;
+  ['#tFit','#tFit2'].forEach(q=>$(q).classList.toggle('hide',VZ.z===1));
   s=Math.floor(s);
   padEl.style.width=padEl.style.height=s+'px'; padEl.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
   // the part of the skin that is actually on screen, so the controller cursor can't wander off-screen
@@ -1349,8 +1399,55 @@ function stamp(x,y,p,d){
   }
 }
 
+/* zoom and pan at the station: pinch with two fingers (or scroll the mouse wheel) to zoom, drag two fingers to pan.
+   "Move view" turns one-finger and mouse drags into panning too, so you can look around without inking */
+const VZ={z:1,px:0,py:0,mode:false,d0:[0,0]}, VZ_MAX=4, PAN_SPREAD=90; // fingers closer than PAN_SPREAD px only zoom
+function setViewMode(on){ VZ.mode=on; padEl.classList.toggle('viewing',on);
+  ['#tView','#tView2'].forEach(q=>{ const b=$(q); b.setAttribute('aria-pressed',on); b.textContent=on?'Draw':'Move view'; }); }
+function viewReset(){ VZ.z=1; VZ.px=VZ.py=0; setViewMode(false); }
+// zoom to z, keeping the skin under screen point (fx,fy) where it is
+function viewZoom(z,fx,fy){
+  const tw=$('#twork').getBoundingClientRect(); if(fx==null){ fx=tw.left+tw.width/2; fy=tw.top+tw.height/2; }
+  z=clamp(z,1,VZ_MAX); const Fx=fx-(tw.left+tw.width/2), Fy=fy-(tw.top+tw.height/2), k=z/VZ.z;
+  const dx=VZ.d0[0]*VZ.z+VZ.px, dy=VZ.d0[1]*VZ.z+VZ.py;
+  VZ.px=Fx-(Fx-dx)*k-VZ.d0[0]*z; VZ.py=Fy-(Fy-dy)*k-VZ.d0[1]*z; VZ.z=z; layoutPad(); }
+function viewPan(dx,dy){ VZ.px+=dx; VZ.py+=dy; layoutPad(); }
+const EDGE=.32; // the outer 32% of the visible area counts as "near the edge"
+function edgeShift(px,py){ const r=$('#twork').getBoundingClientRect(), mx=r.width*EDGE, my=r.height*EDGE, cx=r.left+r.width/2, cy=r.top+r.height/2;
+  return [px<r.left+mx||px>r.right-mx?(cx-px)*.85:0, py<r.top+my||py>r.bottom-my?(cy-py)*.85:0]; }
+// after lifting: if you were heading for the edge, glide so the spot you stopped at sits a bit behind the middle and you can see what comes next
+function viewFollow(px,py){ if(VZ.z<=1) return; const r=$('#twork').getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2, v=VZ.vel||[0,0], sp=Math.hypot(v[0],v[1]);
+  const ux=sp>.01?v[0]/sp:0, uy=sp>.01?v[1]/sp:0, a=(px-cx)/(r.width/2)*ux+(py-cy)/(r.height/2)*uy, [ex,ey]=edgeShift(px,py);
+  if(a<.3&&!ex&&!ey) return; const dx=(cx-ux*r.width*.22-px)*.85, dy=(cy-uy*r.height*.22-py)*.85; VZ.anim={dx,dy,left:1}; }
+function viewTick(dt){
+  const c=VZ.cam||(VZ.cam=[0,0]); let tx=0, ty=0;
+  if(VZ.z>1&&stk&&ptr&&VZ.finger&&VZ.vel){ const v=VZ.vel, sp=Math.hypot(v[0],v[1]);
+    if(sp>.02){ const ux=v[0]/sp, uy=v[1]/sp, r=$('#twork').getBoundingClientRect(), [px,py]=VZ.finger;
+      // how far out the needle is in the direction you're going: 0 = middle, 1 = edge
+      const a=(px-(r.left+r.width/2))/(r.width/2)*ux+(py-(r.top+r.height/2))/(r.height/2)*uy;
+      // camera speed, as a share of your stroke speed: nothing near the middle, matching you by halfway, faster beyond it
+      const g=a<.1?0:a<.5?(a-.1)/.4:Math.min(2,1+(a-.5)*3);
+      // when your finger stops: past halfway the skin keeps flowing a little while (slowing down), otherwise it stops quickly
+      const idle=performance.now()-(VZ.lastMove||0), hold=idle<50?1:Math.max(0,1-(idle-50)/(a>.5?700:150));
+      tx=-ux*sp*g*hold; ty=-uy*sp*g*hold; } }
+  c[0]+=(tx-c[0])*.25; c[1]+=(ty-c[1])*.25;
+  if(Math.abs(c[0])+Math.abs(c[1])>.003){ viewPan(c[0]*dt,c[1]*dt);
+    // the skin moved under your finger: keep the line going to whatever is under it now
+    if(stk&&ptr&&VZ.finger){ const [x,y]=toDoc(VZ.finger[0],VZ.finger[1]); strokeMove(x,y,ptr.p); } }
+  else c[0]=c[1]=0;
+  const a=VZ.anim; if(!a) return; const g=Math.min(a.left,dt/260); viewPan(a.dx*g,a.dy*g); a.left-=g; if(a.left<=0) VZ.anim=null; }
+// stop a stroke without keeping it (a second finger landed): liner ink is still in the stroke buffer, so it's thrown away
+function strokeAbort(){ if(job.wiping){ job.wiping=false; wipeLast=null; return; } if(!stk) return; if(stk.tool==='liner') bctx.clearRect(0,0,DOC,DOC); stk=null; buzz(false); }
+['#tView','#tView2'].forEach(q=>$(q).onclick=()=>setViewMode(!VZ.mode));
+['#tFit','#tFit2'].forEach(q=>$(q).onclick=()=>{ viewReset(); layoutPad(); });
+padEl.addEventListener('wheel',e=>{ e.preventDefault(); viewZoom(VZ.z*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY); },{passive:false});
+
 /* pointer on pad */
 let ptr=null;
+// fingers on the pad (for pinch), a touch waiting to see if it's a pinch, and a pan drag
+const touches=new Map(); let pinch=null, waitTouch=null, panDrag=null;
+function pinchInfo(){ const p=[...touches.values()]; return {d:Math.max(20,Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)),x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2}; }
+function beginDraw(id,x,y,t,pr){ ptr={id,t,c:[x,y],p:1}; const [dx,dy]=toDoc(x,y); strokeBegin(dx,dy,pr); }
 const toDoc=(cx,cy)=>{ const r=padEl.getBoundingClientRect(); return [(cx-r.left)/r.width*DOC,(cy-r.top)/r.height*DOC]; };
 function ptrPressure(e,speed){
   if(e.pointerType==='pen'&&e.pressure>0) return e.pressure;
@@ -1358,19 +1455,40 @@ function ptrPressure(e,speed){
 }
 padEl.addEventListener('pointerdown',e=>{
   if(e.button!==0||modalOpen) return; padEl.setPointerCapture(e.pointerId);
+  touches.set(e.pointerId,{x:e.clientX,y:e.clientY}); VZ.anim=null; VZ.vel=[0,0]; VZ.cam=[0,0]; VZ.finger=null; VZ.lastMove=performance.now();
+  // a second finger: zoom and pan, never ink (the first finger's stroke is thrown away)
+  if(touches.size>=2){ if(ptr){ strokeAbort(); ptr=null; } waitTouch=null; panDrag=null; pinch={...pinchInfo(),z:VZ.z}; return; }
+  if(VZ.mode){ panDrag={id:e.pointerId,x:e.clientX,y:e.clientY}; return; }
+  // a finger waits a moment before inking, in case a second one follows for a pinch
+  if(e.pointerType==='touch'){ const w={id:e.pointerId,x:e.clientX,y:e.clientY,t:e.timeStamp}; waitTouch=w;
+    setTimeout(()=>{ if(waitTouch===w&&touches.size===1){ waitTouch=null; beginDraw(w.id,w.x,w.y,w.t,1); } },90); return; }
   ptr={id:e.pointerId,t:e.timeStamp,c:[e.clientX,e.clientY],p:1};
   const [x,y]=toDoc(e.clientX,e.clientY); strokeBegin(x,y,ptrPressure(e,0));
 });
 padEl.addEventListener('pointermove',e=>{
   hover=[e.clientX,e.clientY]; if(e.pointerType!=='touch') updateRing();
+  if(touches.has(e.pointerId)) touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  // pinch zooms toward the fingers; with the fingers spread apart (not bunched together) moving them also pans around the skin
+  if(pinch&&touches.size>=2){ const n=pinchInfo(); viewZoom(pinch.z*n.d/pinch.d,n.x,n.y); if(n.d>=PAN_SPREAD) viewPan(n.x-pinch.x,n.y-pinch.y); pinch.x=n.x; pinch.y=n.y; pinch.z=VZ.z; pinch.d=n.d; return; }
+  if(panDrag&&e.pointerId===panDrag.id){ viewPan(e.clientX-panDrag.x,e.clientY-panDrag.y); panDrag.x=e.clientX; panDrag.y=e.clientY; return; }
+  if(waitTouch&&e.pointerId===waitTouch.id&&Math.hypot(e.clientX-waitTouch.x,e.clientY-waitTouch.y)>6){ const w=waitTouch; waitTouch=null; beginDraw(w.id,w.x,w.y,w.t,1); }
   if(!ptr||e.pointerId!==ptr.id) return;
-  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  const was=ptr.c.slice(), evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
   for(const ev of (evs.length?evs:[e])){
     const dt=Math.max(1,ev.timeStamp-ptr.t), sp=Math.hypot(ev.clientX-ptr.c[0],ev.clientY-ptr.c[1])/dt;
     ptr.t=ev.timeStamp; ptr.c=[ev.clientX,ev.clientY]; const [x,y]=toDoc(ev.clientX,ev.clientY); strokeMove(x,y,ptrPressure(ev,sp));
   }
+  flowPan(e.clientX-was[0],e.clientY-was[1],e.clientX,e.clientY);
 });
-const endPtr=e=>{ if(ptr&&e.pointerId===ptr.id){ ptr=null; strokeEnd(); } };
+// zoomed in and inking toward the edge: the skin slides the other way as you go, so you can keep tracing without zooming out.
+// It only moves while your finger moves outward (never while it holds still), and the line always stays under your finger
+function flowPan(dx,dy,px,py){ if(VZ.z<=1||!stk) return;
+  const now=performance.now(), dt=Math.max(8,now-(VZ.lastMove||now-16)); VZ.lastMove=now; VZ.finger=[px,py];
+  // your stroke's speed and direction, smoothed (pixels per ms), so jitters don't wiggle the view
+  const v=VZ.vel||(VZ.vel=[0,0]); v[0]=v[0]*.8+dx/dt*.2; v[1]=v[1]*.8+dy/dt*.2; }
+const endPtr=e=>{ touches.delete(e.pointerId); if(touches.size<2) pinch=null; if(panDrag&&panDrag.id===e.pointerId) panDrag=null;
+  if(waitTouch&&waitTouch.id===e.pointerId){ const w=waitTouch; waitTouch=null; if(e.type==='pointerup'&&!pinch){ beginDraw(w.id,w.x,w.y,w.t,1); ptr=null; strokeEnd(); } } // a quick tap still makes a dot
+  if(ptr&&e.pointerId===ptr.id){ const inked=!!stk; ptr=null; strokeEnd(); VZ.cam=[0,0]; VZ.finger=null; if(inked&&!(job.smudges&&job.smudges.length)) viewFollow(e.clientX,e.clientY); } };
 padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr);
 padEl.addEventListener('pointerleave',()=>{ hover=null; updateRing(); });
 
@@ -1534,7 +1652,7 @@ function startJob(opts){
   else if(job.mode==='warmup'){ $('#tTitle').textContent=`Warm-up: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`Fake skin, for ${CH[job.cust.ch].name}. No clock, no supplies used.`; }
   else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}${job.shadeSpec?`, shaded ${shadeText(job.shadeSpec)}`:''}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
-  padCursor.x=300; padCursor.y=300; setTool('liner'); show('tattoo');
+  padCursor.x=300; padCursor.y=300; viewReset(); setTool('liner'); show('tattoo');
   if(real&&!save.seenWipe){ save.seenWipe=true; persist();
     modal(`Real skin gets messy. Smudges of extra ink and blood build up while you work. Wipe them with the paper towel (Towel button, W key${inputMode==='pad'?', or X on your controller':''}) before they set, or they cost you points. Keep an eye on your ink too.`,[['Got it',true,true]]); }
 }
@@ -1555,15 +1673,17 @@ function scoreWork(){
   let d=x.getImageData(0,0,DOC,DOC).data; const pts=[];
   for(let y=0;y<DOC;y+=3) for(let i=0;i<DOC;i+=3) if(d[(y*DOC+i)*4+3]>80) pts.push(i,y);
   x.clearRect(0,0,DOC,DOC); x.lineWidth=tol*2+5; x.stroke(path); d=x.getImageData(0,0,DOC,DOC).data;
+  // a narrow band right on the line: ink that stays in bounds but wobbles off the line scores lower
+  x.clearRect(0,0,DOC,DOC); x.lineWidth=Math.max(9,sizeOf('liner')+3); x.stroke(path); const dT=x.getImageData(0,0,DOC,DOC).data;
   const L=lctx.getImageData(0,0,DOC,DOC).data, W1=DOC+1, I=new Int32Array(W1*W1);
-  let ink=0, good=0;
-  for(let y=0;y<DOC;y++){ let rowSum=0; for(let i=0;i<DOC;i++){ const o=(y*DOC+i)*4, v=L[o+3]>60?1:0; if(v){ ink++; if(d[o+3]>20) good++; } rowSum+=v; I[(y+1)*W1+i+1]=I[y*W1+i+1]+rowSum; } }
+  let ink=0, good=0, tight=0;
+  for(let y=0;y<DOC;y++){ let rowSum=0; for(let i=0;i<DOC;i++){ const o=(y*DOC+i)*4, v=L[o+3]>60?1:0; if(v){ ink++; if(d[o+3]>20) good++; if(dT[o+3]>20) tight++; } rowSum+=v; I[(y+1)*W1+i+1]=I[y*W1+i+1]+rowSum; } }
   let hit=0, n=pts.length/2;
   for(let k=0;k<pts.length;k+=2){ const px=pts[k], py=pts[k+1], x0=Math.max(0,px-tol), x1=Math.min(DOC,px+tol+1), y0=Math.max(0,py-tol), y1=Math.min(DOC,py+tol+1);
     if(I[y1*W1+x1]-I[y0*W1+x1]-I[y1*W1+x0]+I[y0*W1+x0]>0) hit++; }
   const cov=n?hit/n:0, acc=ink?good/ink:0;
-  const score=ink<80?0:Math.round(100*clamp(.5*cov+.5*acc));
-  const stars=score>=90?3:score>=78?2:1;
+  const accT=ink?tight/ink:0, score=ink<80?0:Math.round(100*clamp(.35*cov+.25*acc+.4*accT));
+  const stars=starsOf(score);
   return {cov,acc,score,stars};
 }
 // shading score: how much of the marked area is shaded, and how much shading stayed inside it
@@ -1580,7 +1700,7 @@ function scoreShade(){
     if(inn&&!onEdge){ room++; if(a>30){ const p=(i-3)>>2; if(nearestColor(S[i-3],S[i-2],S[i-1])===wantColor(p%DOC,(p/DOC)|0)) hit++; else wrong++; } }
     if(a>30){ ink++; if(!inn&&!onEdge) spill++; } }
   const cov=room?hit/room:0, acc=ink?clamp(1-(spill+wrong)/ink):0, colorOk=hit+wrong?hit/(hit+wrong):1;
-  const score=ink<40?0:Math.round(100*clamp(.6*cov+.4*acc)), stars=score>=90?3:score>=78?2:1;
+  const score=ink<40?0:Math.round(100*clamp(.6*cov+.4*acc)), stars=starsOf(score);
   return {cov,acc,score,stars,colorOk,shade:true};
 }
 function composite(includeSten){
@@ -1602,7 +1722,7 @@ async function finishJob(){
     if(s.cov<.6){ await modal(`You've only shaded ${Math.round(s.cov*100)}% of ${DESIGNS[job.design].shadeName}. Fill it in first.`,[['Keep working',false,true]]); return; }
     if(!await modal('Finished shading?',[['Keep working',false],['Done',true,true]])) return;
     strokeEnd(); const s2=scoreShade(), L=job.lineRes, score=Math.round(.6*L.score+.4*s2.score);
-    const r={...L,score,stars:score>=90?3:score>=78?2:1,shaded:true,lineScore:L.score,shadeCov:s2.cov,shadeAcc:s2.acc,colorOk:s2.colorOk};
+    const r={...L,score,stars:starsOf(score),shaded:true,lineScore:L.score,shadeCov:s2.cov,shadeAcc:s2.acc,colorOk:s2.colorOk};
     $('#shadeInks').classList.add('hide');
     if(isClient(job.mode)) startAftercare(withSmudges(r)); else showResults(r);
     return;
@@ -1616,7 +1736,7 @@ async function finishJob(){
   else showResults(scoreWork());
 }
 // smudges left to set in come off the line score
-function withSmudges(r){ r.smudgePen=job.smudgePen; r.score=Math.max(0,r.score-job.smudgePen); r.stars=r.score>=90?3:r.score>=78?2:1; return r; }
+function withSmudges(r){ r.smudgePen=job.smudgePen; r.score=Math.max(0,r.score-job.smudgePen); r.stars=starsOf(r.score); return r; }
 $('#tDone').onclick=finishJob;
 /* developer mode: tap a Menu button 10 times in a row (each within 3 s) to switch it on or off */
 let devTaps=0, devLast=0;
@@ -1638,7 +1758,7 @@ $('#tSkip').onclick=async()=>{
   if(v==='fail'){ job.strikes=job.maxStrikes; job.failed=true; renderSlips(); failRound(); return; }
   lctx.save(); lctx.lineCap=lctx.lineJoin='round'; lctx.lineWidth=7; lctx.strokeStyle=job.color; lctx.stroke(pathOf(job.design)); lctx.restore(); // so the results picture shows a tattoo
   job.dirty=true; job.inkAcc=Math.max(job.inkAcc,9000);
-  const r={cov:v/100,acc:v/100,score:v,stars:v>=90?3:v>=78?2:1};
+  const r={cov:v/100,acc:v/100,score:v,stars:starsOf(v)};
   if(isClient(job.mode)) startAftercare(withSmudges(r)); else showResults(r);
 };
 $('#tMenu').onclick=async()=>{
@@ -1659,7 +1779,9 @@ $('#tMenu').onclick=async()=>{
 };
 
 /* =============== RESULTS =============== */
-const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+// stars in halves: 3, 2½, 2, 1½, 1 (a finished round never gets 0)
+const starsOf=s=>s>=92?3:s>=86?2.5:s>=79?2:s>=70?1.5:1;
+const starStr=n=>{ n=n||0; const f=Math.floor(n), h=n-f>=.5; return '★'.repeat(f)+(h?'<span class="hstar">★</span>':'')+'☆'.repeat(3-f-(h?1:0)); };
 const DEE_PRACTICE=["","Sloppy, but it counts. One star. Slow down and stay right on the stencil.","Clean work. Your hand's starting to listen.","Spot on. That's how I want every line to look."];
 // Share of the price a finished real tattoo earns, from its line score. Under 70 pays nothing.
 const payRate=s=>s<70?0:s<78?.1+.4*(s-70)/8:s<90?.5+.35*(s-78)/12:Math.min(1,.85+.15*(s-90)/10);
@@ -1668,7 +1790,7 @@ function showFail(){
   const res=$('#res'); const cust=isClient(job.mode), career=job.mode==='career', warmup=job.mode==='warmup'; let who='dee', quote, btns;
   // real skin is one shot: the customer walks out and there's no retry
   if(cust){ useSupplies(); save.rep-=2; who=job.cust.ch; quote="Whoa, whoa! Stop! That's going way outside the lines! I'm out of here.";
-    if(career) F.today.lost++; else save.cust++;
+    if(career) F.today.lost++; else { save.cust++; apprLost(); }
     persist(); }
   else quote="Five slips. Wipe it down and start over. Stay right on that purple line.";
   const lastCust=!career&&save.cust>=CUSTOMERS.length;
@@ -1699,30 +1821,31 @@ function showResults(r){
   if(job.mode==='practice'){
     const i=job.idx; const firstPass=r.stars>0&&!save.stars[i];
     save.stars[i]=Math.max(save.stars[i],r.stars); save.best[i]=Math.max(save.best[i],r.score); persist();
-    quoteWho='dee'; quote=DEE_PRACTICE[r.stars];
+    quoteWho='dee'; quote=DEE_PRACTICE[Math.floor(r.stars)];
     if(firstPass&&i<PRACTICE.length-1) extra=`<p style="grid-column:1/-1;margin:0">New pad unlocked: ${DESIGNS[PRACTICE[i+1]].name}</p>`;
     btns=`<button class="gbtn" id="rRetry">Try again</button><button class="gbtn go" id="rBoard">Back to the pads</button>`;
   } else if(job.mode==='warmup'){
     const nm=CH[job.cust.ch].name, pr=payRate(r.score);
-    quoteWho='dee'; quote=pr?DEE_PRACTICE[r.stars]:"On real skin that would earn you nothing. Go again.";
+    quoteWho='dee'; quote=pr?DEE_PRACTICE[Math.floor(r.stars)]:"On real skin that would earn you nothing. Go again.";
     extra=`<p style="grid-column:1/-1;margin:0">On ${nm}'s ${job.cust.spot}, this would earn ${pr?`about ${Math.round(pr*100)}% of the price`:'nothing (score under 70)'}.</p>`;
     btns=`<button class="gbtn" id="rRetry">Practice again</button><button class="gbtn go" id="rReal">Start on ${nm}</button>`;
   } else if(job.mode==='career'){
     const c=job.cust, late=job.elapsed>job.limit, h=healInfo(r.clean), pr=payRate(r.score);
     const full=Math.round(c.tip*pr*(late?.7:1)*(.75+.4*r.clean)), pay=Math.round(full*deeKeep()), cut=full-pay; // working for Dee: the shop keeps 60%
-    const rep=pr?r.stars-1:-1;
+    const rep=pr?Math.floor(r.stars)-1:-1;
     save.coins+=pay; save.rep+=rep; F.today.you+=pay; F.today.jobs++;
+    (save.inked||(save.inked=[])).push(job.design); if(save.inked.length>16) save.inked.shift();
     save.reviews.push({name:CH[c.ch].name,design:DESIGNS[job.design].name,due:save.cday+h.days,rep:h.rep+(r.stars===3?1:0),label:h.label});
     persist();
-    quoteWho=c.ch; quote=c.react[pr?r.stars:0];
+    quoteWho=c.ch; quote=c.react[pr?Math.floor(r.stars):0];
     extra=`<dl class="stats" style="grid-column:1/-1;margin:0">${lineRow(pr)}<dt>Paid</dt><dd><i class="coin"></i> ${pay}${late&&pay?' (ran over time)':''}</dd>${cut?`<dt>Dee's cut</dt><dd>−${cut} (the shop keeps 60%)</dd>`:''}<dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${aftercareRows(r)}<dt>Healed review</dt><dd>in ${h.days} day${h.days>1?'s':''}</dd></dl>`;
     btns=`<button class="gbtn go" id="rFloor">Back to the shop floor</button>`;
   } else {
     const c=job.cust, late=job.elapsed>job.limit, cl=r.clean??1, pr=payRate(r.score);
     const tip=Math.round(c.tip*pr*(late?.6:1)*(r.stars===3?1.25:1)*(.75+.4*cl));
-    const rep=(pr?r.stars:-1)+healInfo(cl).rep;
-    save.coins+=tip; save.rep+=rep; save.scores.push(r.score); save.cust++; persist();
-    quoteWho=c.ch; quote=c.react[pr?r.stars:0];
+    const rep=(pr?Math.floor(r.stars):-1)+healInfo(cl).rep;
+    save.coins+=tip; save.rep+=rep; save.scores.push(r.score); save.cust++; if(!pr) apprLost(); persist();
+    quoteWho=c.ch; quote=c.react[pr?Math.floor(r.stars):0];
     extra=`<dl class="stats" style="grid-column:1/-1;margin:0">${lineRow(pr)}<dt>Tip</dt><dd><i class="coin"></i> ${tip}${late&&tip?' (ran over time)':''}</dd><dt>Reputation</dt><dd>${rep>=0?'+':''}${rep}</dd>${r.clean!=null?aftercareRows(r):''}</dl>`;
     btns=save.cust>=CUSTOMERS.length?`<button class="gbtn go" id="rNext">Close up shop</button>`:`<button class="gbtn go" id="rNext">Next customer</button>`;
   }
@@ -1828,6 +1951,9 @@ async function offerWarmup(cust,design,start,career){
   if(v==='practice'){ await playerWalk(deskSpot()); startWarmup(); } else start();
 }
 // On the shop floor, show the player walking somewhere (the desk or the tattoo chair) before the next screen
+// if you're behind the counter, walk out its open right end first (instead of straight through the counter)
+async function walkOutOfCounter(){ const p=F.player, {cx,fy}=sceneGeo(); if(!p||!(p.y<fy-2&&p.x<cx-44)) return;
+  await playerWalk({x:cx-38,y:fy-12}); await playerWalk({x:cx-38,y:fy+16}); }
 async function playerWalk(to){
   const p=F.player; if(!p) return;
   show('floor'); F.busy=true; F.target={x:to.x,y:to.y}; F.hot=null; F.hotLabel=''; $('#fPrompt').classList.add('hide');
@@ -1888,8 +2014,21 @@ function nextCustomer(){ if(save.cust>=CUSTOMERS.length) ending(); else enterFlo
 function afterScriptedJob(){
   const c=F.jobCust; F.jobCust=null;
   if(c){ const s=chairSit(0); c.x=s.x; c.y=s.y; custLeave(c); }
+  if(apprFailed()){ apprDayFailed(); return; }
   if(save.cust>=CUSTOMERS.length) ending(); else enterFloor();
 }
+
+// a customer lost on Dee's days (walked out, slipped three times, or work too sloppy to charge for)
+function apprLost(){ if(save.apprDay) save.apprDay.lost++; }
+const apprFailed=()=>!!(save.apprDay&&save.apprDay.lost>=2);
+async function apprDayFailed(){ const d=save.apprDay;
+  enterFloor(); F.busy=true; await sleep(400);
+  await say('dee',"That's two customers out the door today. Not in my shop.");
+  await say('dee',"Go home, sleep on it. Tomorrow we run this day again, and you do it right.");
+  hideDlg();
+  Object.assign(save,{coins:d.coins,rep:d.rep,sup:{...d.sup},cust:d.cust}); save.scores.length=d.scores; d.lost=0; persist();
+  F.custs.slice().forEach(removeCust); F.custs=[]; F.jobCust=null; F.player=null;
+  await dayCard(`Day ${d.day}`,'Take two'); enterFloor(); await fade(false); F.busy=false; F.spawnAt=performance.now()+1500; }
 
 /* ---------- the robbery lesson (after pad 2): comply, hide or fight, then Dee's gun ---------- */
 async function robberyLesson(){
@@ -2121,6 +2260,7 @@ function ensureCareerSave(){
   save.sup={...d.sup,...(save.sup||{})};
   save.up={...d.up,...(save.up||{})};
   ['staff','shops','reviews','applicants'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
+  if(save.deeDecor&&!save.deeDecorFix){ const st=save.furn&&save.furn.dee; if(st) ['sofa','plant2','lamp2'].forEach(k=>{ if(st[k]&&!st[k].sold&&!st[k].stored&&st[k].dx<182) delete st[k]; }); save.deeDecorFix=true; }
   // staff from before levels and mood: Mika, Bo and Sage become full records
   save.staff=save.staff.map(x=>x.name?x:poolStaff(x.id,x.chair)); save.staff.forEach(regStaff);
   if(save.cday==null) save.cday=1; if(save.clock==null) save.clock=600;
@@ -2177,7 +2317,7 @@ async function resumeJob(){
 const cDirt=$('#cDirt'), dctx=cDirt.getContext('2d');
 TOOLS.towel={sizes:[[70,'Towel']],i:0};
 TOOLS.cloth={sizes:[[80,'Rub']],i:0};
-const SMUDGE_WARN=2.5, SMUDGE_LATE=6, SMUDGE_PEN=3, SMUDGE_MAX_PEN=30;
+const SMUDGE_WARN=5, SMUDGE_LATE=15, SMUDGE_PEN=3, SMUDGE_MAX_PEN=30;
 let wipeLast=null, cleanToastAt=0;
 function alphaIn(x0,y0,w,h){ const d=dctx.getImageData(Math.max(0,x0|0),Math.max(0,y0|0),w,h).data; let s=0; for(let i=3;i<d.length;i+=8) s+=d[i]; return s; }
 function addSmudge(x,y){
@@ -2288,7 +2428,7 @@ const DES_INFO={smiley:{pay:25,dur:60,time:180,rep:0},heart:{pay:32,dur:75,time:
   anchor:{pay:48,dur:105,time:280,rep:6},dagger:{pay:52,dur:105,time:280,rep:10},moon:{pay:58,dur:120,time:300,rep:14},rose:{pay:80,dur:150,time:400,rep:18},
   bolt:{pay:34,dur:70,time:200,rep:2},gem:{pay:45,dur:90,time:250,rep:5},cherry:{pay:50,dur:100,time:280,rep:8},skull:{pay:70,dur:135,time:360,rep:15}};
 // a lettering job: a random word in a style your reputation has unlocked
-function letterJob(){ const st=pickR(Object.keys(LSTYLES).filter(k=>save.rep>=LSTYLES[k].rep)), w=pickR(LWORDS), k=letterKey(w,st);
+function letterJob(style){ const st=style||pickR(Object.keys(LSTYLES).filter(k=>save.rep>=LSTYLES[k].rep)), w=pickR(LWORDS), k=letterKey(w,st);
   if(!DES_INFO[k]){ const dur=40+12*w.length; DES_INFO[k]={pay:Math.round((20+8*w.length)*LSTYLES[st].pay),dur,time:Math.round(dur*2.4+60),rep:0,letter:true}; }
   return k; }
 const NAMES=['Ava','Bram','Cass','Dario','Enzo','Faye','Hollis','Ines','Jory','Kit','Lior','Mabel','Nico','Odette','Priya','Quinn','Rafe','Sunny','Tamsin','Uri','Vida','Wren','Xavi','Yara','Zeke','Bea','Cole','Dot','Ezra','Gia'];
@@ -2363,8 +2503,9 @@ async function manageStaff(st,after){
   const busy=!!(F.sst[st.id]&&F.sst[st.id].busy), offT=st.off===save.cday+1;
   const v=await modal(`${st.name}, ${LVL_NAME[st.lvl]} (level ${st.lvl}${st.lvl<5?`, ${st.xp}/${LVL_XP[st.lvl]} XP`:''})${st.known&&st.bad?', a bad hire':''}. Mood ${Math.round(st.mood)} (${moodWord(st.mood)}), energy ${Math.round(st.energy)} (${energyWord(st.energy)}). Paid ${st.wage} coins a day${st.wage<FAIR_WAGE[st.lvl]?`, less than ${aOrAn(LVL_NAME[st.lvl].toLowerCase())} usually makes`:''}.`,
     [['Back',null,true],['Give a raise (+5 a day)','raise',false,st.raised===save.cday],[offT?'Cancel tomorrow off':'Give tomorrow off (paid)','off'],[`Let ${st.name} go`,'fire',false,busy]]);
-  if(v==='raise'){ st.wage+=5; st.raised=save.cday; st.mood=Math.min(100,st.mood+15); toast(`${st.name} got a raise: ${st.wage} coins a day`); }
-  if(v==='off'){ st.off=offT?0:save.cday+1; toast(offT?`${st.name} works tomorrow after all`:`${st.name} has tomorrow off`); }
+  const me=F.staffActs[st.id];
+  if(v==='raise'){ st.wage+=5; st.raised=save.cday; st.mood=Math.min(100,st.mood+15); toast(`${st.name} got a raise: ${st.wage} coins a day`); if(me){ me.say='THANKS BOSS!'; me.sayT=2.4; } }
+  if(v==='off'){ st.off=offT?0:save.cday+1; toast(offT?`${st.name} works tomorrow after all`:`${st.name} has tomorrow off`); if(me){ me.say=offT?'OH. OKAY.':'YES! A DAY OFF!'; me.sayT=2.4; } }
   if(v==='fire'&&await modal(`Let ${st.name} go? They leave right away.`,[['Keep them',false,true],['Let them go',true]])){ fireStaff(st); toast(`${st.name} packed up and left`); }
   persist(); if(current==='floor') renderFloorHud(); if(after) after(); }
 // the Staff tab: your crew first, then today's applicants
@@ -2377,7 +2518,7 @@ function staffRows(){
 
 // who's at the counter: Dee (at Dee's shop until Day 4), your clerk, or nobody (then waiting customers lose patience twice as fast)
 const deeAtCounter=()=>save.workAt==='dee'&&!save.deeDied;
-function patienceRate(){ if(F.appr||deeAtCounter()) return 1; const k=CLERKS.find(x=>x.id===save.clerk); return k?k.patience:2; }
+function patienceRate(){ const e=F.appr?1:entF(); if(F.appr||deeAtCounter()) return e; const k=CLERKS.find(x=>x.id===save.clerk); return (k?k.patience:2)*e; }
 // while you work for Dee (until Day 4), the shop keeps 60% of what you make
 const deeKeep=()=>save.career&&deeAtCounter()?.4:1;
 const UPGRADES=[
@@ -2410,7 +2551,23 @@ const DEE_SHOP={id:'dee',name:"Dee's shop",district:'downtown',x:525,y:196,rent:
 // the Supply Store: the only place to buy supplies (a blue blip on the map)
 const SUPPLIER={id:'supply',name:'Neon Springs Supply Co.',district:'northside',x:690,y:196,desc:'Needles, ink, ointment, plastic wrap and film. Every tattoo shop in town shops here.'};
 const HOSPITAL={id:'hosp',name:'Neon Springs General',district:'downtown',x:437,y:286,desc:'Hospital. Patches you up after a fight.'}, HEAL_COST=450;
-const shopById=id=>id==='dee'?DEE_SHOP:id==='supply'?SUPPLIER:id==='hosp'?HOSPITAL:SHOPS.find(s=>s.id===id);
+// Comfy Corner Furniture: couches, plants and lamps for your shops (open 9 AM to 9 PM in career)
+const FURNSTORE={id:'furn',name:'Comfy Corner Furniture',district:'suburbs',x:355,y:452,desc:'Couches, plants, lamps, TVs, radios and framed art. Whatever you buy is delivered to the shop you work at.'}, FURN_OPEN=540, FURN_CLOSE=1260;
+const FURN_SHOP=[
+  {id:'sofa',name:'Couch',desc:'A comfy couch for the waiting area.',price:260,type:'sofa'},
+  {id:'fern',name:'Potted fern',desc:'Big, leafy and green.',price:60,type:'plant',kind:'fern'},
+  {id:'cactus',name:'Cactus',desc:'Low maintenance. Don\'t sit on it.',price:55,type:'plant',kind:'cactus'},
+  {id:'palm',name:'Potted palm',desc:'A little bit of vacation.',price:85,type:'plant',kind:'palm'},
+  {id:'lamp',name:'Floor lamp',desc:'Warm light for a cozy corner.',price:70,type:'lamp'},
+  {id:'tv',name:'TV',desc:'Hangs on the wall and plays art and your own tattoo designs. Waiting customers stay patient longer.',price:320,type:'tv'},
+  {id:'radio',name:'Radio',desc:'Music for the waiting area. Customers wait a little longer.',price:120,type:'radio'},
+  {id:'pic_rose',name:'Framed flash: rose',desc:'Hangs on the wall.',price:45,type:'pic',kind:'rose'},
+  {id:'pic_anchor',name:'Framed flash: anchor',desc:'Hangs on the wall.',price:45,type:'pic',kind:'anchor'},
+  {id:'pic_dagger',name:'Framed flash: dagger',desc:'Hangs on the wall.',price:45,type:'pic',kind:'dagger'},
+  {id:'pic_skull',name:'Framed flash: skull',desc:'Hangs on the wall.',price:55,type:'pic',kind:'skull'},
+  {id:'pic_heart',name:'Framed flash: heart',desc:'Hangs on the wall.',price:40,type:'pic',kind:'heart'}];
+const furnOpen=()=>!save.career||(save.clock>=FURN_OPEN&&save.clock<FURN_CLOSE);
+const shopById=id=>id==='dee'?DEE_SHOP:id==='supply'?SUPPLIER:id==='furn'?FURNSTORE:id==='hosp'?HOSPITAL:SHOPS.find(s=>s.id===id);
 // veteran artists you can hire to run a shop for you
 const VETERANS=[
   {id:'vet_hank',name:'Hank "Hammer" Doyle',skill:.82,wage:50,fee:1000},
@@ -2440,51 +2597,127 @@ function decorRows(){
   return Object.entries(DECOR).map(([k,o])=>`<div class="item"><div class="grow"><div class="nm">${o.name}</div><div class="ds">${o.price} coins per color. Original is free.</div>
     <div class="swatches"><button class="gbtn small" data-decor="${k}:" aria-pressed="${!d[k]}">Original</button>${o.cols.map(c=>`<button class="swatch" style="background:${c}" data-decor="${k}:${c}" aria-pressed="${d[k]===c}" aria-label="${o.name} ${c}" ${d[k]!==c&&save.coins<o.price?'disabled':''}></button>`).join('')}</div></div></div>`).join('')
     +'<p class="hint">Colors apply to the shop you work in.</p>'; }
-function buyDecor(key){ const [k,c]=key.split(':'), o=DECOR[k], all=save.decor||(save.decor={}), d=all[shopKey()]||(all[shopKey()]={});
+async function buyDecor(key){ const [k,c]=key.split(':'), o=DECOR[k], all=save.decor||(save.decor={}), d=all[shopKey()]||(all[shopKey()]={});
   if((d[k]||'')===c) return;
+  if(c&&save.coins<o.price){ toast('Not enough coins'); return; }
+  const ok=await modal(c?`Buy this ${o.name.toLowerCase()} color for ${o.price} coins?`:`Go back to the original ${o.name.toLowerCase()}? It's free, but the color you bought is gone.`,[['Cancel',false],[c?'Buy it':'Change back',true,true]]);
+  if(!ok){ renderStore('decor:'+key); return; }
   if(c){ if(save.coins<o.price){ toast('Not enough coins'); return; } save.coins-=o.price; d[k]=c; toast(`${o.name}: done (−${o.price})`); }
   else { delete d[k]; toast(`${o.name}: back to the original`); }
   persist(); blip(880); renderStore('decor:'+key); }
 
 /* ---------- furniture: chairs, bench seats, desk, lamp, plant and (in bought shops) the supply closet ---------- */
 const FURN_INFO={chair:{name:'tattoo chair',fp:[-26,-14,26,12],c:[0,-1]},seat:{name:'bench seat',fp:[-8,-6,8,3],c:[0,-1]},desk:{name:'practice desk',fp:[-4,0,40,18],c:[18,9]},
-  lamp:{name:'floor lamp',fp:[-5,-16,8,2],c:[2,-7]},plant:{name:'plant',fp:[-14,-18,26,8],c:[6,-5]},closet:{name:'supply closet',fp:[-2,-12,24,4],c:[11,-4]},sofa:{name:'couch',fp:[-22,-10,22,4],c:[0,-3]}};
-const shopKey=()=>bigRoom()?save.workAt:'dee';
+  lamp:{name:'floor lamp',fp:[-5,-16,8,2],c:[2,-7]},plant:{name:'plant',fp:[-14,-18,26,8],c:[6,-5]},closet:{name:'supply closet',fp:[-2,-12,24,4],c:[11,-4]},sofa:{name:'couch',fp:[-22,-10,22,4],c:[0,-3]},radio:{name:'radio',fp:[-7,-4,7,2],c:[0,-1]},
+  tv:{name:'TV',wall:true,w:34,h:24,fp:[0,0,0,0],c:[0,0]},pic:{name:'picture',wall:true,w:22,h:28,fp:[0,0,0,0],c:[0,0]}};
+const shopKey=()=>sceneTheme()?save.workAt:'dee';
 const furnStore=()=>{ if(!save.furn) save.furn={}; return save.furn[shopKey()]||(save.furn[shopKey()]={}); };
 const fpRect=(type,x,y)=>{ const f=FURN_INFO[type].fp; return [x+f[0],y+f[1],x+f[2],y+f[3]]; };
 const hits=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 // spots nothing may go: the counter and the lane behind it, the doorway, and the room's edges
 function placeOK(type,x,y,others){
   const {cx,fy}=sceneGeo(), r=fpRect(type,x,y);
-  if(r[0]<4||r[2]>roomW()-4||r[1]<fy-20||r[3]>H-1) return false;
+  if(r[0]<4||r[2]>(sideWallX()||roomW())-4||r[1]<fy-20||r[3]>H-1) return false;
   if(hits(r,[cx-128,fy-22,cx-48,fy+9])||hits(r,[cx-18,H-30,cx+18,H+5])) return false;
   return !others.some(o=>hits(r,fpRect(o.type,o.x,o.y)));
 }
 let FURN_MEMO={k:null,list:null};
 function furnList(){
   const {cx,fy}=sceneGeo(), L=layout(), st=furnStore(), big=bigRoom();
-  const memo=[shopKey(),W,H,save.up.chairs,save.up.seats,F.furnVer||0,F.active].join('|'); if(FURN_MEMO.k===memo) return FURN_MEMO.list;
+  const memo=[shopKey(),W,H,save.up.chairs,save.up.seats,F.furnVer||0,F.active,shopExpanded()].join('|'), lim=sideWallX(); if(FURN_MEMO.k===memo) return FURN_MEMO.list;
   const out=[];
-  const add=(key,type,dx,dy,k,free,kind)=>{ const sv=st[key]; if(sv&&sv.sold) return;
-    let x=sv?cx+sv.dx:cx+dx, y=sv?fy+sv.dy:fy+dy;
-    if(!sv&&free&&!placeOK(type,x,y,out)){ const f=findFree(type,out); if(f){ x=f.x; y=f.y; st[key]={dx:x-cx,dy:y-fy}; } }
+  const add=(key,type,dx,dy,k,free,kind)=>{ const sv=st[key]; if(sv&&(sv.sold||sv.stored)) return;
+    const keep=sv&&!(lim&&cx+sv.dx>lim-10);
+    let x=keep?cx+sv.dx:cx+dx, y=keep?fy+sv.dy:fy+dy;
+    if(!keep&&(free||lim)&&!placeOK(type,x,y,out)){ const f=findFree(type,out,deeNew(key)?cx+182:null); if(f){ x=f.x; y=f.y; if(F.active) st[key]={dx:x-cx,dy:y-fy}; } }
     out.push({key,type,x,y,k,kind}); };
   add('chair0','chair',L.chair,-6,0);
   if(L.lamp!=null) add('lamp','lamp',L.lamp,-2);
   if(L.plant) add('plant','plant',L.px,0,undefined,false,L.plant);
   // what Dee brought in for the new room
   if(shopKey()==='dee'&&save.deeDecor){ add('sofa','sofa',290,-8,undefined,true); add('plant2','plant',196,0,undefined,true,'fern'); add('lamp2','lamp',440,-2,undefined,true); }
+  // furniture bought at Comfy Corner
+  ((save.extraFurn||{})[shopKey()]||[]).filter(e=>!(FURN_INFO[e.type]||{}).wall).forEach((e,i)=>add(e.key,e.type,(big?200:40)+i*46,e.type==='sofa'?-8:8,undefined,true,e.kind));
   add('desk','desk',L.desk[0],L.desk[1]);
-  add('closet','closet',Math.max(-162,6-cx),-6);
+  add('closet','closet',Math.max(-192,4-cx),-6);
   for(let i=0;i<save.up.seats;i++) add('seat'+i,'seat',Math.max(14,cx-128)+i*16-cx,H-12-fy,i,true);
   for(let k=1;k<=save.up.chairs;k++) add('chair'+k,'chair',big?170+82+(k-1)*64:50+(k-1)*56,big?-6:44,k,true);
   FURN_MEMO={k:memo,list:out}; return out;
 }
-function findFree(type,others){ const {cx,fy}=sceneGeo(), x0=bigRoom()?cx+180:24; // bought shops: look in the back room first
-  for(const [a,b] of [[x0,roomW()-24],[24,x0]]) for(let y=fy-6;y<=H-8;y+=8) for(let x=a;x<b;x+=8) if(placeOK(type,x,y,others)) return {x,y};
+// furniture stored at the register (per shop): bought at Comfy Corner, or picked up and put away. Only couches, plants and lamps
+const STORABLE=['sofa','plant','lamp','radio','tv','pic'];
+const furnInv=()=>{ const a=save.furnInv||(save.furnInv={}); return a[shopKey()]||(a[shopKey()]=[]); };
+const invName=e=>{ const f=FURN_SHOP.find(x=>x.type===e.type&&(x.kind||null)===(e.kind||null)); const n=f?f.name:FURN_INFO[e.type].name; return n[0].toUpperCase()+n.slice(1); };
+function storeCarried(){ const c=F.carry; furnStore()[c.key]={stored:true}; furnInv().push({key:c.key,type:c.type,kind:c.kind}); F.carry=null; furnChanged(); persist(); blip(700);
+  toast(`${invName(c)} stored at the register (Furniture tab)`); }
+async function storeAsk(){ const nm=invName(F.carry).toLowerCase();
+  if(await modal(`Store the ${nm} at the register? You can place it again any time from the register's Furniture tab.`,[['Keep carrying',false],['Store it',true,true]])) storeCarried(); }
+function placeStored(key){ const inv=furnInv(), i=inv.findIndex(e=>e.key===key); if(i<0) return; const e=inv[i]; inv.splice(i,1); delete furnStore()[key];
+  F.carry={key:e.key,type:e.type,kind:e.kind}; furnChanged(); persist(); const back=storeBack; storeBack=null; (back||enterFloor)(); toast(`Carrying the ${invName(e).toLowerCase()}. Find a spot for it.`); }
+function storedRows(){ const inv=furnInv();
+  if(!inv.length) return '<p class="hint">No furniture stored here. Buy some at Comfy Corner Furniture across town (the orange spot on the map), or pick up a couch, plant, lamp, radio, TV or picture and bring it to the register to put it away.</p>';
+  return inv.map(e=>`<div class="item"><div class="grow"><div class="nm">${invName(e)}</div><div class="ds">Stored at the register.</div></div><button class="gbtn small go" data-buy="place:${e.key}">Place it</button></div>`).join('')
+    +'<p class="hint">Placing it puts it in your hands: walk to a free spot and put it down.</p>'; }
+// Dee's furniture for the new room
+const deeNew=key=>shopKey()==='dee'&&['sofa','plant2','lamp2'].includes(key);
+function findFree(type,others,minX){ const {cx,fy}=sceneGeo(), x0=bigRoom()?cx+180:24; // bought shops: look in the back room first
+  for(const [a,b] of minX?[[minX,roomW()-24]]:[[x0,roomW()-24],[24,x0]]) for(let y=fy-6;y<=H-8;y+=8) for(let x=a;x<b;x+=8) if(placeOK(type,x,y,others)) return {x,y};
   return null; }
 const piece=key=>furnList().find(p=>p.key===key);
 const furnChanged=()=>{ F.furnVer=(F.furnVer||0)+1; };
+
+/* ---------- the space next door: bought shops start without it; walk up to the wall on the right to buy it ---------- */
+const expandPrice=id=>Math.max(500,Math.round(shopById(id).price*.625/50)*50);
+const shopExpanded=()=>save.workAt==='dee'?!!save.deeExpand:!!(save.expanded||{})[save.workAt];
+// more bench seats and tattoo chairs (and so staff) only fit once there's room
+const roomToGrow=()=>save.workAt==='dee'||shopExpanded();
+function sideWallX(){ if(!save.career||!sceneTheme()||shopExpanded()) return null; const {cx}=sceneGeo(); return Math.min(cx+165,W-24); }
+function drawSideWall(x0,th){ const w=roomW()-x0+2, c1=hexMix(th.wall,'#000000',.18), c2=hexMix(th.wall,'#000000',.32);
+  R(x0,0,w,H,c1); for(let y=0,r=0;y<H;y+=6,r++){ R(x0,y,w,1,c2); for(let x=x0+(r%2)*8;x<x0+w;x+=16) R(x,y,1,6,c2); } R(x0,0,3,H,hexMix(th.wall,'#000000',.45)); }
+async function expandAsk(){ const id=save.workAt, pr=expandPrice(id), sh=shopById(id);
+  const ok=await modal(`Buy the space next door and knock out this wall for ${pr} coins? You'll have room for more bench seats, tattoo chairs and staff.`,
+    [['Not now',false],[save.coins<pr?`Need ${pr-save.coins} more`:'Expand',true,true,save.coins<pr]]);
+  if(!ok||save.coins<pr||shopExpanded()) return;
+  const {cx,fy}=sceneGeo(), x0=sideWallX()||cx+165;
+  save.coins-=pr; (save.expanded||(save.expanded={}))[id]=true; persist(); furnChanged(); blip(70); blip(110);
+  for(let k=0;k<50;k++) DUST.push({x:x0+Math.random()*24,y:fy-70+Math.random()*80,vx:Math.random()*2.4-.6,vy:-Math.random()*2,floor:fy+8+Math.random()*34,life:100,s:Math.random()<.5?2:1,c:pickR(['#c8b8a8','#8a8a86','#6a6a70','#a89888'])});
+  renderFloorHud(); toast(`${sh.name} just got bigger: room for more seats, chairs and staff!`); }
+
+/* ---------- wall items: a TV and framed pictures hang on the wall (never over the window, sign, frames, phone or closet) ---------- */
+const wallY=()=>Math.round((sceneGeo().fy-22)*0.2);
+function wallBlocks(){ const {cx}=sceneGeo(), th=sceneTheme(), st=th?Object.keys(THEMES).find(k=>THEMES[k]===th):'dee', b=[];
+  b.push([cx-34,cx+34]); // the window
+  const fr=th?layout().frames:3; if(fr) b.push([cx-120,cx-118+28*fr]); // framed flash
+  b.push([cx+44,cx+48+(th?pixW(th.neon[0],2)+12:62)]); // the neon sign
+  b.push([cx-50,cx-30]); // the wall phone
+  if(st==='nautical') b.push([cx+116,cx+136]);
+  if(st==='gallery') [0,1,2].forEach(i=>{ const x=Math.round(roomW()*(.08+i*.3)); if(Math.abs(x-cx)>=40) b.push([x-2,x+36]); });
+  const cl=piece('closet'); if(cl) b.push([cl.x-4,cl.x+26]);
+  if(bigRoom()){ const x0=cx+170; b.push([x0-8,x0+8],[x0+121,x0+179],[x0+38,x0+62],[x0+233,x0+257]); }
+  return b; }
+function wallList(){ const st=furnStore(), out=[];
+  ((save.extraFurn||{})[shopKey()]||[]).forEach(e=>{ const inf=FURN_INFO[e.type]; if(!inf||!inf.wall) return; const sv=st[e.key];
+    if(!sv||sv.sold||sv.stored||sv.wx==null||(F.carry&&F.carry.key===e.key)) return; out.push({key:e.key,type:e.type,kind:e.kind,x:sv.wx}); });
+  return out; }
+function wallOK(type,x){ const w=FURN_INFO[type].w, lim=sideWallX()||roomW(); if(x<4||x+w>lim-4) return false;
+  if(wallBlocks().some(([a,b])=>x<b+2&&x+w>a-2)) return false;
+  return !wallList().some(o=>x<o.x+FURN_INFO[o.type].w+2&&x+w>o.x-2); }
+const tvPool=()=>save.inked&&save.inked.length?save.inked:PRACTICE;
+const wallDrop=type=>type==='tv'?6:0; // the TV hangs a little lower than the pictures
+function drawWallItems(t,wb){ const y=Math.round(wb*0.2); wallList().forEach(w=>drawWallItem(w.type,w.x,y+wallDrop(w.type),w.kind,t)); }
+// the TV plays your tattoo designs (or flash art until you've done some); pictures are framed flash
+function drawWallItem(type,x,y,kind,t){
+  if(type==='tv'){ R(x,y,34,22,'#151515'); R(x+2,y+2,30,17,'#0e1a2e'); R(x+14,y+22,6,2,'#151515'); R(x+29,y+20,2,1,'#e04040');
+    const pool=tvPool(), k=pool[((t/4000)|0)%pool.length]; if(!DESIGNS[k]&&/^lt_/.test(k)){ const [,st,w]=k.split('_'); letterKey(w,st); }
+    if(DESIGNS[k]) miniDesign(k,x+17,y+10.5,14,'#9fe8ff',[x+2,y+2,30,17]); }
+  if(type==='pic'){ R(x,y,22,28,'#3d2414'); R(x+2,y+2,18,24,'#f2e6cc'); if(DESIGNS[kind]) miniDesign(kind,x+11,y+14,15,'#b3263e'); } }
+function miniDesign(k,mx,my,size,col,clip){ const b=designBox(k), s=size/Math.max(b.w,b.h);
+  sx.save(); if(clip){ sx.beginPath(); sx.rect(...clip); sx.clip(); }
+  sx.translate(mx,my); sx.scale(s,s); sx.translate(-(b.x+b.w/2),-(b.y+b.h/2)); sx.strokeStyle=col; sx.lineWidth=1.2/s; sx.lineJoin=sx.lineCap='round'; sx.stroke(pathOf(k)); sx.restore(); }
+async function wallMoveAsk(w){ const nm=invName(w).toLowerCase();
+  if(await modal(`Move the ${nm}?`,[['Leave it',false],['Move it',true,true]])){ F.carry={key:w.key,type:w.type,kind:w.kind}; furnChanged(); blip(520); } }
+// TV and radio keep waiting customers happier in the shop they're in
+function entF(){ return (furnList().some(p=>p.type==='radio')?.85:1)*(wallList().some(p=>p.type==='tv')?.75:1); }
 
 /* ---------- floor state ---------- */
 const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:null,targetAct:null,padMove:[0,0],keys:{},
@@ -2507,16 +2740,25 @@ function drawPiece(p,chair,L){ const {x,y}=p;
   if(p.type==='plant') drawPlant(p.kind||L.plant||'cactus',x,y);
   if(p.type==='sofa'){ R(x-20,y-22,40,12,'#3f6b6b'); R(x-20,y-22,40,2,'#5a8a8a'); R(x-20,y-10,40,8,'#4a7a7a'); R(x-20,y-10,40,1,'#6a9a9a'); R(x-23,y-16,5,14,'#355a5a'); R(x+18,y-16,5,14,'#355a5a'); R(x-18,y-2,3,3,'#2a1a10'); R(x+15,y-2,3,3,'#2a1a10'); R(x-1,y-21,2,11,'#355a5a'); }
   if(p.type==='desk') drawDesk(x,y);
+  if(p.type==='radio'){ R(x-7,y-12,14,3,'#6a4a32'); R(x-6,y-9,2,9,'#4a3020'); R(x+4,y-9,2,9,'#4a3020'); R(x-6,y-19,12,7,'#2b2b33'); R(x-5,y-18,4,5,'#555'); R(x+1,y-17,4,1,'#e0a33a'); R(x+1,y-15,4,1,'#e0a33a'); R(x+5,y-25,1,6,'#888');
+    if(F.active){ const k=(tick/36|0)%3; R(x+5+k,y-25-k,1,3,'#9fe8ff'); R(x+4+k,y-23-k,2,2,'#9fe8ff'); } }
   if(p.type==='closet'){ R(x-1,y-44,24,3,'#4a3020'); R(x,y-41,22,41,'#6a4a32'); R(x+2,y-39,8,37,'#8a6a46'); R(x+12,y-39,8,37,'#8a6a46'); R(x+9,y-22,1,3,'#e0c070'); R(x+12,y-22,1,3,'#e0c070'); R(x+5,y-50,12,6,'#c0a070'); R(x+5,y-50,12,1,'#d8bc88'); }
 }
 // the piece you're carrying: a see-through preview in front of you, outlined green (fits) or red (something's in the way)
 function carrySpot(){ const p=F.player, c=F.carry, inf=FURN_INFO[c.type], dir=p.flip?-1:1, half=(inf.fp[2]-inf.fp[0])/2;
+  if(inf.wall){ const x=Math.round((p.x-inf.w/2)/2)*2; return {x,y:wallY()+wallDrop(c.type),ok:wallOK(c.type,x),wall:true}; }
   const mx=p.x+dir*(half+10), my=p.y, x=Math.round((mx-inf.c[0])/4)*4, y=Math.round((my-inf.c[1])/4)*4;
-  return {x,y,ok:placeOK(c.type,x,y,furnList().filter(o=>o.key!==c.key))}; }
-function drawCarryGhost(chair,L){ const g=carrySpot(), r=fpRect(F.carry.type,g.x,g.y), col=g.ok?'#7fff7f':'#ff5a46';
-  sx.globalAlpha=.55; drawPiece({type:F.carry.type,x:g.x,y:g.y},chair,L); sx.globalAlpha=1;
+  return {x,y,ok:placeOK(c.type,x,y,furnList().filter(o=>o.key!==c.key))&&!(newRoomOnly(c)&&x<sceneGeo().cx+182)}; }
+// Dee's new bench, and extra tattoo chairs in Dee's shop, only go in the new room
+const newRoomOnly=c=>c.newRoom||(shopKey()==='dee'&&c.type==='chair'&&c.k>0);
+function drawCarryGhost(chair,L){ const g=carrySpot(), col=g.ok?'#7fff7f':'#ff5a46';
+  if(g.wall){ const inf=FURN_INFO[F.carry.type]; sx.globalAlpha=.7; drawWallItem(F.carry.type,g.x,g.y,F.carry.kind,performance.now()); sx.globalAlpha=1;
+    R(g.x-1,g.y-1,inf.w+2,1,col); R(g.x-1,g.y+inf.h,inf.w+2,1,col); R(g.x-1,g.y-1,1,inf.h+2,col); R(g.x+inf.w,g.y-1,1,inf.h+2,col); return; }
+  const r=fpRect(F.carry.type,g.x,g.y);
+  sx.globalAlpha=.3; drawPiece({type:F.carry.type,x:g.x,y:g.y,kind:F.carry.kind},chair,L); sx.globalAlpha=1;
   R(r[0],r[3]-1,r[2]-r[0],1,col); R(r[0],r[1],r[2]-r[0],1,col); R(r[0],r[1],1,r[3]-r[1],col); R(r[2]-1,r[1],1,r[3]-r[1],col);
-  const p=F.player; R(p.x-5,p.y-46,10,6,'#c0a070'); R(p.x-5,p.y-46,10,1,'#d8bc88'); }
+  const p=F.player, inf=FURN_INFO[F.carry.type]; drawPiece({type:F.carry.type,x:Math.round(p.x-inf.c[0]),y:Math.round(p.y-9),kind:F.carry.kind},chair,L);
+  const sk=(CH.you&&CH.you.skin)||'#eab894'; R(p.x-9,p.y-17,3,3,sk); R(p.x+6,p.y-17,3,3,sk); }
 function drawFloorOverlay(t){
   if(F.tourAt&&!(F.tourAt.near&&F.player&&Math.hypot(F.player.x-F.tourAt.x,F.player.y-F.tourAt.y)>48)){ const b=((t/220)|0)%2, x=F.tourAt.x, y=F.tourAt.y-b; // Dee's tour: "walk here" arrow
     R(x-4,y,9,3,'#9fe8ff'); R(x-3,y+3,7,2,'#9fe8ff'); R(x-2,y+5,5,1,'#9fe8ff'); R(x-1,y+6,3,1,'#9fe8ff'); R(x,y+7,1,1,'#9fe8ff'); }
@@ -2524,7 +2766,11 @@ function drawFloorOverlay(t){
     R(c.x-8,c.y-38,16,3,'#2a1a14'); R(c.x-7,c.y-37,Math.max(1,14*f),1,f>.5?'#86c060':f>.25?'#d9a12b':'#c2453a'); });
   save.staff.forEach(st=>{ const a=F.staffActs[st.id], s=F.sst[st.id]; if(!a||!s) return;
     if(s.busy){ const f=clamp(1-(s.busy.until-save.clock)/s.busy.len); R(a.x-8,a.y-38,16,3,'#2a1a14'); R(a.x-7,a.y-37,Math.max(1,14*f),1,'#9fe8ff'); }
-    else if(s.noSup){ R(a.x-3,a.y-46,7,10,'#fff'); R(a.x,a.y-44,1,4,'#c2453a'); R(a.x,a.y-39,1,1,'#c2453a'); } });
+    else if(s.noSup){ R(a.x-3,a.y-46,7,10,'#fff'); R(a.x,a.y-44,1,4,'#c2453a'); R(a.x,a.y-39,1,1,'#c2453a'); }
+    if(s.noSup||a.sayT>0) return; const ex=Math.round(a.x)+6, ey=Math.round(a.y)-44-(((t/400)|0)%2);
+    if(st.energy<30) pixText('Z',ex,ey,1,'#9fd4ff');
+    else if(st.mood<45){ R(ex,ey,5,5,'#3d2b55'); R(ex+1,ey+1,1,1,'#fff'); R(ex+3,ey+1,1,1,'#fff'); R(ex+1,ey+3,3,1,'#fff'); R(ex+1,ey+4,1,1,'#3d2b55'); R(ex+3,ey+4,1,1,'#3d2b55'); }
+    else if(st.mood>=80){ R(ex,ey,2,1,'#ff6fa8'); R(ex+3,ey,2,1,'#ff6fa8'); R(ex,ey+1,5,1,'#ff6fa8'); R(ex+1,ey+2,3,1,'#ff6fa8'); R(ex+2,ey+3,1,1,'#ff6fa8'); } });
   const p=F.player; if(p){ R(p.x-2,p.y-40,5,1,'#ffe36e'); R(p.x-1,p.y-39,3,1,'#ffe36e'); R(p.x,p.y-38,1,1,'#ffe36e'); }
   if(F.deathRunning&&F.bodies&&F.bodies.length&&!F.ambCalled&&!F.deathStage&&((t/300)|0)%2){ const {cx,fy}=sceneGeo(), x=cx-40, y=fy-52;
     R(x-3,y,7,2,'#ff3a3a'); R(x-2,y+2,5,1,'#ff3a3a'); R(x-1,y+3,3,1,'#ff3a3a'); R(x,y+4,1,1,'#ff3a3a'); }
@@ -2534,7 +2780,8 @@ function drawFloorOverlay(t){
 
 function hotspots(){
   const {cx,fy}=sceneGeo();
-  if(F.carry&&F.player) return [{x:F.player.x,y:F.player.y,r:9999,ax:F.player.x,ay:F.player.y,door:true,label:`Put down the ${FURN_INFO[F.carry.type].name}`,act:carryMenu}];
+  if(F.carry&&F.player){ if(!F.appr&&STORABLE.includes(F.carry.type)&&Math.hypot(F.player.x-(cx-88),F.player.y-(fy+10))<28) return [{x:F.player.x,y:F.player.y,r:9999,ax:cx-90,ay:fy-12,label:`Store the ${invName(F.carry).toLowerCase()} at the register`,act:storeAsk}];
+    return [{x:F.player.x,y:F.player.y,r:9999,ax:F.player.x,ay:F.player.y,door:true,label:`${FURN_INFO[F.carry.type].wall?'Hang':'Put down'} the ${FURN_INFO[F.carry.type].name}`,act:carryMenu}]; }
   const hs=[...(F.appr?[]:[{x:cx-88,y:fy+10,r:22,ax:cx-90,ay:fy-12,label:'Register (staff & upgrades)',act:()=>openStore('office',enterFloor)}]),
             F.appr?{x:cx,y:H-10,r:16,ax:cx,ay:H+6,door:true,label:'Door',
                 act:()=>{ if(save.runAsk||save.runTut){ F.away=true; openMap(enterFloor); } else toast('Dee: "Where are you going? Clients are on the way."'); }}
@@ -2546,12 +2793,14 @@ function hotspots(){
   if(F.suspended){ const a=artistPos(); hs.push({x:a.x,y:a.y,r:16,ax:a.x+26,ay:a.y-14,label:'Back to your client',act:resumeJob}); }
   F.custs.forEach(c=>{ if(c.state==='waiting') hs.push(c.script
     ?{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}`,act:()=>talkScripted(c)}
-    :{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}: ${DESIGNS[c.design].name}, ${c.pay} coins`,act:()=>talkCustomer(c)}); });
+    :{x:c.x,y:c.y,r:16,ax:c.x,ay:c.y,label:`Talk to ${CH[c.ch].name}`,act:()=>talkCustomer(c)}); });
   save.staff.forEach(st=>{ const a=F.staffActs[st.id]; if(a) hs.push({x:a.x,y:a.y,r:14,ax:a.x,ay:a.y,label:`${st.name} (${LVL_NAME[st.lvl]}): ${staffStatus(st)}`,act:()=>manageStaff(st)}); });
   // furniture: the supply closet opens your stock; anything not in use can be moved (career only)
   furnList().forEach(p=>{ const inf=FURN_INFO[p.type], mx=p.x+inf.c[0], my=p.y+inf.fp[3];
     if(p.type==='closet') hs.push({x:mx,y:my+10,r:16,ax:mx,ay:p.y-6,label:'Supply closet (your stock)',act:()=>openStore('stock',enterFloor)});
     else if(save.career&&!F.appr&&!pieceBusy(p)) hs.push({x:mx,y:my+6,r:11,ax:mx,ay:p.y-6,label:`Move the ${inf.name}`,act:()=>pickUp(p)}); });
+  if(save.career&&!F.appr){ const sw=sideWallX(); if(sw) hs.push({x:sw-12,y:fy+24,r:24,ax:sw-14,ay:fy-4,label:`Expand into next door (${expandPrice(save.workAt)} coins)`,act:expandAsk});
+    const wy=wallY(); wallList().forEach(w=>{ const inf=FURN_INFO[w.type], mx=w.x+inf.w/2; hs.push({x:mx,y:fy-10,r:16,ax:mx,ay:wy+inf.h/2+14,wall:w.key,label:`Move the ${invName(w).toLowerCase()}`,act:()=>wallMoveAsk(w)}); }); }
   return hs;
 }
 function staffStatus(st){ const s=F.sst[st.id]; if(st.off===save.cday) return 'day off'; if(!s) return 'ready for a client'; if(s.busy) return `tattooing ${wantText(s.busy.c.design)}`; if(s.noSup) return 'out of supplies!'; if(s.tired) return 'too tired to work'; return 'waiting for a client'; }
@@ -2584,7 +2833,8 @@ function setDoors(open){
 }
 async function endDayAsk(){
   if(F.suspended){ toast('Finish the tattoo in the chair first'); return; }
-  const ok=await modal(`End the day now${F.custs.some(c=>c.state==='waiting')?'? Anyone still waiting goes home':''}?`,[['Keep working',false],['End the day',true,true]]);
+  if(deeDay()){ toast('Dee: "We\'re not closing up yet, kid."'); return; }
+  const ok=await modal(F.mustEnd?'There is nothing more to do today. Close up and start tomorrow.':`End the day now${F.custs.some(c=>c.state==='waiting')?'? Anyone still waiting goes home':''}?`,[['Keep working',false,false,!!F.mustEnd],['End the day',true,true]]);
   if(ok&&!F.closing){ F.closing=true; F.mustEnd=false; F.tourAt=null; endDay(); }
 }
 function renderFloorHud(){
@@ -2600,7 +2850,7 @@ const hpNow=()=>save.hp==null?100:Math.max(0,Math.min(100,Math.round(save.hp)));
 const hpSpeed=h=>h>75?1:h>50?.86:h>25?.72:.56;
 function clampPlayer(p){
   const {cx,fy}=sceneGeo();
-  p.x=clamp(p.x,8,F.wallUp?cx+155:roomW()-8); p.y=clamp(p.y,fy-16,H-4);
+  const sw=sideWallX(); p.x=clamp(p.x,8,F.wallUp?cx+155:sw?sw-8:roomW()-8); p.y=clamp(p.y,fy-16,H-4);
   p.behind=p.y<fy-8&&p.x<cx-50; // behind the counter: drawn behind it, like Dee
 }
 // furniture your feet can't pass through: [x0,y0,x1,y1] in scene pixels
@@ -2635,6 +2885,7 @@ function floorTick(dt){
   // a body on the floor: customers react, and the paramedics come after a while
   if(F.bodies&&F.bodies.length){ bodyReactions(); if(F.ambCalled&&(F.ambT-=dt/1000)<=0&&!F.ambBusy){ F.ambBusy=true; paramedics(F.bodies.slice()).then(()=>{ F.ambBusy=false; F.ambCalled=false; }); } }
   if(!F.appr&&save.career&&!F.deathRunning&&!F.takeRunning&&!(F.bodies&&F.bodies.length)) shopChatter(dt);
+  if(!F.appr&&deeDay()&&!F.open&&!F.deeOpened&&save.clock>=DAY_START+60&&!F.busy&&!F.carry&&!dlg.active&&!modalOpen&&!F.deathRunning) deeOpensDoors();
   // Day 4 (career): the robbery that kills Dee, after 12:30 at Dee's shop with the doors open and nothing in progress
   if(!F.appr&&save.career&&!save.deeDied&&save.workAt==='dee'&&F.open&&save.clock>=750&&!F.busy&&!F.jobCust&&!F.suspended&&!dlg.active&&!F.deathRunning&&!modalOpen) deeDeath();
   // Day 10 (career): the gang Dee owed money comes for the shop
@@ -2645,7 +2896,7 @@ function floorTick(dt){
   F.custs.slice().forEach(c=>{
     const arrived=Math.hypot(c.tx-c.x,c.ty-c.y)<.8;
     if(c.state==='arriving'&&arrived){ c.state='waiting'; if(c.script&&!save.seenWaitBar) deeWaitBar(); }
-    if(c.state==='toChair'&&arrived){ c.state='inChair'; c.flip=false; if(c.by==='you'&&!F.starting){ F.starting=true; setTimeout(()=>{ F.starting=false; startCareerJob(c); },350); } }
+    if(c.state==='toChair'&&arrived){ c.state='inChair'; c.sit=true; c.flip=false; if(c.by==='you'&&!F.starting){ F.starting=true; setTimeout(()=>{ F.starting=false; startCareerJob(c); },350); } }
     else if(c.state==='leaving'&&arrived) removeCust(c);
   });
   // nearest interaction
@@ -2671,18 +2922,20 @@ function pieceBusy(p){
     const st=save.staff.find(s=>s.chair===p.k); return !!(st&&F.sst[st.id]&&F.sst[st.id].busy); }
   return false; }
 function pickUp(p){ if(pieceBusy(p)){ toast('Someone is using that right now'); return; }
-  F.carry={key:p.key,type:p.type,k:p.k}; furnChanged(); blip(520); toast(`Carrying the ${FURN_INFO[p.type].name}`); }
+  F.carry={key:p.key,type:p.type,k:p.k,kind:p.kind}; furnChanged(); blip(520); toast(`Carrying the ${FURN_INFO[p.type].name}`); }
 function sellValue(c){
   if(c.type==='chair'&&c.k>0) return Math.round(UPGRADES.find(u=>u.id==='chairs').price(save.up.chairs-1)/2);
   if(c.type==='seat') return save.up.seats>2?Math.round(UPGRADES.find(u=>u.id==='seats').price(save.up.seats-3)/2):0;
+  const bought=((save.extraFurn||{})[shopKey()]||[]).find(e=>e.key===c.key); if(bought) return Math.round(bought.price/2);
   if(c.type==='plant'||c.type==='lamp') return 15;
   if(c.type==='sofa') return 40;
   return 0; }
 async function carryMenu(){
   const c=F.carry, g=carrySpot(), nm=FURN_INFO[c.type].name, val=sellValue(c);
-  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(val) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
-  const v=await modal(g.ok?`Put the ${nm} down here?`:`Something is in the way here. Find a free spot for the ${nm}.`,opts);
-  if(v==='put'){ const {cx,fy}=sceneGeo(), st=furnStore(); st[c.key]={dx:g.x-cx,dy:g.y-fy}; F.carry=null; furnChanged(); persist(); blip(700);
+  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(val&&!c.newRoom) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
+  if(newRoomOnly(c)&&!g.ok&&g.x<sceneGeo().cx+182){ await modal(c.newRoom?'Dee wants the new bench in the new room, past where the wall was.':'Extra tattoo chairs go in the new room, past where the wall was.',[['Keep carrying','keep',true]]); return; }
+  const v=await modal(g.ok?(g.wall?`Hang the ${nm} here?`:`Put the ${nm} down here?`):(g.wall?`It can't hang there (window, sign, pictures or the closet). Find a free spot on the wall.`:`Something is in the way here. Find a free spot for the ${nm}.`),opts);
+  if(v==='put'){ const {cx,fy}=sceneGeo(), st=furnStore(); st[c.key]=g.wall?{wx:g.x}:{dx:g.x-cx,dy:g.y-fy}; F.carry=null; furnChanged(); persist(); blip(700);
     save.staff.forEach(s=>{ const a=F.staffActs[s.id]; if(a&&'chair'+s.chair===c.key){ const sp=staffPos(s.chair); a.x=a.tx=sp.x; a.y=a.ty=sp.y; } }); }
   if(v==='sell'){ const ok=await modal(`Sell the ${nm} for ${val} coins? This can't be undone.`,[['Keep it',false,true],['Sell it',true]]); if(ok) sellCarried(val); }
 }
@@ -2693,7 +2946,7 @@ function sellCarried(val){
     save.up.chairs--; save.staff.forEach((s,i)=>{ s.chair=i+1; }); F.staffActs={}; }
   if(c.type==='seat'){ for(let j=c.k;j<save.up.seats-1;j++){ if(st['seat'+(j+1)]) st['seat'+j]=st['seat'+(j+1)]; else delete st['seat'+j]; } delete st['seat'+(save.up.seats-1)];
     F.custs.forEach(cu=>{ if(cu.seat!=null&&cu.seat>c.k) cu.seat--; }); save.up.seats--; }
-  if(c.type==='plant'||c.type==='lamp'||c.type==='sofa') st[c.key]={sold:true};
+  if(STORABLE.includes(c.type)) st[c.key]={sold:true};
   save.coins+=val; F.carry=null; furnChanged(); persist(); blip(990); toast(`Sold for ${val} coins`); enterFloor();
 }
 function floorInteract(){ if(F.hot&&!F.busy) F.hot.act(); }
@@ -2706,6 +2959,7 @@ $('#scr-floor').addEventListener('pointerdown',e=>{
     const r0=sc.getBoundingClientRect(), s0=Math.max(r0.width/W,r0.height/H), x0=(e.clientX-r0.left-(r0.width-W*s0)/2)/s0+camX(), y0=(e.clientY-r0.top-(r0.height-H*s0)/2)/s0;
     const c=F.custs.find(c=>c.state==='waiting'&&Math.abs(x0-c.x)<=7&&y0>=c.y-32&&y0<=c.y+1);
     if(c){ const h=hotspots().find(h=>h.x===c.x&&h.y===c.y); if(h){ F.targetAct=h; F.target={x:c.x,y:c.y+6}; } }
+    else { const wy=wallY(), w=wallList().find(w=>x0>=w.x&&x0<=w.x+FURN_INFO[w.type].w&&y0>=wy&&y0<=wy+FURN_INFO[w.type].h); const h=w&&hotspots().find(h=>h.wall===w.key); if(h){ F.targetAct=h; F.target={x:h.x,y:h.y}; } }
     return; }
   const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2;
   const x=(e.clientX-r.left-ox)/s+camX(), y=(e.clientY-r.top-oy)/s;
@@ -2714,7 +2968,11 @@ $('#scr-floor').addEventListener('pointerdown',e=>{
 });
 
 function freeSeat(){ for(let i=0;i<save.up.seats;i++) if(!F.custs.some(c=>c.seat===i)) return i; return -1; }
-function arrivalGap(){ const repF=save.rep>=0?Math.max(.45,1-save.rep/70):1+Math.min(1.5,-save.rep/20), base=58*(save.up.neon?.75:1)*repF/shopById(save.workAt).traffic; return base*(.6+Math.random()*.8); } // busier districts send customers faster
+// a shop you just started working at is quiet at first: word gets around over its first three days
+// a famous shop draws people who expect not to wait long
+const repPat=()=>clamp(1-Math.max(0,save.rep)/150,.6,1);
+function newShopF(){ const st=save.shopState[save.workAt]; if(!st) return 1; const d=st.days||0; return d<1?2:d<2?1.6:d<3?1.3:1; }
+function arrivalGap(){ const repF=save.rep>=0?Math.max(.45,1-save.rep/70):1+Math.min(1.5,-save.rep/20), base=85*(save.up.neon?.75:1)*repF*newShopF()/shopById(save.workAt).traffic; return base*(.6+Math.random()*.8); } // busier districts send customers faster
 function spawnCustomer(){
   const seat=freeSeat(); if(seat<0) return;
   const id='cu'+(F.nextId++), sh=pickR(SHIRTS);
@@ -2722,15 +2980,17 @@ function spawnCustomer(){
     skin:pickR(SKINS),shirt:sh[0],shirtD:sh[1],pants:pickR(['#3b3950','#2b2b3a','#4a5b8c','#3b4a5c']),boots:'#2a1a14',tattoos:Math.random()<.3?1:0};
   const pool=Object.keys(DES_INFO).filter(k=>!DES_INFO[k].letter&&save.rep>=DES_INFO[k].rep).sort((a,b)=>DES_INFO[a].rep-DES_INFO[b].rep);
   // some customers want lettering (half of them on the Eastside)
-  const design=Math.random()<(shopById(save.workAt).district==='eastside'?.5:.2)?letterJob():Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
-  const info=DES_INFO[design], sp=seatPos(seat), pat=pickR([[110,150],[160,230],[240,340]]).reduce((a,b)=>a+Math.random()*(b-a));
+  // lettering starts at your new place after the gang takes Dee's shop: the first customer there asks for it, then it's a regular request
+  const ltOK=save.takeover&&save.workAt!=='dee', ltIntro=ltOK&&!save.letterIntro&&!F.custs.some(x=>x.letterIntro);
+  const design=ltIntro?letterJob('typewriter'):ltOK&&Math.random()<(shopById(save.workAt).district==='eastside'?.5:.2)?letterJob():Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
+  const info=DES_INFO[design], sp=seatPos(seat), pat=pickR([[280,360],[380,500],[540,720]]).reduce((a,b)=>a+Math.random()*(b-a));
   const shade=DESIGNS[design].shade&&Math.random()<.6?randomShade():null; // most customers want some color; it pays more and takes longer
   const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,
-    spot:pickR(SPOTS),pay:Math.round(info.pay*shopById(save.workAt).payMul*(shade?1.25:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:info.time+(shade?90:0),
-    patience:pat,patience0:pat,arrived:save.clock,skin:CH[id].skin};
+    spot:pickR(SPOTS),pay:Math.round(info.pay*shopById(save.workAt).payMul*(shade?1.25:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:Math.round((info.time+(shade?90:0))*clamp(1-Math.max(0,save.rep)/200,.7,1)),
+    patience:ltIntro?400:pat*repPat(),patience0:ltIntro?400:pat*repPat(),arrived:save.clock,skin:CH[id].skin,letterIntro:ltIntro};
   F.custs.push(c); actors.push(c);
 }
-function custLeave(c){ c.state='leaving'; c.seat=null; const d=doorOut(); c.tx=d.x; c.ty=d.y; }
+function custLeave(c){ c.state='leaving'; c.sit=false; c.seat=null; const d=doorOut(); c.tx=d.x; c.ty=d.y; }
 function removeCust(c){ F.custs=F.custs.filter(x=>x!==c); const i=actors.indexOf(c); if(i>=0) actors.splice(i,1); if(F.jobCust!==c&&!c.script) delete CH[c.ch]; }
 
 /* ---------- Dee's shop on Days 2-3: a guided tour, then the seven scripted customers walk in one at a time ---------- */
@@ -2741,7 +3001,9 @@ function spawnScripted(){
     (async()=>{ await dayCard('Day 3','Word is getting around'); renderFloorHud(); await fade(false); F.busy=false; F.spawnAt=performance.now()+600; })();
     return;
   }
-  const sp=seatPos(0), pat=save.cust===0?60:save.runAsk?75:45; // patience in real seconds (Dee's shop has no clock); a bit more during Dee's supply errand
+  // the start of a day at Dee's: remember how things stood, in case the day has to be run again
+  { const day=save.cust<4?2:3; if(!save.apprDay||save.apprDay.day!==day) { save.apprDay={day,cust:day===2?0:4,coins:save.coins,rep:save.rep,sup:{...save.sup},scores:save.scores.length,lost:0}; persist(); } }
+  const sp=seatPos(0), pat=save.cust===0?120:save.runAsk?120:90; // patience in real seconds (Dee's shop has no clock); a bit more during Dee's supply errand
   const c={ch:C.ch,x:sceneGeo().cx,y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat:0,script:C,
     design:C.design,spot:C.spot,skin:C.skin,time:C.time,pay:C.tip,patience:pat,patience0:pat};
   F.custs.push(c); actors.push(c);
@@ -2863,7 +3125,7 @@ async function deeDeath(){
   F.busy=true; F.hot=null;
   await say(null,"He's gone. Dee isn't moving.");
   // kneel by Dee's head (Dee lies with the head to the right)
-  hideDlg(); await playerWalk({x:dee.x-44,y:dee.y+2}); F.busy=true; p.flip=false;
+  hideDlg(); await walkOutOfCounter(); await playerWalk({x:dee.x-44,y:dee.y+2}); F.busy=true; p.flip=false;
   await say('dee',"Kid... come here. I don't think I'm getting up from this one.");
   await say('you',"I'm sorry, Dee. I tried. I couldn't stop him.");
   await say('dee',"Not your fault. That one was coming for me a long time.");
@@ -2932,8 +3194,8 @@ async function gangTakeover(){
   const st=save.staff[0], victims=[];
   if(cl) victims.push({a:cl,id:cl.ch,clerk:true}); if(st&&F.staffActs[st.id]) victims.push({a:F.staffActs[st.id],id:'st_'+st.id});
   for(const v of victims){ const sa=v.a, vid=v.id, nm=CH[vid].name;
-    if(v.clerk){ await say('boss',`Hey. ${nm}. Where do you think you're going?`); hideDlg(); sa.creep=false; sa.tx=sa.x; sa.ty=sa.y; await sleep(300); }
-    else { await say(vid,"You can't just walk in here and take—"); hideDlg(); await sleep(400); }
+    if(v.clerk){ await say('boss',"Hey. You, behind the counter. Where do you think you're going?"); hideDlg(); sa.creep=false; sa.tx=sa.x; sa.ty=sa.y; await sleep(300); }
+    else { hideDlg(); await walk(vid,cx+70,fy+18); sa.flip=true; await say(vid,"You can't just walk in here and take—"); hideDlg(); await sleep(400); }
     const r=actors.find(a=>a.ch==='rob1'); r.flip=sa.x<r.x;
     const gx=r.x+(r.flip?-10:10), gy=r.y-17, tx=sa.x, ty=sa.y-18, ang=Math.atan2(ty-gy,tx-gx), dist=Math.hypot(tx-gx,ty-gy);
     CUTSHOTS.length=0; CUTSHOTS.push({x:gx,y:gy,vx:Math.cos(ang),vy:Math.sin(ang),flash:1}); blip(320); blip(950);
@@ -2962,7 +3224,16 @@ async function gangTakeover(){
 function leaveForStreet(){
   F.custs.slice().forEach(removeCust); F.custs=[]; F.player=null; F.staffActs={}; F.sst={}; F.jobCust=null; F.open=false;
   actors.length=0; F.away=true; F.at='street'; fade(false); openMap(null);
+  if(save.takeover&&!save.shops.length&&save.coins<FRESH_START()) setTimeout(brokeRestart,900);
 }
+async function brokeRestart(){
+  await modal("No shop, and not enough coins to buy one. Time to start over.",[['Start over',true,true]]);
+  const id='eastink'; save.shops=[id]; save.shopState[id]={mgr:null,lose:0,days:0}; save.workAt=id;
+  ['furn','extraFurn','furnInv','decor','expanded'].forEach(k=>{ if(save[k]) delete save[k][id]; });
+  Object.assign(save,{cday:8,clock:DAY_START,coins:150,staff:[],clerk:null,hp:100,up:{seats:2,chairs:0,neon:false,rotary:false,light:false}});
+  Object.assign(save.sup,{needles:8,ink:80,ointment:6,wraps:6,film:2}); persist();
+  Object.assign(F,{player:null,custs:[],sst:{},staffActs:{},jobCust:null,today:{you:0,staff:0,jobs:0,sjobs:0,lost:0},arrivalAt:DAY_START+20,open:false,closing:false,away:false,lateToast:false,carry:null});
+  furnChanged(); await dayCard(`Day ${careerDay()}`,'Starting over at Eastside Ink'); enterFloor(); await fade(false); }
 // Day 3 at Dee's: a "customer" walks up to the counter, chats with Dee, then pulls a gun. The fight starts right at the register
 async function deeRobbery2(){
   F.busy=true; F.hot=null; F.hotLabel=''; F.target=null; $('#fPrompt').classList.add('hide');
@@ -3017,11 +3288,12 @@ async function deeWaitBar(){
 }
 // a Day 2-3 customer waited too long: they're gone for good, and the story moves on to the next one
 function scriptedWalkout(c){
-  custLeave(c); save.rep-=1; save.cust++; persist(); renderFloorHud();
+  custLeave(c); save.rep-=1; save.cust++; apprLost(); persist(); renderFloorHud();
   toast(`${CH[c.ch].name} got tired of waiting and left (−1 rep)`); blip(200);
   F.spawnAt=performance.now()+2500;
   (async()=>{ if(!save.seenWalkout){ save.seenWalkout=true; persist(); F.busy=true; await sleep(600);
       await say('dee',"Lost one. That's money and reputation out the door. Don't keep them sitting."); hideDlg(); F.busy=false; }
+    if(apprFailed()){ await sleep(1200); apprDayFailed(); return; }
     if(save.cust>=CUSTOMERS.length){ await sleep(1200); ending(); } })();
 }
 const waitFor=async(cond,ms=60000)=>{ const t0=performance.now(); while(!cond()&&performance.now()-t0<ms) await sleep(80); };
@@ -3080,6 +3352,12 @@ function staffTick(st){
 }
 async function talkCustomer(c){
   if(F.busy) return; if(F.suspended){ toast('Finish your client in the chair first'); return; } F.talking=c;
+  // the first lettering customer explains what they want
+  if(c.letterIntro&&!save.letterIntro){ F.busy=true; const w=DESIGNS[c.design].say.match(/"(.*)"/)[1];
+    await say(c.ch,`Hey. Do you do lettering? Words, not pictures. I want "${w}", in plain typewriter letters.`);
+    await say(null,"Lettering: customers want a word in a style. Typewriter first; script, graffiti and blackletter come as your reputation grows, and they pay more.");
+    await say(null,"Every letter is its own little shape with tight gaps. Go slow and keep each stroke on the line.");
+    hideDlg(); save.letterIntro=true; persist(); F.busy=false; }
   const hrs=c.dur/60, ht=Number.isInteger(hrs)?hrs:hrs.toFixed(1);
   const v=await modal(`${CH[c.ch].name} wants ${wantText(c.design)} on the ${c.spot}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
     [['Not now','later'],['Send away','away'],['Start tattoo','go',true]]);
@@ -3108,7 +3386,7 @@ function afterCareerJob(){
 }
 async function doorMenu(){
   const v=await modal(`The front door. ${F.open?'The sign says OPEN.':'The sign says CLOSED.'}`,
-    [['Stay in','stay'],[F.open?'Close the doors':'Open the doors','doors',!F.open],['Head out (city map)','map',F.open],['End the day','end']]);
+    [['Stay in','stay'],[F.open?'Close the doors':'Open the doors','doors',!F.open],['Head out (city map)','map',F.open],['End the day','end',false,deeDay()]]);
   if(v==='doors') setDoors(!F.open);
   if(v==='map'){ F.away=true; openMap(enterFloor); }
   if(v==='end') endDayAsk();
@@ -3119,7 +3397,7 @@ async function floorMenu(){
   if(F.deathRunning){ toast(F.deathStage==='hosp'?'Get to the hospital first.':'Call for help first.'); return; }
   if(F.takeRunning) return;
   const opts=F.appr?[['Supply closet','store'],['Save & quit','quit']]
-    :[[F.open?'Close the doors':'Open the doors','doors'],['Supply closet & office','store'],['End the day','end'],['Save & quit','quit']];
+    :[[F.open?'Close the doors':'Open the doors','doors'],['Supply closet & office','store'],['End the day','end',false,deeDay()],['Save & quit','quit']];
   if(dev) opts.push(['Dev: +500 coins','coins'],['Dev: restock supplies','sup']);
   if(dev&&!F.busy&&!F.suspended&&!F.jobCust) opts.push(...(F.appr?[['Dev: skip this customer','skipc']]:[['Dev: skip 2 hours','skiph'],['Dev: end the day now','skipd']]));
   opts.push(['Resume','resume',true]);
@@ -3134,6 +3412,11 @@ async function floorMenu(){
   if(v==='end') endDayAsk();
   if(v==='quit'){ persist(); show('title'); }
 }
+// working for Dee before the robbery: Dee runs the day, so it can't be ended early
+const deeDay=()=>save.career&&save.workAt==='dee'&&!save.deeDied&&!F.mustEnd;
+async function deeOpensDoors(){ F.deeOpened=true; F.busy=true;
+  await say('dee',"No customers, no money! Don't forget to open the doors, kid. We've got rent to pay.");
+  hideDlg(); setDoors(true); F.busy=false; }
 // tonight's rent where you work: the shop's rent plus upkeep for extra bench seats and chairs (none while Dee still runs Dee's shop, including the day Dee died)
 function rentToday(){ if(save.workAt==='dee'&&(!save.deeDied||save.deeDied===save.cday||save.takeover)) return 0; return shopById(save.workAt).rent+(save.up.seats-2)*5+save.up.chairs*15; }
 function endDay(){
@@ -3154,7 +3437,7 @@ function endDay(){
     if(id===save.workAt){ net=T.you+T.staff-rent-wages; how='you worked here'; }
     else if(s.mgr){ const r=autoDay(sh,s.mgr); net=r.gross-sh.rent-s.mgr.wage; others+=net; how=`${s.mgr.name}: ${r.cust} tattoos`; }
     else { net=-sh.rent; others+=net; how='closed, no manager'; }
-    s.lose=net<0?(s.lose||0)+1:0;
+    s.lose=net<0?(s.lose||0)+1:0; if(id===save.workAt) s.days=(s.days||0)+1;
     let warn=''; if(s.lose>=5){ gone.push(sh.name); releaseManager(id); save.shops=save.shops.filter(x=>x!==id); delete save.shopState[id]; if(save.workAt===id) save.workAt='dee'; }
     else if(s.lose>=3) warn=` ⚠ losing money ${s.lose} days in a row`;
     lines.push(`<li>${sh.name} (${how}): ${sg(net)}${warn}</li>`);
@@ -3190,7 +3473,7 @@ function workAt(id){
 }
 $('#bNextDay').onclick=async()=>{
   F.carry=null; F.mustEnd=false; F.tourAt=null; save.cday++; refreshApplicants(); save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.bodies=[]; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
-  await dayCard(`Day ${careerDay()}`,(save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now. ":'')+(save.coins<0?'Money is tight. Get to work. ':'9 AM. Open the doors when you\'re ready. ')+(rentToday()?`Rent due tonight: ${rentToday()}`:'')+save.staff.filter(x=>x.off===save.cday).map(x=>` ${x.name} has the day off.`).join('')); F.closing=false; enterFloor(); await fade(false);
+  await dayCard(`Day ${careerDay()}`,[save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now.":'',save.coins<0?'Money is tight. Get to work.':'9 AM. Open the doors when you\'re ready.',rentToday()?`Rent due tonight: ${rentToday()}`:'',...save.staff.filter(x=>x.off===save.cday).map(x=>`${x.name} has the day off.`)].filter(Boolean).join('\n')); F.closing=false; enterFloor(); await fade(false);
   // the first morning without Dee
   if(save.deeDied&&save.cday===save.deeDied+1&&!save.clerk){ F.busy=true;
     await say(null,"The shop is quiet without Dee. Your rose still hangs on Dee's wall.");
@@ -3213,7 +3496,8 @@ async function startCareer(){
   await say('dee',"Supplies come from the Supply Store across town, open 8 to 6. Walk out the door and find it on the map. Don't leave customers waiting while you shop.");
   await say('dee',"Save your money. There are shops all over Neon Springs waiting for an owner.");
   if(!save.deeExpand) await deeExpands();
-  await say('dee',"Now go open those doors.");
+  hideDlg(); setDoors(true); F.deeOpened=true;
+  await say('dee',"Doors are open. Let's get tattooing.");
   hideDlg(); F.busy=false;
 }
 // Dee bought next door: walks over, knocks the wall down with a sledgehammer, brings in furniture, and you place a new bench
@@ -3237,7 +3521,7 @@ async function deeExpands(){
   save.deeDecor=true; if(save.up.seats<6) save.up.seats++; furnChanged(); persist();
   await say('dee',"I brought in some furniture for it too. Here's another bench seat for the waiting area. Put it wherever you think it works.");
   hideDlg(); F.camAt=null;
-  F.carry={key:'seat'+(save.up.seats-1),type:'seat',k:save.up.seats-1}; furnChanged(); F.busy=false;
+  F.carry={key:'seat'+(save.up.seats-1),type:'seat',k:save.up.seats-1,newRoom:true}; furnChanged(); F.busy=false;
   if(!save.seenFurn){ save.seenFurn=true; persist();
     await say(null,"You're carrying the bench seat. Find a free spot: the outline turns green where it fits, red where it doesn't.");
     await say(null,"Press the button to put it down. Later, anything that isn't in use can be moved: walk up to it and pick it up.");
@@ -3245,11 +3529,17 @@ async function deeExpands(){
   await waitFor(()=>!F.carry,1e9);
   F.busy=true; await walk('dee',cx-48,fy-12); await walk('dee',cx-90,fy-12); dee.behind=true; dee.flip=false;
   await say('dee',"Looks good.");
+  await say('dee',"If you ever want more furniture, Comfy Corner across town sells couches, plants and lamps. Here, I'll show you where.");
+  hideDlg(); await peekOnMap('furn');
+  await say('dee',"Whenever you've got coins to spare.");
 }
 
 /* ---------- counter store ---------- */
 let storeTab='supplies', storeBack=null;
 let storeMode='all';
+// on Dee's supply errand you can only buy what Dee asked for, once (so nobody spends Dee's money on the wrong things)
+const ERRAND=['ointment','wraps'];
+function errandLabel(id){ if(!save.runAsk) return null; if(!ERRAND.includes(id)) return "Not on Dee's list"; return save.sup[id]>0?'Got it':null; }
 function openStore(tab,back){ storeMode=tab==='stock'?'stock':tab==='office'?'office':'all'; storeTab=tab==='stock'?'closet':tab==='office'?'upgrades':tab||'supplies'; storeBack=back||null; renderStore(); show('store'); }
 function itemRow(name,desc,price,key,doneLabel){
   return `<div class="item"><div class="grow"><div class="nm">${name}</div><div class="ds">${desc}</div></div>`+
@@ -3257,18 +3547,22 @@ function itemRow(name,desc,price,key,doneLabel){
 }
 // two kinds of store screen: the Supply Store across town (buy supplies), and your own closet & office (see stock, buy upgrades and staff)
 function renderStore(focusKey){
-  const supplier=storeTab==='supplies';
-  const tabs=supplier?['supplies']:storeMode==='stock'?['closet']:storeMode==='office'?['upgrades','staff','decor']:save.career?['closet','upgrades','staff']:['closet'];
-  $('#stTitle').textContent=supplier?SUPPLIER.name:storeMode==='stock'?'Supply closet':storeMode==='office'?'Register & office':save.career?'Supply closet & office':'Supply closet';
-  $('#stTabs').innerHTML=tabs.length<2?'':tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{closet:'Closet',upgrades:'Upgrades',staff:'Staff',decor:'Decor'}[t]}</button>`).join('');
+  const supplier=storeTab==='supplies'||storeTab==='furniture';
+  const tabs=supplier?[storeTab]:storeMode==='stock'?['closet']:storeMode==='office'?['upgrades','staff','decor','stored']:save.career?['closet','upgrades','staff']:['closet'];
+  $('#stTitle').textContent=storeTab==='furniture'?FURNSTORE.name:supplier?SUPPLIER.name:storeMode==='stock'?'Supply closet':storeMode==='office'?'Register & office':save.career?'Supply closet & office':'Supply closet';
+  $('#stTabs').innerHTML=tabs.length<2?'':tabs.map(t=>`<button class="gbtn small" data-tab="${t}" aria-pressed="${t===storeTab}">${{closet:'Closet',upgrades:'Upgrades',staff:'Staff',decor:'Decor',stored:'Furniture'}[t]}</button>`).join('');
   $('#stCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
   let rows='';
-  if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id)).join('');
+  if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id,errandLabel(it.id))).join('')
+    +(save.runAsk?'<p class="hint">Dee only sent you for ointment and plastic wrap.</p>':'');
   if(storeTab==='closet') rows=SUPPLY.map(it=>`<div class="item"><div class="grow"><div class="nm">${it.name}</div><div class="ds">${it.desc}</div></div><span class="pr ${save.sup[it.id]<(it.id==='ink'?10:2)?'failtag':''}">${save.sup[it.id]}${it.unit}</span></div>`).join('')
     +`<p class="hint">Running low? Walk out the front door and find the Supply Store on the city map${save.career?' (open 8 AM to 6 PM)':''}.</p>`
     +(storeMode==='stock'&&save.career?'<div class="row"><button class="gbtn small" id="stMoveCloset">Move this closet</button></div>':'');
   if(storeTab==='decor') rows=decorRows();
-  if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(); return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):null); }).join('');
+  if(storeTab==='stored') rows=storedRows();
+  if(storeTab==='furniture') rows=FURN_SHOP.map(it=>itemRow(it.name,it.desc,it.price,'furn:'+it.id)).join('')+`<p class="hint">Delivered to the register at ${shopById(save.workAt).name}: place it from the register's Furniture tab.</p>`;
+  if(storeTab==='upgrades') rows=UPGRADES.map(u=>{ const l=u.lvl(), grow=u.id==='seats'||u.id==='chairs'; return itemRow(u.name+(u.max>1?` (${l}/${u.max})`:''),u.desc,u.price(l),'up:'+u.id,l>=u.max?(u.max>1?'Maxed':'Owned'):grow&&!roomToGrow()?'Expand first':null); }).join('')
+    +(roomToGrow()?'':`<p class="hint">No room for more seats or chairs yet. Walk to the wall on the right of the shop to buy the space next door (${expandPrice(save.workAt)} coins).</p>`);
   if(storeTab==='staff') rows=staffRows()
     +`<p class="hint">Free chairs for staff: ${save.up.chairs-save.staff.length}. Buy extra chairs under Upgrades.</p>`
     // counter clerk: only needed once Dee isn't behind the counter
@@ -3284,8 +3578,11 @@ function renderStore(focusKey){
 }
 function buyItem(key){
   const [kind,id]=key.split(':');
+  if(kind==='sup'&&errandLabel(id)) return;
+  if(kind==='place'){ placeStored(id); return; }
   if(kind==='crew'){ const st=save.staff.find(x=>x.id===id); if(st) manageStaff(st,()=>renderStore(key)); return; }
   if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; save.runTut=true; toast(`Bought ${it.name.toLowerCase()}`); }
+  if(kind==='up'&&(id==='seats'||id==='chairs')&&!roomToGrow()){ toast('Expand the shop first: walk to the wall on the right'); return; }
   if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy();
     if((id==='chairs'||id==='seats')&&F.player&&save.career){ // new furniture comes out in your hands
       F.carry=id==='chairs'?{key:'chair'+save.up.chairs,type:'chair',k:save.up.chairs}:{key:'seat'+(save.up.seats-1),type:'seat',k:save.up.seats-1};
@@ -3300,6 +3597,10 @@ function buyItem(key){
     if(save.staff.length>=save.up.chairs){ toast('Buy an extra tattoo chair first (Upgrades)'); return; }
     if(save.coins<a.fee) return; save.coins-=a.fee; save.applicants=save.applicants.filter(x=>x!==a);
     const st={...a,chair:freeChair()}; delete st.fee; delete st.desc; save.staff.push(st); regStaff(st); toast(`${a.name} joined the shop!`); }
+  if(kind==='furn'){ const it=FURN_SHOP.find(x=>x.id===id); if(save.coins<it.price) return; const ef=save.extraFurn||(save.extraFurn={}), key=shopKey(), list=ef[key]||(ef[key]=[]);
+    if(list.filter(e=>!(furnStore()[e.key]||{}).sold).length>=16){ toast('No more room for furniture there'); return; }
+    const nk='x'+Date.now().toString(36)+((Math.random()*1e5)|0); save.coins-=it.price; list.push({key:nk,type:it.type,kind:it.kind,price:it.price}); furnStore()[nk]={stored:true}; furnInv().push({key:nk,type:it.type,kind:it.kind}); furnChanged();
+    toast(`${it.name} is waiting at the register in ${shopById(save.workAt).name} (Furniture tab)`); }
   if(kind==='clerk'){ const k=CLERKS.find(x=>x.id===id); if(save.coins<k.fee) return; save.coins-=k.fee; save.clerk=id; toast(`${k.name} is behind the counter now`); }
   persist(); blip(880); renderStore(key);
 }
@@ -3540,10 +3841,11 @@ function renderMap(){
   $('#mapBack').classList.toggle('hide',!!F.at&&F.at!==save.workAt);
   const mk=(sh,cls)=>{ const id=sh.id, b=document.createElement('button'); const lost=id==='dee'&&save.takeover; b.className='blip '+cls+(lost?' lost':'')+(F.at===id?' here':''); b.textContent=save.workAt===id&&!lost?'★':'';
     b.title=sh.name; b.setAttribute('aria-label',sh.name); b.dataset.x=sh.x; b.dataset.y=sh.y; b.dataset.id=id;
-    b.setAttribute('aria-pressed',mapSel===id); b.onclick=()=>{ if(mapDragged) return; mapSel=id; centerMapOn(id); renderMap(); if(inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); };
+    b.setAttribute('aria-pressed',mapSel===id); b.onclick=()=>{ if(mapDragged||F.mapPeek) return; mapSel=id; centerMapOn(id); renderMap(); if(inputMode==='pad') setPadFocus(document.querySelector(`#mapBox [data-id="${id}"]`)); };
     box.appendChild(b); };
   mk(DEE_SHOP,'home');
   mk(SUPPLIER,'supply'+(save.runTut?'':' guide')+(supplierOpen()?'':' shut')); // only the very first time (Dee's errand) a marker points at it
+  mk(FURNSTORE,'furn'+(save.furnGuide?' guide':'')+(furnOpen()?'':' shut'));
   mk(HOSPITAL,'hosp'+(save.hospGuide?' guide':'')); // marked once, after Dee's death; after the first visit you find it yourself
   SHOPS.forEach(sh=>mk(sh,(save.shops.includes(sh.id)?'owned':'')+(save.eastGuide&&sh.id==='eastink'?' guide east':'')));
   placePins();
@@ -3552,6 +3854,12 @@ function renderMap(){
   if(mapSel==='hosp'){ // the hospital card
     info.innerHTML=`<div class="grow"><b>${HOSPITAL.name}</b><br>${HOSPITAL.desc} Your health: ${hpNow()}%.${save.career?' The trip takes about 20 minutes.':''}</div><div class="mbtns"><button class="gbtn go small" id="mHosp">Go in</button></div>`;
     $('#mHosp').onclick=openHospital; return; }
+  if(mapSel==='furn'){ // the furniture store card
+    const open=furnOpen();
+    info.innerHTML=`<div class="grow"><b>${FURNSTORE.name}</b>${save.career?' · open 9 AM to 9 PM':''}<br>${FURNSTORE.desc}`+
+      (!open?'<br><b class="failtag">Closed right now.</b>':save.career?' The trip takes about 20 minutes.':'')+`</div><div class="mbtns">${open&&save.career&&!F.mapPeek?'<button class="gbtn go small" id="mShopFurn">Shop here</button>':''}</div>`;
+    if($('#mShopFurn')) $('#mShopFurn').onclick=()=>{ F.away=!!F.player; if(F.at!=='furn') advanceTime(20); F.at='furn'; save.furnGuide=false; persist(); openStore('furniture',()=>{ show('map'); renderMap(); placePins(); }); };
+    return; }
   if(mapSel==='supply'){ // the Supply Store card
     const open=supplierOpen();
     info.innerHTML=`<div class="grow"><b>${SUPPLIER.name}</b>${save.career?` · open 8 AM to 6 PM`:''}<br>${SUPPLIER.desc}`+
@@ -3645,6 +3953,11 @@ function openMap(back){
   // start with the right amount of traffic for this time of day (quiet at night)
   const lv=trafficLevel((save.clock||600)/60,mapT); MOVERS.forEach(m=>{ if(m.car&&m.r>lv) m.out=true; });
 }
+// point at a place on the city map for a few seconds, then come back to the shop floor (nothing on the map can be used meanwhile)
+async function peekOnMap(id){ const sh=shopById(id); if(id==='furn') save.furnGuide=true; persist();
+  F.mapPeek=true; mapBack=null; mapSel=null; drawCity(); initMovers(); MV.x=sh.x; MV.y=sh.y; MV.z=1.6; MV.goal=null;
+  renderMap(); show('map'); sizeMap(); placePins(); $('#mapBack').classList.add('hide');
+  await sleep(3500); F.mapPeek=false; show('floor'); }
 // the Supply Store keeps shop hours in career mode: 8 AM to 6 PM (Dee's errand on Days 2-3 has no clock)
 const SUP_OPEN=480, SUP_CLOSE=1080;
 const supplierOpen=()=>!save.career||(save.clock>=SUP_OPEN&&save.clock<SUP_CLOSE);
@@ -3674,7 +3987,7 @@ mapBoxEl.addEventListener('wheel',e=>{ e.preventDefault(); const rect=mapBoxEl.g
   zoomMap(e.deltaY<0?1.15:1/1.15,r.x+(e.clientX-rect.left)/rect.width*r.w,r.y+(e.clientY-rect.top)/rect.height*r.h); },{passive:false});
 $('#mzIn').onclick=()=>zoomMap(1.3); $('#mzOut').onclick=()=>zoomMap(1/1.3); $('#mzFit').onclick=()=>{ MV.z=MAP_ZMIN; MV.goal=null; placePins(); };
 // ✕ (and the back button): close the shop card first if one is open, otherwise leave the map
-$('#mapBack').onclick=()=>{ if(mapSel){ closeMapCard(); return; }
+$('#mapBack').onclick=()=>{ if(F.mapPeek) return; if(mapSel){ closeMapCard(); return; }
   if(F.at==='street'){ toast('You have no shop to go back to. Pick one of yours on the map, or buy one.'); return; }
   if(F.at&&F.at!==save.workAt){ toast(`You're at ${shopById(F.at).name}. Tap your shop on the map and choose Enter shop.`); return; }
   if(mapBack) mapBack(); else show('title'); };
@@ -3781,10 +4094,11 @@ $('#mkGo').onclick=()=>{ const L={...mkLook}; delete L.touched; newLook=L; const
 $('#bFree').onclick=startFree;
 $('#bCtl').onclick=()=>show('controls'); $('#bCtlBack').onclick=()=>show('title');
 $('#bSound').onclick=()=>{ save.sound=!save.sound; persist(); refreshTitle(); };
-$('#bEndFree').onclick=startFree; $('#bEndCareer').onclick=startCareer; $('#bEndTitle').onclick=()=>show('title');
+$('#bEndCareer').onclick=startCareer;
 
 /* =============== KEYBOARD =============== */
 window.addEventListener('keydown',e=>{
+  if(logoOn){ endLogo(); return; }
   const k=e.key.toLowerCase();
   if(dlg.active&&(e.code==='Space'||k==='enter')){ e.preventDefault(); advance(); return; }
   if(current==='fight'&&!modalOpen){ // keyboard: arrows/WASD move, mouse aims, click or Space/Enter shoots
@@ -3811,7 +4125,8 @@ window.addEventListener('keydown',e=>{
   if(job.phase!=='ink'){ if(k==='escape') $('#tMenu').click(); else if(k==='f') setFull(!save.fullView); return; }
   if(k==='l') setTool('liner'); else if(k==='s') setTool('shade'); else if(k==='e'&&job.mode==='free') setTool('erase');
   else if(k==='w'&&isClient(job.mode)) setTool('towel');
-  else if(k==='[') bumpSize(-1); else if(k===']') bumpSize(1); 
+  else if(k==='[') bumpSize(-1); else if(k===']') bumpSize(1);
+  else if(k==='v') setViewMode(!VZ.mode); else if(k==='0'){ viewReset(); layoutPad(); } else if(k==='='||k==='+') viewZoom(VZ.z*1.25); else if(k==='-') viewZoom(VZ.z/1.25);
   else if(k==='escape') $('#tMenu').click();
   else if(k==='f') setFull(!save.fullView);
 });
@@ -3871,6 +4186,7 @@ function pollPad(dt){
     dbg.textContent=`${g.id.slice(0,48)} · ${g.mapping||'non-standard'} · buttons held: ${held.length?held.join(','):'none'} · stick ${(ax[0]||0).toFixed(2)}, ${(ax[1]||0).toFixed(2)} · page focused: ${document.hasFocus()?'yes':'no'}${gp.err?' · error: '+gp.err:''}`; }
   gp.prev=b;
   if(b.some((v,i)=>v>.5&&!was(i))) gp.lastPress=Date.now();
+  if(logoOn){ if(b.some((v,i)=>v>.5&&!was(i))) endLogo(); return; }
   const woke=anyDown&&inputMode!=='pad';
   if(woke){ setInput('pad'); ensureAudio(); } // switch over, but still act on this press
   if(inputMode!=='pad') return;
@@ -3919,10 +4235,16 @@ function pollPad(dt){
   if(sdir){ if(!padFocusEl){ const f=focusables(); setPadFocus(f.find(e=>e.dataset.tool===job.tool)||f[0]); } else moveFocus(sdir); }
   if(padFocusEl&&(mag>.5||rt>.08)) clearPadFocus();
   if(padFocusEl){ if(down(0)||down(1)||down(2)||down(3)||down(9)) padFocusEl.click(); updateRing(); return; }
+  const rx2=ax[2]||0, ry2=ax[3]||0; if(VZ.z>1&&Math.hypot(rx2,ry2)>.25) viewPan(-rx2*8*(dt/16.7),-ry2*8*(dt/16.7));
+  if(VZ.mode){ if(padCursor.drawing){ padCursor.drawing=false; strokeEnd(); }
+    if(Math.hypot(lx,ly)>.2) viewPan(-lx*8*(dt/16.7),-ly*8*(dt/16.7));
+    if(rt>.2) viewZoom(VZ.z*(1+.03*rt*(dt/16.7))); if(lt>.2) viewZoom(VZ.z/(1+.03*lt*(dt/16.7)));
+    if(down(1)) $('#tMenu').click(); if(down(2)) setViewMode(false); updateRing(); return; }
   const sp=7*(lt>.3?.3:1);
   const vis=job.vis||{x0:0,y0:0,x1:DOC,y1:DOC}, zf=Math.min(1,(vis.x1-vis.x0)/DOC*1.4);
   padCursor.x=clamp(padCursor.x+Math.sign(lx)*lx*lx*sp*zf*(dt/16.7),vis.x0,vis.x1);
   padCursor.y=clamp(padCursor.y+Math.sign(ly)*ly*ly*sp*zf*(dt/16.7),vis.y0,vis.y1);
+  if(VZ.z>1){ const pr=padEl.getBoundingClientRect(), [dx,dy]=edgeShift(pr.left+padCursor.x/DOC*pr.width,pr.top+padCursor.y/DOC*pr.height); if(dx||dy) viewPan(dx*.05*(dt/16.7),dy*.05*(dt/16.7)); }
   const inking=rt>.08||on(0), p=rt>.08?clamp(.35+.65*rt):1;
   if(inking&&!padCursor.drawing){ padCursor.drawing=true; strokeBegin(padCursor.x,padCursor.y,p); }
   else if(inking&&padCursor.drawing) strokeMove(padCursor.x,padCursor.y,p);
@@ -3943,6 +4265,7 @@ window.addEventListener('gamepaddisconnected',()=>{ gp.seen=false; padStatus('id
 /* =============== ANDROID BACK BUTTON =============== */
 // MainActivity calls this on back. Return true if the game handled it; false lets the app close (title screen only).
 window.__tmBack=function(){
+  if(logoOn){ endLogo(); return true; }
   if(inputMode==='pad'&&Date.now()-(gp.lastPress||0)<400) return true; // controller B was already handled in pollPad
   if(modalOpen){ const bs=focusables(); if(bs[0]) bs[0].click(); return true; }
   if(dlg.active){ advance(); return true; }
@@ -3973,7 +4296,7 @@ function fitAll(){
   setCompact();
   const scr=document.querySelector('.screen.active');
   if(scr){
-    scr.querySelectorAll('.dim > .wood').forEach(el=>{ const d=el.parentElement; fitEl(el,d.clientWidth-20,d.clientHeight-20); });
+    scr.querySelectorAll('.dim > .wood').forEach(el=>{ if(el.classList.contains('store')){ el.style.zoom=''; return; } const d=el.parentElement; fitEl(el,d.clientWidth-20,d.clientHeight-20); }); // store lists scroll instead
     if(scr.id==='scr-title') fitEl($('#tfit'),scr.clientWidth-16,scr.clientHeight-16);
     if(scr.id==='scr-tattoo'&&document.documentElement.classList.contains('compact')){
       fitEl(scr.querySelector('.thud'),9999,scr.clientHeight-12); fitEl(scr.querySelector('.ttools'),9999,scr.clientHeight-12);
@@ -4015,6 +4338,7 @@ function loop(t){
   if(current==='fight'&&!modalOpen) fightTick(dt);
   if(current==='map') mapTick(dt);
   if(current==='maker'&&tick%15===0) drawMakerPreview();
+  if(current==='tattoo') viewTick(dt);
   if((current==='map'||current==='store'||current==='hosp')&&F.away) offFloorTick(dt);
   if(sceneMode&&current!=='tattoo'){ updateActors();
     // cinematic camera: zoom smoothly toward CAM.focus (used for Dee's last moments)
@@ -4029,7 +4353,20 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 addEventListener('resize',resizeScene); resizeScene();
-show('title'); requestAnimationFrame(loop);
+/* =============== COMPANY LOGO =============== */
+// T.M.I fades in, then "Tee & Milton Inc." slams in one word at a time; the last slam knocks the I of T.M.I crooked. Any tap, key or button skips it
+let logoOn=true;
+async function playLogo(){
+  const box=$('#lgBox'), words=[...document.querySelectorAll('.lgwords span')];
+  await sleep(300); if(!logoOn) return; $('#lgTm').classList.add('on'); await sleep(800);
+  for(let i=0;i<words.length;i++){ if(!logoOn) return;
+    words[i].classList.add('slam'); if(i===0) document.querySelector('.lgwords').classList.add('on'); await sleep(190);
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); blip(i===words.length-1?60:90);
+    if(i===words.length-1) $('#lgI').classList.add('lean'); else await sleep(300); }
+  await sleep(1700); endLogo(); }
+function endLogo(){ if(!logoOn) return; logoOn=false; const L=$('#tmiSplash'); L.classList.add('out'); setTimeout(()=>L.remove(),650); }
+$('#tmiSplash').addEventListener('pointerdown',endLogo);
+show('title'); requestAnimationFrame(loop); playLogo();
 })();
 </script>
 </body>
