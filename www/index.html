@@ -751,8 +751,8 @@ const CUSTOMERS = [
    hi:["Hello. This one's for my mom.","A simple heart on my wrist. She always drew them on my notes.","Fill it in red, please. Her favorite color."],
    dee:"Smooth curves. Meet the point at the bottom clean.",
    react:["I... maybe it'll heal better.","It means a lot. Thank you.","She would have loved this.","It's beautiful. I can't stop looking at it."]},
-  {ch:'fenwick',design:'anchor',spot:'forearm',skin:'#d9a07c',time:300,tip:30,
-   hi:["Forty years on the water and never had one done.","Give me an anchor, kid. Old school, on the forearm."],
+  {ch:'fenwick',design:'anchor',spot:'forearm',skin:'#d9a07c',time:300,tip:30,line:'blue',
+   hi:["Forty years on the water and never had one done.","Give me an anchor, kid. Old school, on the forearm.","And do the lines in blue, like the old sailors had."],
    dee:"Long straight shaft. Pull it in one go, don't stitch it.",
    react:["Hmph. Looks like it lost a storm.","It'll hold. Mostly.","Now that's a proper anchor.","Fine work. Shipshape, the whole thing."]},
   {ch:'ray',design:'dagger',spot:'upper arm',skin:'#93623f',time:300,tip:35,
@@ -761,8 +761,8 @@ const CUSTOMERS = [
    dee:"He sits like a rock. Your lines are the only thing that can shake.",
    react:["Crooked blade. Not happy.","It's alright. I've had worse.","Sharp. I like it.","Now THAT is a blade. You've got hands, kid."]},
   {ch:'luna',design:'moon',spot:'shoulder blade',skin:'#f3cdb0',time:300,tip:40,
-   shade:[{part:'all',color:'purple'}],
-   hi:["Hey! I want a crescent moon with two little stars.","On my shoulder blade. Something to watch over me.","Purple, all of it. The moon and the stars."],
+   shade:[{part:'all',color:'purple'}],line:'purple',
+   hi:["Hey! I want a crescent moon with two little stars.","On my shoulder blade. Something to watch over me.","Purple, all of it. The lines too. The moon and the stars."],
    dee:"Never practiced a moon? Welcome to shop life. Same rules apply.",
    react:["Hmm, the moon looks a bit lumpy.","It's sweet. Thank you!","Dreamy. Exactly what I pictured.","It's glowing! You're amazing!"]},
   {ch:'tobias',design:'star',spot:'calf',skin:'#6a4430',time:200,tip:30,
@@ -779,7 +779,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[],letterIntro:false,apprDay:null,deeDecorFix:false,furnGuide:false,extraFurn:{},furnInv:{},expanded:{},inked:[]});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[],letterIntro:false,apprDay:null,deeDecorFix:false,furnGuide:false,extraFurn:{},furnInv:{},expanded:{},inked:[],seenLineTip:false,runList:null,runGot:null,openedDay:0});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -844,8 +844,8 @@ function spriteRows(c,frame){
 }
 function palette(c){ return {h:c.hair,s:c.skin,e:'#2a1a14',m:c.sex==='f'?'#c0506a':'#9c4a44',c:c.shirt,d:c.shirtD,p:c.pants,b:c.boots,T:'#2e5866',A:c.apron,k:c.hat||c.hair,i:'#e8e1d0'}; }
 // someone sitting in the tattoo chair: the top half of the sprite on the seat, legs stretched out along the chair
-function drawSeated(a){ const c=CH[a.ch], x=Math.round(a.x), y=Math.round(a.y);
-  sx.save(); sx.translate(x-14,y-22); sx.rotate(Math.PI/2); drawSprite(sx,c,0,0,0,false); sx.restore(); }
+function drawSeated(a){ const c=CH[a.ch], x=Math.round(a.x), y=Math.round(a.y), ch=F.active&&furnList().find(p=>p.type==='chair'&&Math.abs(p.x-a.x)<12&&Math.abs(p.y-a.y)<4);
+  sx.save(); if(ch&&ch.r%2){ sx.translate(2*x,0); sx.scale(-1,1); } sx.translate(x-14,y-22); sx.rotate(Math.PI/2); drawSprite(sx,c,0,0,0,false); sx.restore(); }
 function drawSprite(ctx,c,x,y,frame,flip,sc=2){
   const rows=spriteRows(c,frame), pal=palette(c), w=10*sc, h=16*sc, ox=Math.round(x-w/2), oy=Math.round(y-h);
   ctx.fillStyle='rgba(30,15,10,.28)'; ctx.fillRect(ox+2,oy+h-2,w-4,3);
@@ -1108,7 +1108,7 @@ function drawShopFurniture(t,cx,wb,fy,th){
   R(cx-124,fy-26,68,5,ctr[0]); R(cx-122,fy-21,64,24,ctr[1]); for(let x=cx-118;x<cx-60;x+=14) R(x,fy-17,10,16,ctr[2]);
   R(cx-44,fy-46,9,13,'#2b2b2b'); R(cx-43,fy-45,7,4,'#b8323c'); R(cx-42,fy-40,5,5,'#d8d0c0'); R(cx-41,fy-33,1,8,'#2b2b2b'); // wall phone
   R(cx-112,fy-36,16,10,'#5b5b6b'); R(cx-110,fy-34,12,3,'#9fe8ff'); R(cx-86,fy-34,8,8,'#bfe3e0'); R(cx-84,fy-31,4,4,'#f2c14e');
-  const inside=a=>{ if(a.piece||!(a===F.player||a.moving)) return null; const r=pieces.find(q=>{ const f=fpRect(q.piece.type,q.piece.x,q.piece.y); return a.x>f[0]&&a.x<f[2]&&a.y>f[1]&&a.y<f[3]; }); return r?r.y-1:null; };
+  const inside=a=>{ if(a.piece||!(a===F.player||a.moving)) return null; const r=pieces.find(q=>{ const f=fpRect(q.piece.type,q.piece.x,q.piece.y,q.piece.r); return a.x>f[0]&&a.x<f[2]&&a.y>f[1]&&a.y<f[3]; }); return r?r.y-1:null; };
   actors.filter(a=>!a.behind).map(a=>{ if(a.sit) return {wrap:a,y:a.y+.5}; const sy=inside(a); return sy==null?a:{wrap:a,y:sy}; }).concat(pieces).sort((a,b)=>a.y-b.y).forEach(a=>a.piece?drawPiece(a.piece,chair,L):drawActor(a.wrap||a)); // someone passing through furniture is drawn behind it
   if(F.carry&&F.active) drawCarryGhost(chair,L);
   if(DUST.length) drawDust();
@@ -1376,7 +1376,7 @@ function interp(x,y,p){
   let pos=stk.gap;
   while(pos<=seg){ const k=pos/seg, pp=stk.last.p+(p-stk.last.p)*k; stamp(stk.last.x+dx*k,stk.last.y+dy*k,pp,stk.dist+pos); pos+=spacing(pp); }
   stk.gap=pos-seg; stk.dist+=seg; stk.last={x,y,p};
-  if(job.smudges&&stk.total==null&&!stk.slipped) smudgeTravel(seg,x,y);
+  if(job.smudges&&stk.total==null&&!stk.slipped) smudgeTravel(stk.tool==='shade'?seg*.25:seg,x,y);
 }
 function stamp(x,y,p,d){
   if(stk.slipped) return;
@@ -1387,8 +1387,8 @@ function stamp(x,y,p,d){
       const xi=Math.round(clamp(x,0,DOC-1)), yi=Math.round(clamp(y,0,DOC-1));
       if(!job.strikeMask[yi*DOC+xi]){ stk.out++; showWarn(true); if(stk.out>=3){ stk.slipped=true; slip(); return; } }
     }
-    // linework is always black outside Free mode
-    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.mode==='free'?job.color:'#151515'; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
+    // linework is black unless the customer asked for colored lines (or in Free mode)
+    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.mode==='free'||job.lineSpec?job.color:'#151515'; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
     if(stk.total==null) job.inkAcc+=2*r*spacing(p); // each dab covers about (width × step) of skin
   } else if(stk.tool==='shade'){
     job.inkAcc+=size*spacing(p)*.25; // shading lays down thinner ink
@@ -1482,13 +1482,13 @@ padEl.addEventListener('pointermove',e=>{
 });
 // zoomed in and inking toward the edge: the skin slides the other way as you go, so you can keep tracing without zooming out.
 // It only moves while your finger moves outward (never while it holds still), and the line always stays under your finger
-function flowPan(dx,dy,px,py){ if(VZ.z<=1||!stk) return;
+function flowPan(dx,dy,px,py){ if(VZ.z<=1||!stk||stk.tool!=='liner') return;
   const now=performance.now(), dt=Math.max(8,now-(VZ.lastMove||now-16)); VZ.lastMove=now; VZ.finger=[px,py];
   // your stroke's speed and direction, smoothed (pixels per ms), so jitters don't wiggle the view
   const v=VZ.vel||(VZ.vel=[0,0]); v[0]=v[0]*.8+dx/dt*.2; v[1]=v[1]*.8+dy/dt*.2; }
 const endPtr=e=>{ touches.delete(e.pointerId); if(touches.size<2) pinch=null; if(panDrag&&panDrag.id===e.pointerId) panDrag=null;
   if(waitTouch&&waitTouch.id===e.pointerId){ const w=waitTouch; waitTouch=null; if(e.type==='pointerup'&&!pinch){ beginDraw(w.id,w.x,w.y,w.t,1); ptr=null; strokeEnd(); } } // a quick tap still makes a dot
-  if(ptr&&e.pointerId===ptr.id){ const inked=!!stk; ptr=null; strokeEnd(); VZ.cam=[0,0]; VZ.finger=null; if(inked&&!(job.smudges&&job.smudges.length)) viewFollow(e.clientX,e.clientY); } };
+  if(ptr&&e.pointerId===ptr.id){ const inked=!!stk&&stk.tool==='liner'; ptr=null; strokeEnd(); VZ.cam=[0,0]; VZ.finger=null; if(inked&&!(job.smudges&&job.smudges.length)) viewFollow(e.clientX,e.clientY); } };
 padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr);
 padEl.addEventListener('pointerleave',()=>{ hover=null; updateRing(); });
 
@@ -1506,7 +1506,8 @@ function updateRing(){
 function setTool(t){
   job.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));
   // the color palette shows whenever you're shading a tattoo that has colors (not only after the lines are done)
-  const pal=$('#shadeInks'); if(pal) pal.classList.toggle('hide',!(job.shadeSpec&&job.mode!=='free'&&(job.shadeStep||t==='shade')));
+  // and while lining a tattoo that wants colored lines
+  const pal=$('#shadeInks'); if(pal) pal.classList.toggle('hide',!(job.mode!=='free'&&((job.shadeSpec&&(job.shadeStep||t==='shade'))||(job.lineSpec&&!job.shadeStep&&t==='liner'))));
   $('#szVal').textContent=TOOLS[t].sizes[TOOLS[t].i][1]; updateRing();
 }
 function bumpSize(dir){ const T=TOOLS[job.tool]; T.i=Math.max(0,Math.min(T.sizes.length-1,T.i+dir)); setTool(job.tool); blip(dir>0?700:500); }
@@ -1627,7 +1628,7 @@ function failRound(){
 function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false; }
 
 function startJob(opts){
-  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,shadeSpec:null,...opts});
+  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,shadeSpec:null,lineSpec:null,...opts});
   if(job.shadeSpec&&!DESIGNS[job.design].shade) job.shadeSpec=null; // designs without a shading area stay lines-only
   job.shadeStep=false; job.lineRes=null; $('#shadeInks').classList.add('hide');
   job.maxStrikes=isClient(job.mode)?3:5; job.body=isClient(job.mode)?job.cust.spot:null;
@@ -1650,12 +1651,19 @@ function startJob(opts){
   if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`;
     $('#tSub').textContent=job.shadeSpec?`Practice. Lines first, then shade ${DESIGNS[job.design].shadeName}. No clock.`:'Practice. No clock. Scored on your linework.'; }
   else if(job.mode==='warmup'){ $('#tTitle').textContent=`Warm-up: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`Fake skin, for ${CH[job.cust.ch].name}. No clock, no supplies used.`; }
-  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}${job.shadeSpec?`, shaded ${shadeText(job.shadeSpec)}`:''}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
+  else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}${job.lineSpec?`, ${job.lineSpec} lines`:''}${job.shadeSpec?`, shaded ${shadeText(job.shadeSpec)}`:''}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
-  padCursor.x=300; padCursor.y=300; viewReset(); setTool('liner'); show('tattoo');
-  if(real&&!save.seenWipe){ save.seenWipe=true; persist();
-    modal(`Real skin gets messy. Smudges of extra ink and blood build up while you work. Wipe them with the paper towel (Towel button, W key${inputMode==='pad'?', or X on your controller':''}) before they set, or they cost you points. Keep an eye on your ink too.`,[['Got it',true,true]]); }
+  padCursor.x=300; padCursor.y=300; viewReset(); setTool('liner'); if(job.lineSpec) pickShadeColor('black'); show('tattoo');
+  (async()=>{ if(real&&!save.seenWipe){ save.seenWipe=true; persist();
+    await modal(`Real skin gets messy. Smudges of extra ink and blood build up while you work. Wipe them with the paper towel (Towel button, W key${inputMode==='pad'?', or X on your controller':''}) before they set, or they cost you points. Keep an eye on your ink too.`,[['Got it',true,true]]); }
+    if(job.lineSpec) await lineColorTip(); })();
 }
+// a customer who wants colored lines says so before you start (Dee explains it the first time)
+async function lineColorTip(){ const who=job.cust?CH[job.cust.ch].name:'Dee', col=job.lineSpec;
+  const say1=`${who}: "${col[0].toUpperCase()+col.slice(1)} lines, remember!"`;
+  if(!save.seenLineTip){ save.seenLineTip=true; persist();
+    await modal(`Dee: "Not every tattoo is black lines. This one wants colored linework. Pick the color from the palette before your first line. Your machine always starts on black."\n\n${say1}`,[['Got it',true,true]]); }
+  else await modal(say1,[['Got it',true,true]]); }
 function tickJob(dt){
   if(job.phase==='care'){ if(tick%12===0) renderCarePct(); return; }
   if(job.phase!=='ink'||!isClient(job.mode)||modalOpen) return;
@@ -1676,15 +1684,16 @@ function scoreWork(){
   // a narrow band right on the line: ink that stays in bounds but wobbles off the line scores lower
   x.clearRect(0,0,DOC,DOC); x.lineWidth=Math.max(9,sizeOf('liner')+3); x.stroke(path); const dT=x.getImageData(0,0,DOC,DOC).data;
   const L=lctx.getImageData(0,0,DOC,DOC).data, W1=DOC+1, I=new Int32Array(W1*W1);
-  let ink=0, good=0, tight=0;
-  for(let y=0;y<DOC;y++){ let rowSum=0; for(let i=0;i<DOC;i++){ const o=(y*DOC+i)*4, v=L[o+3]>60?1:0; if(v){ ink++; if(d[o+3]>20) good++; if(dT[o+3]>20) tight++; } rowSum+=v; I[(y+1)*W1+i+1]=I[y*W1+i+1]+rowSum; } }
+  let ink=0, good=0, tight=0, rightCol=0; const want=job.lineSpec;
+  for(let y=0;y<DOC;y++){ let rowSum=0; for(let i=0;i<DOC;i++){ const o=(y*DOC+i)*4, v=L[o+3]>60?1:0; if(v){ ink++; if(d[o+3]>20) good++; if(dT[o+3]>20) tight++; if(want&&nearestColor(L[o],L[o+1],L[o+2])===want) rightCol++; } rowSum+=v; I[(y+1)*W1+i+1]=I[y*W1+i+1]+rowSum; } }
   let hit=0, n=pts.length/2;
   for(let k=0;k<pts.length;k+=2){ const px=pts[k], py=pts[k+1], x0=Math.max(0,px-tol), x1=Math.min(DOC,px+tol+1), y0=Math.max(0,py-tol), y1=Math.min(DOC,py+tol+1);
     if(I[y1*W1+x1]-I[y0*W1+x1]-I[y1*W1+x0]+I[y0*W1+x0]>0) hit++; }
   const cov=n?hit/n:0, acc=ink?good/ink:0;
-  const accT=ink?tight/ink:0, score=ink<80?0:Math.round(100*clamp(.35*cov+.25*acc+.4*accT));
+  const accT=ink?tight/ink:0, lineOk=want&&ink?rightCol/ink:null;
+  const score=ink<80?0:Math.round(100*clamp(.35*cov+.25*acc+.4*accT)*(lineOk==null?1:.4+.6*lineOk));
   const stars=starsOf(score);
-  return {cov,acc,score,stars};
+  return {cov,acc,score,stars,lineOk};
 }
 // shading score: how much of the marked area is shaded, and how much shading stayed inside it
 function scoreShade(){
@@ -1850,13 +1859,14 @@ function showResults(r){
     btns=save.cust>=CUSTOMERS.length?`<button class="gbtn go" id="rNext">Close up shop</button>`:`<button class="gbtn go" id="rNext">Next customer</button>`;
   }
   if(downloads) btns=`<button class="gbtn" id="rSave">Save PNG</button>`+btns;
-  if(r.shaded&&(job.mode==='practice'||job.mode==='warmup')){
+  if(r.lineOk!=null&&r.lineOk<.8&&(job.mode==='practice'||job.mode==='warmup')) quote=`Those lines should be ${job.lineSpec}, kid. Pick the color before you start. The machine always starts on black.`;
+  else if(r.shaded&&(job.mode==='practice'||job.mode==='warmup')){
     if(r.colorOk<.8) quote="Wrong color, kid. Check the palette before you start. The machine always starts on black.";
     else if(r.shadeCov<.8) quote="Lines are one thing. Your shading's patchy. Slower passes, keep the needle moving."; }
   res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':job.mode==='warmup'?'Warm-up: '+DESIGNS[job.design].name:CH[job.cust.ch].name}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="${r.stars} of 3 stars">${starStr(r.stars)}</div>
-      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd>${r.shaded?`<dt>Lines</dt><dd>${r.lineScore}</dd><dt>Shading</dt><dd>${Math.round(r.shadeCov*100)}% filled · ${Math.round(r.colorOk*100)}% right color</dd>`:''}<dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
+      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd>${r.shaded?`<dt>Lines</dt><dd>${r.lineScore}</dd><dt>Shading</dt><dd>${Math.round(r.shadeCov*100)}% filled · ${Math.round(r.colorOk*100)}% right color</dd>`:''}${r.lineOk!=null?`<dt>Line color</dt><dd>${Math.round(r.lineOk*100)}% ${job.lineSpec}</dd>`:''}<dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
     ${extra}
     <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[quoteWho].name}:</b> ${quote}</span></div>
     <div class="row">${btns}</div>`;
@@ -1946,7 +1956,7 @@ const aOrAn=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
 const wantText=k=>DESIGNS[k].say||aOrAn(DESIGNS[k].name.toLowerCase());
 async function offerWarmup(cust,design,start,career){
   warm={cust,design,start,career};
-  const v=await modal(`${CH[cust.ch].name} wants ${wantText(design)} on the ${cust.spot}${cust.shade&&DESIGNS[design].shade?`, shaded ${shadeText(cust.shade)}`:''}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
+  const v=await modal(`${CH[cust.ch].name} wants ${wantText(design)} on the ${cust.spot}${cust.line?`, in ${cust.line} lines`:''}${cust.shade&&DESIGNS[design].shade?`, shaded ${shadeText(cust.shade)}`:''}. Real skin is one shot. Warm up on fake skin first?${career?' (Each try takes 15 minutes of shop time.)':''}`,
     [['Practice on fake skin','practice'],['Start the tattoo','go',true]]);
   if(v==='practice'){ await playerWalk(deskSpot()); startWarmup(); } else start();
 }
@@ -1962,7 +1972,7 @@ async function playerWalk(to){
 }
 function startWarmup(){
   if(warm.career) advanceTime(15);
-  startJob({mode:'warmup',cust:warm.cust,design:warm.design,skin:'#f1d2bb',stenOp:.85,shadeSpec:warm.cust.shade||null});
+  startJob({mode:'warmup',cust:warm.cust,design:warm.design,skin:'#f1d2bb',stenOp:.85,shadeSpec:warm.cust.shade||null,lineSpec:warm.cust.line||null});
 }
 
 $('#bBoardMenu').onclick=()=>show('title');
@@ -2323,7 +2333,8 @@ function alphaIn(x0,y0,w,h){ const d=dctx.getImageData(Math.max(0,x0|0),Math.max
 function addSmudge(x,y){
   if(job.smudges.length>=6) return;
   const a=Math.random()*Math.PI*2, d=12+Math.random()*18, sx=clamp(x+Math.cos(a)*d,30,DOC-30), sy=clamp(y+Math.sin(a)*d,30,DOC-30), R=34;
-  for(let k=0;k<5;k++){ const blood=Math.random()<.35, rad=blood?5+Math.random()*7:12+Math.random()*12;
+  const light=stk&&stk.tool==='shade';
+  for(let k=0;k<(light?3:5);k++){ const blood=Math.random()<(light?.15:.35), rad=blood?5+Math.random()*7:12+Math.random()*12;
     dctx.globalAlpha=blood?.45:.4+Math.random()*.2; dctx.drawImage(dab(blood?'#a31d1d':'#1a1a1a',.35),sx-rad+(Math.random()-.5)*26,sy-rad+(Math.random()-.5)*26,rad*2,rad*2); }
   dctx.globalAlpha=1;
   job.smudges.push({x:sx,y:sy,R,age:0,warned:false,late:false,a0:alphaIn(sx-R,sy-R,R*2,R*2)||1});
@@ -2607,19 +2618,20 @@ async function buyDecor(key){ const [k,c]=key.split(':'), o=DECOR[k], all=save.d
   persist(); blip(880); renderStore('decor:'+key); }
 
 /* ---------- furniture: chairs, bench seats, desk, lamp, plant and (in bought shops) the supply closet ---------- */
-const FURN_INFO={chair:{name:'tattoo chair',fp:[-26,-14,26,12],c:[0,-1]},seat:{name:'bench seat',fp:[-8,-6,8,3],c:[0,-1]},desk:{name:'practice desk',fp:[-4,0,40,18],c:[18,9]},
-  lamp:{name:'floor lamp',fp:[-5,-16,8,2],c:[2,-7]},plant:{name:'plant',fp:[-14,-18,26,8],c:[6,-5]},closet:{name:'supply closet',fp:[-2,-12,24,4],c:[11,-4]},sofa:{name:'couch',fp:[-22,-10,22,4],c:[0,-3]},radio:{name:'radio',fp:[-7,-4,7,2],c:[0,-1]},
+const FURN_INFO={chair:{name:'tattoo chair',fp:[-26,-14,26,12],c:[0,-1],turns:2},seat:{name:'bench seat',fp:[-8,-6,8,3],c:[0,-1]},desk:{name:'practice desk',fp:[-4,0,40,18],c:[18,9],turns:2},
+  lamp:{name:'floor lamp',fp:[-5,-16,8,2],c:[2,-7]},plant:{name:'plant',fp:[-14,-18,26,8],c:[6,-5]},closet:{name:'supply closet',fp:[-2,-12,24,4],c:[11,-4]},sofa:{name:'couch',fp:[-22,-10,22,4],fpS:[-10,-16,10,4],c:[0,-3],turns:4},radio:{name:'radio',fp:[-7,-4,7,2],c:[0,-1],turns:2},
   tv:{name:'TV',wall:true,w:34,h:24,fp:[0,0,0,0],c:[0,0]},pic:{name:'picture',wall:true,w:22,h:28,fp:[0,0,0,0],c:[0,0]}};
 const shopKey=()=>sceneTheme()?save.workAt:'dee';
 const furnStore=()=>{ if(!save.furn) save.furn={}; return save.furn[shopKey()]||(save.furn[shopKey()]={}); };
-const fpRect=(type,x,y)=>{ const f=FURN_INFO[type].fp; return [x+f[0],y+f[1],x+f[2],y+f[3]]; };
+// r = which way it's turned (a couch turned sideways takes up less width and more depth)
+const fpRect=(type,x,y,r)=>{ const inf=FURN_INFO[type], f=r%2&&inf.fpS?inf.fpS:inf.fp; return [x+f[0],y+f[1],x+f[2],y+f[3]]; };
 const hits=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 // spots nothing may go: the counter and the lane behind it, the doorway, and the room's edges
-function placeOK(type,x,y,others){
-  const {cx,fy}=sceneGeo(), r=fpRect(type,x,y);
+function placeOK(type,x,y,others,rot){
+  const {cx,fy}=sceneGeo(), r=fpRect(type,x,y,rot);
   if(r[0]<4||r[2]>(sideWallX()||roomW())-4||r[1]<fy-20||r[3]>H-1) return false;
   if(hits(r,[cx-128,fy-22,cx-48,fy+9])||hits(r,[cx-18,H-30,cx+18,H+5])) return false;
-  return !others.some(o=>hits(r,fpRect(o.type,o.x,o.y)));
+  return !others.some(o=>hits(r,fpRect(o.type,o.x,o.y,o.r)));
 }
 let FURN_MEMO={k:null,list:null};
 function furnList(){
@@ -2627,10 +2639,10 @@ function furnList(){
   const memo=[shopKey(),W,H,save.up.chairs,save.up.seats,F.furnVer||0,F.active,shopExpanded()].join('|'), lim=sideWallX(); if(FURN_MEMO.k===memo) return FURN_MEMO.list;
   const out=[];
   const add=(key,type,dx,dy,k,free,kind)=>{ const sv=st[key]; if(sv&&(sv.sold||sv.stored)) return;
-    const keep=sv&&!(lim&&cx+sv.dx>lim-10);
+    const keep=sv&&!(lim&&cx+sv.dx>lim-10)&&!(deeNew(key)&&!sv.own&&sv.dx<182);
     let x=keep?cx+sv.dx:cx+dx, y=keep?fy+sv.dy:fy+dy;
     if(!keep&&(free||lim)&&!placeOK(type,x,y,out)){ const f=findFree(type,out,deeNew(key)?cx+182:null); if(f){ x=f.x; y=f.y; if(F.active) st[key]={dx:x-cx,dy:y-fy}; } }
-    out.push({key,type,x,y,k,kind}); };
+    out.push({key,type,x,y,k,kind,r:(sv&&sv.r)||0}); };
   add('chair0','chair',L.chair,-6,0);
   if(L.lamp!=null) add('lamp','lamp',L.lamp,-2);
   if(L.plant) add('plant','plant',L.px,0,undefined,false,L.plant);
@@ -2697,14 +2709,16 @@ function wallBlocks(){ const {cx}=sceneGeo(), th=sceneTheme(), st=th?Object.keys
   return b; }
 function wallList(){ const st=furnStore(), out=[];
   ((save.extraFurn||{})[shopKey()]||[]).forEach(e=>{ const inf=FURN_INFO[e.type]; if(!inf||!inf.wall) return; const sv=st[e.key];
-    if(!sv||sv.sold||sv.stored||sv.wx==null||(F.carry&&F.carry.key===e.key)) return; out.push({key:e.key,type:e.type,kind:e.kind,x:sv.wx}); });
+    if(!sv||sv.sold||sv.stored||sv.wx==null||(F.carry&&F.carry.key===e.key)) return; out.push({key:e.key,type:e.type,kind:e.kind,x:sv.wx,y:sv.wy!=null?sv.wy:wallY()+wallDrop(e.type)}); });
   return out; }
 function wallOK(type,x){ const w=FURN_INFO[type].w, lim=sideWallX()||roomW(); if(x<4||x+w>lim-4) return false;
   if(wallBlocks().some(([a,b])=>x<b+2&&x+w>a-2)) return false;
   return !wallList().some(o=>x<o.x+FURN_INFO[o.type].w+2&&x+w>o.x-2); }
 const tvPool=()=>save.inked&&save.inked.length?save.inked:PRACTICE;
 const wallDrop=type=>type==='tv'?6:0; // the TV hangs a little lower than the pictures
-function drawWallItems(t,wb){ const y=Math.round(wb*0.2); wallList().forEach(w=>drawWallItem(w.type,w.x,y+wallDrop(w.type),w.kind,t)); }
+function drawWallItems(t,wb){ wallList().forEach(w=>drawWallItem(w.type,w.x,w.y,w.kind,t)); }
+// how high a wall item hangs while you carry it: walk up toward the wall to raise it, down to lower it (a little either way)
+function wallHangY(type){ const {fy}=sceneGeo(), p=F.player, d=wallY()+wallDrop(type), t=clamp((p.y-(fy-4))/(H-18-(fy-4))); return Math.round((d-10+t*24)/2)*2; }
 // the TV plays your tattoo designs (or flash art until you've done some); pictures are framed flash
 function drawWallItem(type,x,y,kind,t){
   if(type==='tv'){ R(x,y,34,22,'#151515'); R(x+2,y+2,30,17,'#0e1a2e'); R(x+14,y+22,6,2,'#151515'); R(x+29,y+20,2,1,'#e04040');
@@ -2726,14 +2740,21 @@ const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:n
 const KEYMOVE={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
 const seatPos=i=>{ const p=piece('seat'+i); if(p) return {x:p.x,y:p.y}; const {cx}=sceneGeo(); return {x:Math.max(14,cx-128)+i*16,y:H-12}; };
 const chairBase=k=>{ const p=piece('chair'+k); if(p) return {x:p.x,y:p.y}; const {cx,fy}=sceneGeo(); return {x:cx+layout().chair,y:fy-6}; };
-const chairSit=k=>{ const b=chairBase(k); return {x:b.x-6,y:b.y}; };
-const staffPos=k=>{ const b=chairBase(k); return {x:b.x-32,y:Math.min(H-4,b.y+18)}; };
+const chairFlip=k=>{ const p=piece('chair'+k); return !!(p&&p.r%2); };
+const chairSit=k=>{ const b=chairBase(k); return {x:b.x+(chairFlip(k)?6:-6),y:b.y}; };
+const staffPos=k=>{ const b=chairBase(k); return {x:b.x+(chairFlip(k)?32:-32),y:Math.min(H-4,b.y+18)}; };
 const artistPos=()=>staffPos(0);
 const doorOut=()=>({x:sceneGeo().cx,y:H+30});
 const clockText=()=>{ const t=save.clock|0, h=(t/60)|0, m=t%60; return `${((h+11)%12)+1}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
 
 function drawFloorFurniture(cx,fy){ R(cx-13,H-5,26,5,'#6b3a2a'); R(cx-11,H-4,22,1,'#8a5a3a'); }
-function drawPiece(p,chair,L){ const {x,y}=p;
+function drawPiece(p,chair,L){ const {x,y}=p, r=p.r||0;
+  // turned pieces: flipped left/right (a couch turned sideways or around gets its own drawing)
+  if(p.type==='sofa'&&r){ if(r===2){ R(x-21,y-22,42,20,'#355a5a'); R(x-21,y-22,42,2,'#4a7a7a'); R(x-21,y-12,42,1,'#2e4e4e'); R(x-19,y-2,3,3,'#2a1a10'); R(x+16,y-2,3,3,'#2a1a10'); return; }
+    sx.save(); if(r===3){ sx.translate(2*x,0); sx.scale(-1,1); }
+    R(x+3,y-26,6,24,'#3f6b6b'); R(x+3,y-26,6,2,'#5a8a8a'); R(x-8,y-12,12,10,'#4a7a7a'); R(x-8,y-12,12,1,'#6a9a9a'); R(x-10,y-17,6,15,'#355a5a'); R(x-10,y-17,6,1,'#4a7a7a');
+    R(x-9,y-2,3,3,'#2a1a10'); R(x+5,y-2,3,3,'#2a1a10'); sx.restore(); return; }
+  if(r%2&&FURN_INFO[p.type].turns===2){ const ax=x+(p.type==='desk'?18:0); sx.save(); sx.translate(2*ax,0); sx.scale(-1,1); drawPiece({...p,r:0},chair,L); sx.restore(); return; }
   if(p.type==='chair'){ R(x-10,y+2,22,8,'#2b2b2b'); R(x-2,y-4,6,8,'#555'); R(x-22,y-12,44,10,chair[0]); R(x-22,y-12,44,2,chair[1]); R(x+14,y-36,10,26,chair[0]); R(x+16,y-34,2,22,chair[1]); R(x-24,y-18,10,4,'#2b2b2b'); }
   if(p.type==='seat'){ R(x-8,y-9,16,4,'#8a5532'); R(x-8,y-9,16,1,'#c58a52'); R(x-7,y-5,2,5,'#5a3520'); R(x+5,y-5,2,5,'#5a3520'); }
   if(p.type==='lamp'){ R(x,y-60,2,60,'#333'); R(x-8,y-64,16,6,'#d8d0c0'); R(x-6,y-58,12,3,'rgba(255,240,200,.5)'); }
@@ -2746,18 +2767,18 @@ function drawPiece(p,chair,L){ const {x,y}=p;
 }
 // the piece you're carrying: a see-through preview in front of you, outlined green (fits) or red (something's in the way)
 function carrySpot(){ const p=F.player, c=F.carry, inf=FURN_INFO[c.type], dir=p.flip?-1:1, half=(inf.fp[2]-inf.fp[0])/2;
-  if(inf.wall){ const x=Math.round((p.x-inf.w/2)/2)*2; return {x,y:wallY()+wallDrop(c.type),ok:wallOK(c.type,x),wall:true}; }
+  if(inf.wall){ const x=Math.round((p.x-inf.w/2)/2)*2; return {x,y:wallHangY(c.type),ok:wallOK(c.type,x),wall:true}; }
   const mx=p.x+dir*(half+10), my=p.y, x=Math.round((mx-inf.c[0])/4)*4, y=Math.round((my-inf.c[1])/4)*4;
-  return {x,y,ok:placeOK(c.type,x,y,furnList().filter(o=>o.key!==c.key))&&!(newRoomOnly(c)&&x<sceneGeo().cx+182)}; }
+  return {x,y,ok:placeOK(c.type,x,y,furnList().filter(o=>o.key!==c.key),c.r)&&!(newRoomOnly(c)&&x<sceneGeo().cx+182)}; }
 // Dee's new bench, and extra tattoo chairs in Dee's shop, only go in the new room
 const newRoomOnly=c=>c.newRoom||(shopKey()==='dee'&&c.type==='chair'&&c.k>0);
 function drawCarryGhost(chair,L){ const g=carrySpot(), col=g.ok?'#7fff7f':'#ff5a46';
   if(g.wall){ const inf=FURN_INFO[F.carry.type]; sx.globalAlpha=.7; drawWallItem(F.carry.type,g.x,g.y,F.carry.kind,performance.now()); sx.globalAlpha=1;
     R(g.x-1,g.y-1,inf.w+2,1,col); R(g.x-1,g.y+inf.h,inf.w+2,1,col); R(g.x-1,g.y-1,1,inf.h+2,col); R(g.x+inf.w,g.y-1,1,inf.h+2,col); return; }
-  const r=fpRect(F.carry.type,g.x,g.y);
-  sx.globalAlpha=.3; drawPiece({type:F.carry.type,x:g.x,y:g.y,kind:F.carry.kind},chair,L); sx.globalAlpha=1;
+  const r=fpRect(F.carry.type,g.x,g.y,F.carry.r);
+  sx.globalAlpha=.3; drawPiece({type:F.carry.type,x:g.x,y:g.y,kind:F.carry.kind,r:F.carry.r},chair,L); sx.globalAlpha=1;
   R(r[0],r[3]-1,r[2]-r[0],1,col); R(r[0],r[1],r[2]-r[0],1,col); R(r[0],r[1],1,r[3]-r[1],col); R(r[2]-1,r[1],1,r[3]-r[1],col);
-  const p=F.player, inf=FURN_INFO[F.carry.type]; drawPiece({type:F.carry.type,x:Math.round(p.x-inf.c[0]),y:Math.round(p.y-9),kind:F.carry.kind},chair,L);
+  const p=F.player, inf=FURN_INFO[F.carry.type]; drawPiece({type:F.carry.type,x:Math.round(p.x-inf.c[0]),y:Math.round(p.y-9),kind:F.carry.kind,r:F.carry.r},chair,L);
   const sk=(CH.you&&CH.you.skin)||'#eab894'; R(p.x-9,p.y-17,3,3,sk); R(p.x+6,p.y-17,3,3,sk); }
 function drawFloorOverlay(t){
   if(F.tourAt&&!(F.tourAt.near&&F.player&&Math.hypot(F.player.x-F.tourAt.x,F.player.y-F.tourAt.y)>48)){ const b=((t/220)|0)%2, x=F.tourAt.x, y=F.tourAt.y-b; // Dee's tour: "walk here" arrow
@@ -2800,7 +2821,7 @@ function hotspots(){
     if(p.type==='closet') hs.push({x:mx,y:my+10,r:16,ax:mx,ay:p.y-6,label:'Supply closet (your stock)',act:()=>openStore('stock',enterFloor)});
     else if(save.career&&!F.appr&&!pieceBusy(p)) hs.push({x:mx,y:my+6,r:11,ax:mx,ay:p.y-6,label:`Move the ${inf.name}`,act:()=>pickUp(p)}); });
   if(save.career&&!F.appr){ const sw=sideWallX(); if(sw) hs.push({x:sw-12,y:fy+24,r:24,ax:sw-14,ay:fy-4,label:`Expand into next door (${expandPrice(save.workAt)} coins)`,act:expandAsk});
-    const wy=wallY(); wallList().forEach(w=>{ const inf=FURN_INFO[w.type], mx=w.x+inf.w/2; hs.push({x:mx,y:fy-10,r:16,ax:mx,ay:wy+inf.h/2+14,wall:w.key,label:`Move the ${invName(w).toLowerCase()}`,act:()=>wallMoveAsk(w)}); }); }
+    wallList().forEach(w=>{ const inf=FURN_INFO[w.type], mx=w.x+inf.w/2; hs.push({x:mx,y:fy-10,r:16,ax:mx,ay:w.y+inf.h/2+14,wall:w.key,label:`Move the ${invName(w).toLowerCase()}`,act:()=>wallMoveAsk(w)}); }); }
   return hs;
 }
 function staffStatus(st){ const s=F.sst[st.id]; if(st.off===save.cday) return 'day off'; if(!s) return 'ready for a client'; if(s.busy) return `tattooing ${wantText(s.busy.c.design)}`; if(s.noSup) return 'out of supplies!'; if(s.tired) return 'too tired to work'; return 'waiting for a client'; }
@@ -2814,7 +2835,7 @@ function enterFloor(){
     F.dee={ch:'dee',x:cx-90,y:fy-12,tx:cx-90,ty:fy-12,behind:true};
     F.arrivalAt=Math.max(F.arrivalAt,save.clock+10);
   }
-  save.staff.forEach(st=>{ regStaff(st); if(st.off===save.cday){ delete F.staffActs[st.id]; return; } if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:true}; } });
+  save.staff.forEach(st=>{ regStaff(st); if(st.off===save.cday){ delete F.staffActs[st.id]; return; } if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:!chairFlip(st.chair)}; } });
   // Dee is behind the counter in Dee's shop (until Day 4); otherwise your counter clerk, if you've hired one
   const deeHere=F.appr||(save.workAt==='dee'&&!save.deeDied);
   if(deeHere){ F.dee.behind=true; F.dee.fallBack=false; F.dee.down=false; F.dee.dead=false; F.dee.x=F.dee.tx=cx-90; F.dee.y=F.dee.ty=fy-12; }
@@ -2828,7 +2849,7 @@ function enterFloor(){
 }
 // open or close the doors (closing only stops new customers; anyone waiting stays)
 function setDoors(open){
-  F.open=open; if(open) F.arrivalAt=Math.max(F.arrivalAt,save.clock+5);
+  F.open=open; if(open&&save.career&&save.openedDay!==save.cday){ save.openedDay=save.cday; persist(); } if(open) F.arrivalAt=Math.max(F.arrivalAt,save.clock+5);
   toast(open?(save.clock>=CLOSE?"Doors open, but it's late. Nobody new is coming tonight.":'Doors open! Customers can come in.'):'Doors closed. Nobody new comes in.'); blip(open?880:440); renderFloorHud();
 }
 async function endDayAsk(){
@@ -2838,7 +2859,7 @@ async function endDayAsk(){
   if(ok&&!F.closing){ F.closing=true; F.mustEnd=false; F.tourAt=null; endDay(); }
 }
 function renderFloorHud(){
-  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`${shopById(save.workAt).name} · Day ${careerDay()} · ${clockText()}`}</span>`+
+  $('#fChips').innerHTML=`<span class="chip wood">${F.appr?`Day ${dayNum()} · Dee's shop`:`${shopById(save.workAt).name} · Day ${careerDay()} · ${clockText()}${dayFrozen()?' (paused)':''}`}</span>`+
     (F.appr?'':`<span class="chip wood ${F.open?'':'low'}">${F.open?'OPEN':'CLOSED'}</span>`)+
     `<span class="chip wood"><i class="coin"></i>${save.coins}</span><span class="chip wood">Rep ${save.rep}</span>`+(hpNow()<100?`<span class="chip wood ${hpNow()<=50?'low':''}">Health ${hpNow()}%</span>`:'')+`<span class="chip wood ${supLow()?'low':''}">${supText()}</span>`;
   fitChips($('#fChips'));
@@ -2856,7 +2877,7 @@ function clampPlayer(p){
 // furniture your feet can't pass through: [x0,y0,x1,y1] in scene pixels
 function floorBlocks(){
   const {cx,fy}=sceneGeo(), b=[[cx-128,fy-9,cx-52,fy+7]];
-  furnList().forEach(p=>{ if(F.carry&&F.carry.key===p.key) return; if(!F.active&&(p.key!=='chair0'&&/^chair|^seat/.test(p.key))) return; b.push(fpRect(p.type,p.x,p.y)); });
+  furnList().forEach(p=>{ if(F.carry&&F.carry.key===p.key) return; if(!F.active&&(p.key!=='chair0'&&/^chair|^seat/.test(p.key))) return; b.push(fpRect(p.type,p.x,p.y,p.r)); });
   return b;
 }
 const blockedAt=(x,y)=>floorBlocks().some(r=>x>r[0]&&x<r[2]&&y>r[1]&&y<r[3]);
@@ -2885,7 +2906,7 @@ function floorTick(dt){
   // a body on the floor: customers react, and the paramedics come after a while
   if(F.bodies&&F.bodies.length){ bodyReactions(); if(F.ambCalled&&(F.ambT-=dt/1000)<=0&&!F.ambBusy){ F.ambBusy=true; paramedics(F.bodies.slice()).then(()=>{ F.ambBusy=false; F.ambCalled=false; }); } }
   if(!F.appr&&save.career&&!F.deathRunning&&!F.takeRunning&&!(F.bodies&&F.bodies.length)) shopChatter(dt);
-  if(!F.appr&&deeDay()&&!F.open&&!F.deeOpened&&save.clock>=DAY_START+60&&!F.busy&&!F.carry&&!dlg.active&&!modalOpen&&!F.deathRunning) deeOpensDoors();
+  if(!F.appr&&deeDay()&&!F.open&&!F.deeOpened&&performance.now()-(F.deeWait||(F.deeWait=performance.now()))>45000&&!F.busy&&!F.carry&&!dlg.active&&!modalOpen&&!F.deathRunning) deeOpensDoors();
   // Day 4 (career): the robbery that kills Dee, after 12:30 at Dee's shop with the doors open and nothing in progress
   if(!F.appr&&save.career&&!save.deeDied&&save.workAt==='dee'&&F.open&&save.clock>=750&&!F.busy&&!F.jobCust&&!F.suspended&&!dlg.active&&!F.deathRunning&&!modalOpen) deeDeath();
   // Day 10 (career): the gang Dee owed money comes for the shop
@@ -2911,6 +2932,7 @@ function floorTick(dt){
 // time on the floor keeps going even while a box is open (warm-up choice, menus) or you're walking somewhere:
 // the career clock runs, and Dee's waiting customers lose patience (it only pauses while someone is talking)
 function passiveTick(dt){
+  if(F.paused) return; // the menu is open: the whole day waits
   if(!F.appr){ if(!F.closing&&!F.deathRunning) advanceTime(dt/1000*CLOCK_RATE); }
   else F.custs.slice().forEach(c=>{ if(c.script&&c.state==='waiting'&&!dlg.active&&c!==F.talking&&(c.patience-=dt/1000)<=0) scriptedWalkout(c); });
   if(F.suspended) job.elapsed+=dt/1000; // a client left waiting in the chair: their tattoo clock keeps running
@@ -2922,7 +2944,7 @@ function pieceBusy(p){
     const st=save.staff.find(s=>s.chair===p.k); return !!(st&&F.sst[st.id]&&F.sst[st.id].busy); }
   return false; }
 function pickUp(p){ if(pieceBusy(p)){ toast('Someone is using that right now'); return; }
-  F.carry={key:p.key,type:p.type,k:p.k,kind:p.kind}; furnChanged(); blip(520); toast(`Carrying the ${FURN_INFO[p.type].name}`); }
+  F.carry={key:p.key,type:p.type,k:p.k,kind:p.kind,r:p.r||0}; furnChanged(); blip(520); toast(`Carrying the ${FURN_INFO[p.type].name}`); }
 function sellValue(c){
   if(c.type==='chair'&&c.k>0) return Math.round(UPGRADES.find(u=>u.id==='chairs').price(save.up.chairs-1)/2);
   if(c.type==='seat') return save.up.seats>2?Math.round(UPGRADES.find(u=>u.id==='seats').price(save.up.seats-3)/2):0;
@@ -2932,13 +2954,16 @@ function sellValue(c){
   return 0; }
 async function carryMenu(){
   const c=F.carry, g=carrySpot(), nm=FURN_INFO[c.type].name, val=sellValue(c);
-  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(val&&!c.newRoom) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
-  if(newRoomOnly(c)&&!g.ok&&g.x<sceneGeo().cx+182){ await modal(c.newRoom?'Dee wants the new bench in the new room, past where the wall was.':'Extra tattoo chairs go in the new room, past where the wall was.',[['Keep carrying','keep',true]]); return; }
+  const turns=FURN_INFO[c.type].turns||1;
+  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(turns>1) opts.push(['Turn it','turn']); if(val&&!c.newRoom) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
+  if(newRoomOnly(c)&&!g.ok&&g.x<sceneGeo().cx+182&&turns<2){ await modal(c.newRoom?'Dee wants the new bench in the new room, past where the wall was.':'Extra tattoo chairs go in the new room, past where the wall was.',[['Keep carrying','keep',true]]); return; }
   const v=await modal(g.ok?(g.wall?`Hang the ${nm} here?`:`Put the ${nm} down here?`):(g.wall?`It can't hang there (window, sign, pictures or the closet). Find a free spot on the wall.`:`Something is in the way here. Find a free spot for the ${nm}.`),opts);
-  if(v==='put'){ const {cx,fy}=sceneGeo(), st=furnStore(); st[c.key]=g.wall?{wx:g.x}:{dx:g.x-cx,dy:g.y-fy}; F.carry=null; furnChanged(); persist(); blip(700);
-    save.staff.forEach(s=>{ const a=F.staffActs[s.id]; if(a&&'chair'+s.chair===c.key){ const sp=staffPos(s.chair); a.x=a.tx=sp.x; a.y=a.ty=sp.y; } }); }
+  if(v==='put'){ const {cx,fy}=sceneGeo(), st=furnStore(); st[c.key]=g.wall?{wx:g.x,wy:g.y}:{dx:g.x-cx,dy:g.y-fy,r:c.r||0,own:true}; F.carry=null; furnChanged(); persist(); blip(700);
+    save.staff.forEach(s=>{ const a=F.staffActs[s.id]; if(a&&'chair'+s.chair===c.key){ const sp=staffPos(s.chair); a.x=a.tx=sp.x; a.y=a.ty=sp.y; a.flip=!chairFlip(s.chair); } }); }
+  if(v==='turn'){ turnCarried(); carryMenu(); return; }
   if(v==='sell'){ const ok=await modal(`Sell the ${nm} for ${val} coins? This can't be undone.`,[['Keep it',false,true],['Sell it',true]]); if(ok) sellCarried(val); }
 }
+function turnCarried(){ const c=F.carry, n=c&&FURN_INFO[c.type].turns; if(!n||n<2) return; c.r=((c.r||0)+1)%n; furnChanged(); blip(600); }
 function sellCarried(val){
   const c=F.carry, st=furnStore();
   if(c.type==='chair'){ if(save.staff.length>save.up.chairs-1){ toast('Every staff member needs a chair. Let someone go first.'); return; }
@@ -2959,7 +2984,7 @@ $('#scr-floor').addEventListener('pointerdown',e=>{
     const r0=sc.getBoundingClientRect(), s0=Math.max(r0.width/W,r0.height/H), x0=(e.clientX-r0.left-(r0.width-W*s0)/2)/s0+camX(), y0=(e.clientY-r0.top-(r0.height-H*s0)/2)/s0;
     const c=F.custs.find(c=>c.state==='waiting'&&Math.abs(x0-c.x)<=7&&y0>=c.y-32&&y0<=c.y+1);
     if(c){ const h=hotspots().find(h=>h.x===c.x&&h.y===c.y); if(h){ F.targetAct=h; F.target={x:c.x,y:c.y+6}; } }
-    else { const wy=wallY(), w=wallList().find(w=>x0>=w.x&&x0<=w.x+FURN_INFO[w.type].w&&y0>=wy&&y0<=wy+FURN_INFO[w.type].h); const h=w&&hotspots().find(h=>h.wall===w.key); if(h){ F.targetAct=h; F.target={x:h.x,y:h.y}; } }
+    else { const w=wallList().find(w=>x0>=w.x&&x0<=w.x+FURN_INFO[w.type].w&&y0>=w.y&&y0<=w.y+FURN_INFO[w.type].h); const h=w&&hotspots().find(h=>h.wall===w.key); if(h){ F.targetAct=h; F.target={x:h.x,y:h.y}; } }
     return; }
   const r=sc.getBoundingClientRect(), s=Math.max(r.width/W,r.height/H), ox=(r.width-W*s)/2, oy=(r.height-H*s)/2;
   const x=(e.clientX-r.left-ox)/s+camX(), y=(e.clientY-r.top-oy)/s;
@@ -2985,8 +3010,9 @@ function spawnCustomer(){
   const design=ltIntro?letterJob('typewriter'):ltOK&&Math.random()<(shopById(save.workAt).district==='eastside'?.5:.2)?letterJob():Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
   const info=DES_INFO[design], sp=seatPos(seat), pat=pickR([[280,360],[380,500],[540,720]]).reduce((a,b)=>a+Math.random()*(b-a));
   const shade=DESIGNS[design].shade&&Math.random()<.6?randomShade():null; // most customers want some color; it pays more and takes longer
-  const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,
-    spot:pickR(SPOTS),pay:Math.round(info.pay*shopById(save.workAt).payMul*(shade?1.25:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:Math.round((info.time+(shade?90:0))*clamp(1-Math.max(0,save.rep)/200,.7,1)),
+  const line=Math.random()<.25?pickR(Object.keys(PALETTE).filter(n=>n!=='black')):null; // some want their lines in a color
+  const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,line,
+    spot:pickR(SPOTS),pay:Math.round(info.pay*shopById(save.workAt).payMul*(shade?1.25:1)*(line?1.15:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:Math.round((info.time+(shade?90:0))*clamp(1-Math.max(0,save.rep)/200,.7,1)),
     patience:ltIntro?400:pat*repPat(),patience0:ltIntro?400:pat*repPat(),arrived:save.clock,skin:CH[id].skin,letterIntro:ltIntro};
   F.custs.push(c); actors.push(c);
 }
@@ -3272,8 +3298,10 @@ async function deeRunCheck(){
   // only when the shop is clear (someone walking out the door doesn't count)
   if(save.runTut||save.cust<2||save.cust>=CUSTOMERS.length||F.busy||F.tour||F.custs.some(c=>c.state!=='leaving')||F.jobCust) return;
   save.runAsk=true; F.busy=true; await sleep(400);
-  save.sup.ointment=0; save.sup.wraps=0; persist(); // the shop really is out
-  await say('dee',"Kid! We're out of ointment and wrap, and the next customer is walking in right now. I need a supply run.");
+  save.sup.ointment=0; save.sup.wraps=0; // the shop really is out
+  // and if the ink won't last the customers still to come (about 5 ml each), ink goes on the list too
+  const needInk=save.sup.ink<5*(CUSTOMERS.length-save.cust); save.runList=needInk?['ointment','wraps','ink']:['ointment','wraps']; save.runGot=[]; persist();
+  await say('dee',needInk?"Kid! We're out of ointment and wrap, and the ink is running low too. The next customer is walking in right now. I need a supply run.":"Kid! We're out of ointment and wrap, and the next customer is walking in right now. I need a supply run.");
   await say('dee',"Here's 60 coins. Walk out the front door and open the city map. The Supply Store is the blue blip. I've marked it for you, this once.");
   await say('dee',"Buy what we need and get back here fast, before we lose the customer!");
   save.coins+=60; persist(); renderFloorHud(); hideDlg(); F.busy=false; F.spawnAt=performance.now()+800;
@@ -3315,7 +3343,10 @@ async function deeTour(){
   await say('dee',"Clients come in through that door and sit on the bench. Walk up to one to talk. Here comes your first.");
   hideDlg(); save.toured=true; persist(); F.tour=false; F.busy=false; F.spawnAt=0;
 }
-function advanceTime(mins){
+// before the doors first open today, time stands still (set up, decorate, shop around without losing the day)
+const dayFrozen=()=>save.career&&save.openedDay!==save.cday;
+function advanceTime(mins,force){
+  if(dayFrozen()&&!force) return;
   save.clock+=mins;
   const pr=patienceRate(); // nobody at the counter: customers lose patience twice as fast
   F.custs.forEach(c=>{ if(c.state==='waiting'&&c!==F.talking){ c.patience-=mins*pr; if(c.patience<=0){ custLeave(c); save.rep-=1; F.today.lost++; if(current==='floor') toast(`${CH[c.ch].name} got tired of waiting and left (−1 rep)`); } } });
@@ -3359,7 +3390,7 @@ async function talkCustomer(c){
     await say(null,"Every letter is its own little shape with tight gaps. Go slow and keep each stroke on the line.");
     hideDlg(); save.letterIntro=true; persist(); F.busy=false; }
   const hrs=c.dur/60, ht=Number.isInteger(hrs)?hrs:hrs.toFixed(1);
-  const v=await modal(`${CH[c.ch].name} wants ${wantText(c.design)} on the ${c.spot}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
+  const v=await modal(`${CH[c.ch].name} wants ${wantText(c.design)} on the ${c.spot}${c.line?`, in ${c.line} lines`:''}${c.shade?`, shaded ${shadeText(c.shade)}`:''}. Pays about ${c.pay} coins and takes about ${ht} hour${hrs>1?'s':''}.`,
     [['Not now','later'],['Send away','away'],['Start tattoo','go',true]]);
   F.talking=null;
   if(!F.custs.includes(c)||c.state!=='waiting') return;
@@ -3375,9 +3406,9 @@ async function talkCustomer(c){
 function startCareerJob(c){
   F.jobCust=c;
   const career=!c.script, mode=career?'career':'customer';
-  const cust=c.script||{ch:c.ch,spot:c.spot,tip:c.pay,shade:c.shade,react:["This is a mess. I'm not paying for that.","It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']};
+  const cust=c.script||{ch:c.ch,spot:c.spot,tip:c.pay,shade:c.shade,line:c.line,react:["This is a mess. I'm not paying for that.","It's okay, I guess.",'Looks great, thanks!','Wow. Absolutely perfect.']};
   offerWarmup(cust,c.design,async()=>{ await playerWalk(artistPos()); F.busy=false;
-    startJob({mode,cust,design:c.design,skin:c.skin,limit:c.time,shadeSpec:cust.shade||null,stenOp:career?Math.min(.95,.75+(save.up.light?.15:0)):.75}); },career);
+    startJob({mode,cust,design:c.design,skin:c.skin,limit:c.time,shadeSpec:cust.shade||null,lineSpec:cust.line||null,stenOp:career?Math.min(.95,.75+(save.up.light?.15:0)):.75}); },career);
 }
 function afterCareerJob(){
   const c=F.jobCust; F.jobCust=null;
@@ -3401,9 +3432,10 @@ async function floorMenu(){
   if(dev) opts.push(['Dev: +500 coins','coins'],['Dev: restock supplies','sup']);
   if(dev&&!F.busy&&!F.suspended&&!F.jobCust) opts.push(...(F.appr?[['Dev: skip this customer','skipc']]:[['Dev: skip 2 hours','skiph'],['Dev: end the day now','skipd']]));
   opts.push(['Resume','resume',true]);
-  const v=await modal(F.appr?`Day ${dayNum()} at Dee's shop`:`Day ${careerDay()}, ${clockText()} · ${F.open?'Open':'Closed'}`,opts);
+  F.paused=true; const v=await modal(F.appr?`Day ${dayNum()} at Dee's shop`:`Day ${careerDay()}, ${clockText()} · ${F.open?'Open':'Closed'}`,opts);
+  F.paused=false;
   if(v==='coins'){ save.coins+=500; persist(); renderFloorHud(); toast('+500 coins (developer mode)'); }
-  if(v==='skiph'){ advanceTime(120); renderFloorHud(); toast(`Skipped to ${clockText()} (developer mode)`); }
+  if(v==='skiph'){ advanceTime(120,true); renderFloorHud(); toast(`Skipped to ${clockText()} (developer mode)`); }
   if(v==='skipd') endDay();
   if(v==='skipc'){ F.custs.slice().forEach(c=>{ if(c.state!=='inChair'&&c.state!=='toChair') custLeave(c); }); save.cust++; persist(); F.spawnAt=performance.now()+800; toast('Customer skipped (developer mode)'); if(save.cust>=CUSTOMERS.length) ending(); }
   if(v==='sup'){ Object.assign(save.sup,{needles:Math.max(save.sup.needles,20),ink:Math.max(save.sup.ink,200),wraps:Math.max(save.sup.wraps,20),ointment:Math.max(save.sup.ointment,20),film:Math.max(save.sup.film,10)}); persist(); renderFloorHud(); toast('Supplies restocked (developer mode)'); }
@@ -3473,7 +3505,7 @@ function workAt(id){
 }
 $('#bNextDay').onclick=async()=>{
   F.carry=null; F.mustEnd=false; F.tourAt=null; save.cday++; refreshApplicants(); save.clock=DAY_START; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.bodies=[]; F.arrivalAt=DAY_START+20; F.sst={}; F.player=null; F.open=false; F.lateToast=false; persist();
-  await dayCard(`Day ${careerDay()}`,[save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now.":'',save.coins<0?'Money is tight. Get to work.':'9 AM. Open the doors when you\'re ready.',rentToday()?`Rent due tonight: ${rentToday()}`:'',...save.staff.filter(x=>x.off===save.cday).map(x=>`${x.name} has the day off.`)].filter(Boolean).join('\n')); F.closing=false; enterFloor(); await fade(false);
+  await dayCard(`Day ${careerDay()}`,[save.deeDied&&save.cday===save.deeDied+1?"Rest easy, Dee. Dee's shop is yours now.":'',save.coins<0?'Money is tight. Get to work.':'9 AM. The clock starts when you open the doors.',rentToday()?`Rent due tonight: ${rentToday()}`:'',...save.staff.filter(x=>x.off===save.cday).map(x=>`${x.name} has the day off.`)].filter(Boolean).join('\n')); F.closing=false; enterFloor(); await fade(false);
   // the first morning without Dee
   if(save.deeDied&&save.cday===save.deeDied+1&&!save.clerk){ F.busy=true;
     await say(null,"The shop is quiet without Dee. Your rose still hangs on Dee's wall.");
@@ -3539,7 +3571,8 @@ let storeTab='supplies', storeBack=null;
 let storeMode='all';
 // on Dee's supply errand you can only buy what Dee asked for, once (so nobody spends Dee's money on the wrong things)
 const ERRAND=['ointment','wraps'];
-function errandLabel(id){ if(!save.runAsk) return null; if(!ERRAND.includes(id)) return "Not on Dee's list"; return save.sup[id]>0?'Got it':null; }
+const errandList=()=>save.runList||ERRAND;
+function errandLabel(id){ if(!save.runAsk) return null; if(!errandList().includes(id)) return "Not on Dee's list"; return (save.runGot?save.runGot.includes(id):save.sup[id]>0)?'Got it':null; }
 function openStore(tab,back){ storeMode=tab==='stock'?'stock':tab==='office'?'office':'all'; storeTab=tab==='stock'?'closet':tab==='office'?'upgrades':tab||'supplies'; storeBack=back||null; renderStore(); show('store'); }
 function itemRow(name,desc,price,key,doneLabel){
   return `<div class="item"><div class="grow"><div class="nm">${name}</div><div class="ds">${desc}</div></div>`+
@@ -3554,7 +3587,7 @@ function renderStore(focusKey){
   $('#stCoins').innerHTML=`<i class="coin"></i> ${save.coins}`;
   let rows='';
   if(storeTab==='supplies') rows=SUPPLY.map(it=>itemRow(`${it.name} (have ${save.sup[it.id]}${it.unit})`,it.desc,it.price,'sup:'+it.id,errandLabel(it.id))).join('')
-    +(save.runAsk?'<p class="hint">Dee only sent you for ointment and plastic wrap.</p>':'');
+    +(save.runAsk?`<p class="hint">Dee only sent you for ${errandList().map(i=>({ointment:'ointment',wraps:'plastic wrap',ink:'black ink'})[i]).join(', ').replace(/, ([^,]*)$/,' and $1')}.</p>`:'');
   if(storeTab==='closet') rows=SUPPLY.map(it=>`<div class="item"><div class="grow"><div class="nm">${it.name}</div><div class="ds">${it.desc}</div></div><span class="pr ${save.sup[it.id]<(it.id==='ink'?10:2)?'failtag':''}">${save.sup[it.id]}${it.unit}</span></div>`).join('')
     +`<p class="hint">Running low? Walk out the front door and find the Supply Store on the city map${save.career?' (open 8 AM to 6 PM)':''}.</p>`
     +(storeMode==='stock'&&save.career?'<div class="row"><button class="gbtn small" id="stMoveCloset">Move this closet</button></div>':'');
@@ -3581,7 +3614,7 @@ function buyItem(key){
   if(kind==='sup'&&errandLabel(id)) return;
   if(kind==='place'){ placeStored(id); return; }
   if(kind==='crew'){ const st=save.staff.find(x=>x.id===id); if(st) manageStaff(st,()=>renderStore(key)); return; }
-  if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; save.runTut=true; toast(`Bought ${it.name.toLowerCase()}`); }
+  if(kind==='sup'){ const it=SUPPLY.find(x=>x.id===id); if(save.coins<it.price) return; save.coins-=it.price; save.sup[id]+=it.qty; save.runTut=true; if(save.runAsk&&save.runGot) save.runGot.push(id); toast(`Bought ${it.name.toLowerCase()}`); }
   if(kind==='up'&&(id==='seats'||id==='chairs')&&!roomToGrow()){ toast('Expand the shop first: walk to the wall on the right'); return; }
   if(kind==='up'){ const u=UPGRADES.find(x=>x.id===id), pr=u.price(u.lvl()); if(u.lvl()>=u.max||save.coins<pr) return; save.coins-=pr; u.buy();
     if((id==='chairs'||id==='seats')&&F.player&&save.career){ // new furniture comes out in your hands
@@ -4110,6 +4143,7 @@ window.addEventListener('keydown',e=>{
     const m=KEYMOVE[k]; if(m){ e.preventDefault(); F.keys[m]=true; return; }
     if(k==='e'||k==='enter'||e.code==='Space'){ e.preventDefault(); floorInteract(); return; }
     if(k==='escape'){ floorMenu(); return; }
+    if(k==='r'&&F.carry){ turnCarried(); return; } // R turns the furniture you're carrying
     return;
   }
   if(current==='map'&&!modalOpen){ // map: WASD pans, + and - zoom (arrows still move between buttons)
@@ -4244,7 +4278,7 @@ function pollPad(dt){
   const vis=job.vis||{x0:0,y0:0,x1:DOC,y1:DOC}, zf=Math.min(1,(vis.x1-vis.x0)/DOC*1.4);
   padCursor.x=clamp(padCursor.x+Math.sign(lx)*lx*lx*sp*zf*(dt/16.7),vis.x0,vis.x1);
   padCursor.y=clamp(padCursor.y+Math.sign(ly)*ly*ly*sp*zf*(dt/16.7),vis.y0,vis.y1);
-  if(VZ.z>1){ const pr=padEl.getBoundingClientRect(), [dx,dy]=edgeShift(pr.left+padCursor.x/DOC*pr.width,pr.top+padCursor.y/DOC*pr.height); if(dx||dy) viewPan(dx*.05*(dt/16.7),dy*.05*(dt/16.7)); }
+  if(VZ.z>1&&job.tool==='liner'){ const pr=padEl.getBoundingClientRect(), [dx,dy]=edgeShift(pr.left+padCursor.x/DOC*pr.width,pr.top+padCursor.y/DOC*pr.height); if(dx||dy) viewPan(dx*.05*(dt/16.7),dy*.05*(dt/16.7)); }
   const inking=rt>.08||on(0), p=rt>.08?clamp(.35+.65*rt):1;
   if(inking&&!padCursor.drawing){ padCursor.drawing=true; strokeBegin(padCursor.x,padCursor.y,p); }
   else if(inking&&padCursor.drawing) strokeMove(padCursor.x,padCursor.y,p);

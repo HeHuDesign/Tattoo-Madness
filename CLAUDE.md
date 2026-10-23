@@ -161,6 +161,16 @@ Rule: **players already have saves on their phone.** When adding a field, add it
 - **Apprenticeship complete** screen only has "Keep working for Dee". `say()` resolves at once on non-scene screens, so a scene still running behind (e.g. after dev skips) can't talk over another screen.
 - **Store screens scroll:** `.store` is never shrunk by `fitAll()`; its `.items` list scrolls (touch-action pan-y) with the title, tabs and Back fixed.
 - **Free tattoo:** the station menu has "Back to the shop" (`continueGame()`) when a save is in progress.
+- **Oct 22 batch:**
+  - The zoom follow camera only runs while lining (`flowPan`/`viewFollow`/controller `edgeShift` check the liner); shading keeps the zoom but the view stays still.
+  - Shading on real skin counts only 25% of its travel toward smudges, and its smudges are smaller with less blood.
+  - **Colored linework:** `job.lineSpec` (a `PALETTE` name). The liner uses the palette color, the palette shows while lining, `lineColorTip()` says the color before you start (Dee explains it once, `save.seenLineTip`), and `scoreWork()` multiplies the score by .4+.6×`lineOk` (share of line ink in the right color, shown as "Line color" on results). Fenwick (Day 2) wants blue lines and Luna (Day 3) purple. About 25% of career customers want a non-black line color (`c.line`, pay ×1.15).
+  - **Dee's supply run** also sends you for ink when `save.sup.ink` < 5 ml × customers left (`save.runList`, bought items in `save.runGot`, `errandList()`).
+  - Dee's couch, fern and lamp: a saved spot in the old room only counts if you placed it yourself (`own:true`, set on every put-down).
+  - **Turning furniture:** `FURN_INFO.turns`. The couch turns 4 ways (`r` 0 front, 1/3 side with its own footprint `fpS`, 2 back); the tattoo chair, desk and radio flip left/right (a flipped chair also flips where the customer lies and the artist stands: `chairFlip()`). "Turn it" in the carry menu or the R key; saved as `r` in `save.furn`; `fpRect(type,x,y,r)`.
+  - **Wall items hang higher or lower:** while carrying one, walking toward the wall raises it and walking away lowers it (`wallHangY()`, −10 to +14 px from the default), saved as `wy`.
+  - **The clock waits for the doors:** in career, time doesn't pass (not even trips) until the doors are first opened that day (`dayFrozen()`, `save.openedDay`); closing them later doesn't stop it. The HUD clock shows "(paused)". Dev "skip 2 hours" still works (`advanceTime(mins,true)`). On Dee's Day 4, Dee opens the doors after 45 real seconds if you haven't.
+  - The floor menu pauses the day while it's open (`F.paused` in `passiveTick()`).
 - **Prices** (Oct 2026): shops, upgrades, staff, clerks and veterans cost about double the old numbers. Supply prices are unchanged.
 
 ## Controls (all must keep working for every new feature)
