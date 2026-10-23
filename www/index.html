@@ -868,7 +868,7 @@ let W=320,H=180,sceneMode='exterior',tick=0;
 const actors=[];
 function resizeScene(){
   const a=innerWidth/Math.max(1,innerHeight);
-  if(a>=1){ H=180; W=Math.min(420,Math.round(180*a)); } else { W=220; H=Math.min(480,Math.round(220/a)); }
+  if(a>=1){ W=Math.min(420,Math.max(400,Math.round(180*a))); H=Math.max(180,Math.round(W/a)); } else { W=220; H=Math.min(480,Math.round(220/a)); }
   sc.width=W; sc.height=H; sx.imageSmoothingEnabled=false;
 }
 const R=(x,y,w,h,c)=>{ sx.fillStyle=c; sx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
