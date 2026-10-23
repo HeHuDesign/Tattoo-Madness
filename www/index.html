@@ -1344,6 +1344,8 @@ function strokeBegin(x,y,p){
   if(job.failed) return;
   if(isClient(job.mode)&&inkLeft()<=0){ outOfInk(); return; }
   if(job.tool==='shade') job.usedShade=true;
+  // on fake skin, a line in the wrong color fails the round
+  if(job.tool==='liner'&&!job.shadeStep&&(job.mode==='practice'||job.mode==='warmup')&&job.color!==PALETTE[lineWant()]){ job.failed=true; job.failWhy='color'; failRound(); return; }
   job.dirty=true;
   stk={out:0,slipped:false,tool:job.tool,cfg:TOOLS[job.tool],lazy:{x,y},raw:{x,y},last:null,gap:0,dist:0,pts:[],total:null,pressure:p};
   if(stk.tool==='liner'){ bctx.clearRect(0,0,DOC,DOC); cBuf.style.opacity=job.ink; }
@@ -1387,8 +1389,8 @@ function stamp(x,y,p,d){
       const xi=Math.round(clamp(x,0,DOC-1)), yi=Math.round(clamp(y,0,DOC-1));
       if(!job.strikeMask[yi*DOC+xi]){ stk.out++; showWarn(true); if(stk.out>=3){ stk.slipped=true; slip(); return; } }
     }
-    // linework is black unless the customer asked for colored lines (or in Free mode)
-    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.mode==='free'||job.lineSpec?job.color:'#151515'; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
+    // linework uses the palette color (black unless the job wants colored lines)
+    const r=Math.max(.6,size/2*(.45+.55*p)*f); bctx.fillStyle=job.color; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
     if(stk.total==null) job.inkAcc+=2*r*spacing(p); // each dab covers about (width × step) of skin
   } else if(stk.tool==='shade'){
     job.inkAcc+=size*spacing(p)*.25; // shading lays down thinner ink
@@ -1506,8 +1508,8 @@ function updateRing(){
 function setTool(t){
   job.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));
   // the color palette shows whenever you're shading a tattoo that has colors (not only after the lines are done)
-  // and while lining a tattoo that wants colored lines
-  const pal=$('#shadeInks'); if(pal) pal.classList.toggle('hide',!(job.mode!=='free'&&((job.shadeSpec&&(job.shadeStep||t==='shade'))||(job.lineSpec&&!job.shadeStep&&t==='liner'))));
+  // and always while lining
+  const pal=$('#shadeInks'); if(pal) pal.classList.toggle('hide',!(job.mode!=='free'&&((job.shadeSpec&&(job.shadeStep||t==='shade'))||(!job.shadeStep&&t==='liner'))));
   $('#szVal').textContent=TOOLS[t].sizes[TOOLS[t].i][1]; updateRing();
 }
 function bumpSize(dir){ const T=TOOLS[job.tool]; T.i=Math.max(0,Math.min(T.sizes.length-1,T.i+dir)); setTool(job.tool); blip(dir>0?700:500); }
@@ -1628,7 +1630,7 @@ function failRound(){
 function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false; }
 
 function startJob(opts){
-  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,shadeSpec:null,lineSpec:null,...opts});
+  Object.assign(job,{elapsed:0,stenVisible:true,upload:null,shadeSpec:null,lineSpec:null,failWhy:null,...opts});
   if(job.shadeSpec&&!DESIGNS[job.design].shade) job.shadeSpec=null; // designs without a shading area stay lines-only
   job.shadeStep=false; job.lineRes=null; $('#shadeInks').classList.add('hide');
   job.maxStrikes=isClient(job.mode)?3:5; job.body=isClient(job.mode)?job.cust.spot:null;
@@ -1649,11 +1651,11 @@ function startJob(opts){
   if(!free){ job.color='#151515'; job.ink=1; }
   drawPortrait($('#tPortrait'), isClient(job.mode)?CH[job.cust.ch]:CH.dee);
   if(job.mode==='practice'){ $('#tTitle').textContent=`Fake skin ${job.idx+1}: ${DESIGNS[job.design].name}`;
-    $('#tSub').textContent=job.shadeSpec?`Practice. Lines first, then shade ${DESIGNS[job.design].shadeName}. No clock.`:'Practice. No clock. Scored on your linework.'; }
+    $('#tSub').textContent=job.shadeSpec?`Practice. ${job.lineSpec?job.lineSpec[0].toUpperCase()+job.lineSpec.slice(1)+' lines':'Lines'} first, then shade ${DESIGNS[job.design].shadeName}. No clock.`:`Practice. No clock. ${job.lineSpec?job.lineSpec[0].toUpperCase()+job.lineSpec.slice(1)+' lines. ':''}Scored on your linework.`; }
   else if(job.mode==='warmup'){ $('#tTitle').textContent=`Warm-up: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`Fake skin, for ${CH[job.cust.ch].name}. No clock, no supplies used.`; }
   else if(isClient(job.mode)){ $('#tTitle').textContent=`${CH[job.cust.ch].name}: ${DESIGNS[job.design].name}`; $('#tSub').textContent=`On the ${job.cust.spot}${job.lineSpec?`, ${job.lineSpec} lines`:''}${job.shadeSpec?`, shaded ${shadeText(job.shadeSpec)}`:''}. Real skin: ink stays, ${job.maxStrikes} slips and they leave.`; }
   else { $('#tTitle').textContent='Free tattoo'; $('#tSub').textContent='No score. Pick or upload a stencil, or freehand.'; }
-  padCursor.x=300; padCursor.y=300; viewReset(); setTool('liner'); if(job.lineSpec) pickShadeColor('black'); show('tattoo');
+  padCursor.x=300; padCursor.y=300; viewReset(); if(!free) pickShadeColor('black'); setTool('liner'); show('tattoo');
   (async()=>{ if(real&&!save.seenWipe){ save.seenWipe=true; persist();
     await modal(`Real skin gets messy. Smudges of extra ink and blood build up while you work. Wipe them with the paper towel (Towel button, W key${inputMode==='pad'?', or X on your controller':''}) before they set, or they cost you points. Keep an eye on your ink too.`,[['Got it',true,true]]); }
     if(job.lineSpec) await lineColorTip(); })();
@@ -1662,7 +1664,7 @@ function startJob(opts){
 async function lineColorTip(){ const who=job.cust?CH[job.cust.ch].name:'Dee', col=job.lineSpec;
   const say1=`${who}: "${col[0].toUpperCase()+col.slice(1)} lines, remember!"`;
   if(!save.seenLineTip){ save.seenLineTip=true; persist();
-    await modal(`Dee: "Not every tattoo is black lines. This one wants colored linework. Pick the color from the palette before your first line. Your machine always starts on black."\n\n${say1}`,[['Got it',true,true]]); }
+    await modal(`Dee: "Not every tattoo is black lines. This one wants colored linework. Pick the color from the palette before your first line. Your machine always starts on black. On fake skin, a line in the wrong color fails the pad."\n\n${say1}`,[['Got it',true,true]]); }
   else await modal(say1,[['Got it',true,true]]); }
 function tickJob(dt){
   if(job.phase==='care'){ if(tick%12===0) renderCarePct(); return; }
@@ -1684,7 +1686,7 @@ function scoreWork(){
   // a narrow band right on the line: ink that stays in bounds but wobbles off the line scores lower
   x.clearRect(0,0,DOC,DOC); x.lineWidth=Math.max(9,sizeOf('liner')+3); x.stroke(path); const dT=x.getImageData(0,0,DOC,DOC).data;
   const L=lctx.getImageData(0,0,DOC,DOC).data, W1=DOC+1, I=new Int32Array(W1*W1);
-  let ink=0, good=0, tight=0, rightCol=0; const want=job.lineSpec;
+  let ink=0, good=0, tight=0, rightCol=0; const want=lineWant();
   for(let y=0;y<DOC;y++){ let rowSum=0; for(let i=0;i<DOC;i++){ const o=(y*DOC+i)*4, v=L[o+3]>60?1:0; if(v){ ink++; if(d[o+3]>20) good++; if(dT[o+3]>20) tight++; if(want&&nearestColor(L[o],L[o+1],L[o+2])===want) rightCol++; } rowSum+=v; I[(y+1)*W1+i+1]=I[y*W1+i+1]+rowSum; } }
   let hit=0, n=pts.length/2;
   for(let k=0;k<pts.length;k+=2){ const px=pts[k], py=pts[k+1], x0=Math.max(0,px-tol), x1=Math.min(DOC,px+tol+1), y0=Math.max(0,py-tol), y1=Math.min(DOC,py+tol+1);
@@ -1801,6 +1803,7 @@ function showFail(){
   if(cust){ useSupplies(); save.rep-=2; who=job.cust.ch; quote="Whoa, whoa! Stop! That's going way outside the lines! I'm out of here.";
     if(career) F.today.lost++; else { save.cust++; apprLost(); }
     persist(); }
+  else if(job.failWhy==='color') quote=lineWant()==='black'?'Stop! These lines are black. Check the palette before you start.':`Stop! Those lines are ${lineWant()}. Pick the color from the palette before you start. The machine always starts on black.`;
   else quote="Five slips. Wipe it down and start over. Stay right on that purple line.";
   const lastCust=!career&&save.cust>=CUSTOMERS.length;
   btns=career?`<button class="gbtn go" id="fFloor">They walked out. Back to the floor</button>`
@@ -1810,8 +1813,8 @@ function showFail(){
   res.innerHTML=`<h2 class="failtag">${cust?'They walked out':'Round failed'}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="No stars">☆☆☆</div>
-      <dl class="stats"><dt>Slips</dt><dd>${job.maxStrikes} of ${job.maxStrikes}</dd>${cust?'<dt>Reputation</dt><dd>-2</dd><dt>Pay</dt><dd>none</dd>':''}</dl>
-      <p style="margin:0">${cust?'Too many slips on real skin. There are no second tries on a customer.':'You went too far outside the lines too many times.'}</p></div>
+      <dl class="stats">${job.failWhy==='color'?`<dt>Line color</dt><dd>should be ${lineWant()}</dd>`:`<dt>Slips</dt><dd>${job.maxStrikes} of ${job.maxStrikes}</dd>`}${cust?'<dt>Reputation</dt><dd>-2</dd><dt>Pay</dt><dd>none</dd>':''}</dl>
+      <p style="margin:0">${cust?'Too many slips on real skin. There are no second tries on a customer.':job.failWhy==='color'?'Wrong line color.':'You went too far outside the lines too many times.'}</p></div>
     <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[who].name}:</b> ${quote}</span></div>
     ${cust?`<div class="quote"><canvas id="rPortrait2" width="60" height="60"></canvas><span><b>Dee:</b> Real skin doesn't wipe clean. Warm up on the pads before the next one.</span></div>`:''}
     <div class="row">${btns}</div>`;
@@ -1859,14 +1862,14 @@ function showResults(r){
     btns=save.cust>=CUSTOMERS.length?`<button class="gbtn go" id="rNext">Close up shop</button>`:`<button class="gbtn go" id="rNext">Next customer</button>`;
   }
   if(downloads) btns=`<button class="gbtn" id="rSave">Save PNG</button>`+btns;
-  if(r.lineOk!=null&&r.lineOk<.8&&(job.mode==='practice'||job.mode==='warmup')) quote=`Those lines should be ${job.lineSpec}, kid. Pick the color before you start. The machine always starts on black.`;
+  if(r.lineOk!=null&&r.lineOk<.8&&(job.mode==='practice'||job.mode==='warmup')) quote=`Those lines should be ${lineWant()}, kid. Pick the color before you start. The machine always starts on black.`;
   else if(r.shaded&&(job.mode==='practice'||job.mode==='warmup')){
     if(r.colorOk<.8) quote="Wrong color, kid. Check the palette before you start. The machine always starts on black.";
     else if(r.shadeCov<.8) quote="Lines are one thing. Your shading's patchy. Slower passes, keep the needle moving."; }
   res.innerHTML=`<h2>${job.mode==='practice'?DESIGNS[job.design].name+' pad':job.mode==='warmup'?'Warm-up: '+DESIGNS[job.design].name:CH[job.cust.ch].name}</h2>
     <canvas id="rThumb" width="600" height="600"></canvas>
     <div><div class="bigstars" aria-label="${r.stars} of 3 stars">${starStr(r.stars)}</div>
-      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd>${r.shaded?`<dt>Lines</dt><dd>${r.lineScore}</dd><dt>Shading</dt><dd>${Math.round(r.shadeCov*100)}% filled · ${Math.round(r.colorOk*100)}% right color</dd>`:''}${r.lineOk!=null?`<dt>Line color</dt><dd>${Math.round(r.lineOk*100)}% ${job.lineSpec}</dd>`:''}<dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
+      <dl class="stats"><dt>Score</dt><dd>${r.score}</dd>${r.shaded?`<dt>Lines</dt><dd>${r.lineScore}</dd><dt>Shading</dt><dd>${Math.round(r.shadeCov*100)}% filled · ${Math.round(r.colorOk*100)}% right color</dd>`:''}${r.lineOk!=null&&(job.lineSpec||r.lineOk<.97)?`<dt>Line color</dt><dd>${Math.round(r.lineOk*100)}% ${lineWant()}</dd>`:''}<dt>Stencil lines hit</dt><dd>${Math.round(r.cov*100)}%</dd><dt>Clean ink</dt><dd>${Math.round(r.acc*100)}%</dd><dt>Slips</dt><dd>${job.strikes} of ${job.maxStrikes}</dd>${r.smudgePen?`<dt>Smudges</dt><dd>−${r.smudgePen} points</dd>`:''}</dl></div>
     ${extra}
     <div class="quote"><canvas id="rPortrait" width="60" height="60"></canvas><span><b>${CH[quoteWho].name}:</b> ${quote}</span></div>
     <div class="row">${btns}</div>`;
@@ -1900,9 +1903,13 @@ function thumbCanvas(cv,key,skin,filled){
   if(filled){ x.fillStyle='rgba(90,51,184,.3)'; x.fill(pathOf(key)); x.strokeStyle='#151515'; } else x.strokeStyle='#5a33b8';
   x.lineWidth=9; x.lineCap='round'; x.lineJoin='round'; x.stroke(pathOf(key)); x.restore();
 }
-// half the pads are lines first, then shading in the colors Dee asks for: Heart red, Star yellow, Dagger blade half black / half blue
-const PRACTICE_SHADE={1:[{part:'all',color:'red'}],2:[{part:'all',color:'yellow'}],4:[{part:'left',color:'black'},{part:'right',color:'blue'}]};
+// shading pads: lines first, then shading in the colors Dee asks for: Star yellow (shading is introduced here), Dagger blade half black / half blue
+const PRACTICE_SHADE={2:[{part:'all',color:'yellow'}],4:[{part:'left',color:'black'},{part:'right',color:'blue'}]};
 const hasShade=i=>!!PRACTICE_SHADE[i];
+// colored linework is introduced on the Heart pad (pad 2)
+const PRACTICE_LINE={1:'red'};
+// the line color this job wants (black unless it asks for colored lines)
+const lineWant=()=>job.mode==='free'?null:job.lineSpec||'black';
 function openBoard(){
   // the robbery lesson happens the first time you come back to the pads after passing pad 2
   if(save.stars[1]>0&&!save.robTut&&!save.graduated){ robberyLesson(); return; }
@@ -1910,7 +1917,7 @@ function openBoard(){
   PRACTICE.forEach((k,i)=>{
     const unlocked=i===0||save.stars[i-1]>0||dev;
     const b=document.createElement('button'); b.className='padcard'; b.disabled=!unlocked;
-    b.innerHTML=`<canvas></canvas><b>${i+1}. ${DESIGNS[k].name}${hasShade(i)?' + shading':''}</b><span class="st">${starStr(save.stars[i])}</span>${unlocked?'':'<span class="lock">Locked</span>'}`;
+    b.innerHTML=`<canvas></canvas><b>${i+1}. ${DESIGNS[k].name}${PRACTICE_LINE[i]?` + ${PRACTICE_LINE[i]} lines`:''}${hasShade(i)?' + shading':''}</b><span class="st">${starStr(save.stars[i])}</span>${unlocked?'':'<span class="lock">Locked</span>'}`;
     thumbCanvas(b.querySelector('canvas'),k,'#f1d2bb',hasShade(i));
     b.onclick=()=>goPractice(i); g.appendChild(b);
   });
@@ -1930,7 +1937,7 @@ async function goPractice(i){
 }
 function startPractice(i){
   const k=PRACTICE[i];
-  startJob({mode:'practice',idx:i,design:k,cust:null,skin:'#f1d2bb',stenOp:[.95,.9,.85,.8,.72,.65][i],shadeSpec:PRACTICE_SHADE[i]||null});
+  startJob({mode:'practice',idx:i,design:k,cust:null,skin:'#f1d2bb',stenOp:[.95,.9,.85,.8,.72,.65][i],shadeSpec:PRACTICE_SHADE[i]||null,lineSpec:PRACTICE_LINE[i]||null});
 }
 // after the lines on a shading pad: switch to the shader and fill the marked area
 // after the lines on a design with shading: switch to the shader, show the color guide and the palette (always starting on black)
@@ -3010,7 +3017,7 @@ function spawnCustomer(){
   const design=ltIntro?letterJob('typewriter'):ltOK&&Math.random()<(shopById(save.workAt).district==='eastside'?.5:.2)?letterJob():Math.random()<.45?pool[Math.max(0,pool.length-1-((Math.random()*2)|0))]:pickR(pool);
   const info=DES_INFO[design], sp=seatPos(seat), pat=pickR([[280,360],[380,500],[540,720]]).reduce((a,b)=>a+Math.random()*(b-a));
   const shade=DESIGNS[design].shade&&Math.random()<.6?randomShade():null; // most customers want some color; it pays more and takes longer
-  const line=Math.random()<.25?pickR(Object.keys(PALETTE).filter(n=>n!=='black')):null; // some want their lines in a color
+  const line=Math.random()<.4?pickR(Object.keys(PALETTE).filter(n=>n!=='black')):null; // some want their lines in a color
   const c={ch:id,x:sceneGeo().cx+(Math.random()*10-5),y:H+26,tx:sp.x,ty:sp.y,flip:false,moving:false,state:'arriving',seat,design,shade,line,
     spot:pickR(SPOTS),pay:Math.round(info.pay*shopById(save.workAt).payMul*(shade?1.25:1)*(line?1.15:1)*(1+Math.max(0,save.rep)/80)*(.9+Math.random()*.25)),dur:info.dur+(shade?30:0),time:Math.round((info.time+(shade?90:0))*clamp(1-Math.max(0,save.rep)/200,.7,1)),
     patience:ltIntro?400:pat*repPat(),patience0:ltIntro?400:pat*repPat(),arrived:save.clock,skin:CH[id].skin,letterIntro:ltIntro};
