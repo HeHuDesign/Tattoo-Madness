@@ -171,12 +171,13 @@ Rule: **players already have saves on their phone.** When adding a field, add it
   - **Wall items hang higher or lower:** while carrying one, walking toward the wall raises it and walking away lowers it (`wallHangY()`, −10 to +14 px from the default), saved as `wy`.
   - **The clock waits for the doors:** in career, time doesn't pass (not even trips) until the doors are first opened that day (`dayFrozen()`, `save.openedDay`); closing them later doesn't stop it. The HUD clock shows "(paused)". Dev "skip 2 hours" still works (`advanceTime(mins,true)`). On Dee's Day 4, Dee opens the doors after 45 real seconds if you haven't.
   - The floor menu pauses the day while it's open (`F.paused` in `passiveTick()`).
+- **Palm rejection** (Oct 23): a touch with a contact patch of `PALM_SIZE` (44 px) or more is a resting hand and never inks (`palmy()`, `palms`; also if it spreads out mid-stroke, `dropTouch()`). The first pencil (pointerType pen) on the pad turns on **pencil only** (`penOnly`, saved device-wide in `tattooMadness.pen`): fingers and palms never ink, two fingers still pinch. The pencil never counts toward a pinch and throws away a line a touch had started. The station menu shows "Pencil only: on/off" once a pencil has been used (`penSeen`).
 - **Prices** (Oct 2026): shops, upgrades, staff, clerks and veterans cost about double the old numbers. Supply prices are unchanged.
 
 ## Controls (all must keep working for every new feature)
 
 - **Mouse / touchpad:** drag to ink; moving slowly makes a heavier line. Keys: L/S/E tools, [ ] needle size, T stencil, F full view, Esc pause. On the shop floor: WASD/arrows to walk, E/Space to interact, M map, Esc menu. Click the floor to walk there.
-- **Touch:** finger drags ink; a stylus gives real pressure. Tap the floor to walk; tap a person or the counter to walk over and use it.
+- **Touch:** finger drags ink; a stylus gives real pressure. Once a stylus is used, only it inks (palm rejection, toggle in the station menu). Tap the floor to walk; tap a person or the counter to walk over and use it.
 - **Controller (Gamepad API, standard mapping):** left stick moves the machine cursor, RT inks (pressure from how hard it's squeezed), LT slows the cursor for detail, X swaps tool, LB/RB needle size, Y stencil, Start finishes, L3/R3 full view, B pauses at the station. D-pad moves the gold highlight between any buttons on screen; any face button selects. On the shop floor the stick/D-pad walks and any face button interacts; Start opens the menu.
 
 **Hard requirement:** every new button or menu must be reachable with a controller. Use real `<button>` elements inside the active screen or modal; `focusables()` picks them up automatically. Disabled buttons are skipped.

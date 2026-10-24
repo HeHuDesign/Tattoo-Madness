@@ -1447,9 +1447,17 @@ padEl.addEventListener('wheel',e=>{ e.preventDefault(); viewZoom(VZ.z*(e.deltaY<
 /* pointer on pad */
 let ptr=null;
 // fingers on the pad (for pinch), a touch waiting to see if it's a pinch, and a pan drag
-const touches=new Map(); let pinch=null, waitTouch=null, panDrag=null;
+const touches=new Map(), palms=new Set(); let pinch=null, waitTouch=null, panDrag=null;
+// palm rejection: a big contact patch is a resting hand and never inks. Once a pencil (stylus) has been used on this device,
+// fingers and palms never ink at all (two fingers can still pinch). Turned off again in the station menu
+const PEN_KEY='tattooMadness.pen', PALM_SIZE=44;
+let penOnly=false, penSeen=false; try{ const v=localStorage.getItem(PEN_KEY); penOnly=v==='1'; penSeen=v!=null; }catch(e){}
+function setPenOnly(v){ penOnly=v; penSeen=true; try{ localStorage.setItem(PEN_KEY,v?'1':'0'); }catch(e){} }
+const palmy=e=>e.pointerType==='touch'&&Math.max(e.width||0,e.height||0)>=PALM_SIZE;
+function dropTouch(id){ touches.delete(id); palms.add(id); if(touches.size<2) pinch=null; if(waitTouch&&waitTouch.id===id) waitTouch=null;
+  if(ptr&&ptr.id===id){ strokeAbort(); ptr=null; } }
 function pinchInfo(){ const p=[...touches.values()]; return {d:Math.max(20,Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)),x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2}; }
-function beginDraw(id,x,y,t,pr){ ptr={id,t,c:[x,y],p:1}; const [dx,dy]=toDoc(x,y); strokeBegin(dx,dy,pr); }
+function beginDraw(id,x,y,t,pr){ ptr={id,t,c:[x,y],p:1,touch:true}; const [dx,dy]=toDoc(x,y); strokeBegin(dx,dy,pr); }
 const toDoc=(cx,cy)=>{ const r=padEl.getBoundingClientRect(); return [(cx-r.left)/r.width*DOC,(cy-r.top)/r.height*DOC]; };
 function ptrPressure(e,speed){
   if(e.pointerType==='pen'&&e.pressure>0) return e.pressure;
@@ -1457,9 +1465,18 @@ function ptrPressure(e,speed){
 }
 padEl.addEventListener('pointerdown',e=>{
   if(e.button!==0||modalOpen) return; padEl.setPointerCapture(e.pointerId);
-  touches.set(e.pointerId,{x:e.clientX,y:e.clientY}); VZ.anim=null; VZ.vel=[0,0]; VZ.cam=[0,0]; VZ.finger=null; VZ.lastMove=performance.now();
-  // a second finger: zoom and pan, never ink (the first finger's stroke is thrown away)
-  if(touches.size>=2){ if(ptr){ strokeAbort(); ptr=null; } waitTouch=null; panDrag=null; pinch={...pinchInfo(),z:VZ.z}; return; }
+  const pen=e.pointerType==='pen';
+  if(palmy(e)){ palms.add(e.pointerId); return; }
+  VZ.anim=null; VZ.vel=[0,0]; VZ.cam=[0,0]; VZ.finger=null; VZ.lastMove=performance.now();
+  // the pencil always draws: it never counts toward a pinch, and a line a resting hand started is thrown away
+  if(pen){ if(!penOnly){ setPenOnly(true); toast('Pencil mode: your hand and fingers will not draw now (two fingers still zoom). Change it in the Menu.'); }
+    pinch=null; waitTouch=null; if(ptr&&ptr.touch){ strokeAbort(); ptr=null; }
+    if(VZ.mode){ panDrag={id:e.pointerId,x:e.clientX,y:e.clientY}; return; }
+    ptr={id:e.pointerId,t:e.timeStamp,c:[e.clientX,e.clientY],p:1}; const [x,y]=toDoc(e.clientX,e.clientY); strokeBegin(x,y,ptrPressure(e,0)); return; }
+  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  // a second finger: zoom and pan, never ink (the first finger's stroke is thrown away; a pencil line keeps going)
+  if(touches.size>=2){ if(ptr&&!ptr.touch&&e.pointerType==='touch'&&penOnly) return; if(ptr){ strokeAbort(); ptr=null; } waitTouch=null; panDrag=null; pinch={...pinchInfo(),z:VZ.z}; return; }
+  if(e.pointerType==='touch'&&penOnly) return;
   if(VZ.mode){ panDrag={id:e.pointerId,x:e.clientX,y:e.clientY}; return; }
   // a finger waits a moment before inking, in case a second one follows for a pinch
   if(e.pointerType==='touch'){ const w={id:e.pointerId,x:e.clientX,y:e.clientY,t:e.timeStamp}; waitTouch=w;
@@ -1468,6 +1485,9 @@ padEl.addEventListener('pointerdown',e=>{
   const [x,y]=toDoc(e.clientX,e.clientY); strokeBegin(x,y,ptrPressure(e,0));
 });
 padEl.addEventListener('pointermove',e=>{
+  if(palms.has(e.pointerId)) return;
+  // a contact that spreads out while it's down is a hand settling onto the screen
+  if(palmy(e)){ dropTouch(e.pointerId); return; }
   hover=[e.clientX,e.clientY]; if(e.pointerType!=='touch') updateRing();
   if(touches.has(e.pointerId)) touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
   // pinch zooms toward the fingers; with the fingers spread apart (not bunched together) moving them also pans around the skin
@@ -1488,7 +1508,7 @@ function flowPan(dx,dy,px,py){ if(VZ.z<=1||!stk||stk.tool!=='liner') return;
   const now=performance.now(), dt=Math.max(8,now-(VZ.lastMove||now-16)); VZ.lastMove=now; VZ.finger=[px,py];
   // your stroke's speed and direction, smoothed (pixels per ms), so jitters don't wiggle the view
   const v=VZ.vel||(VZ.vel=[0,0]); v[0]=v[0]*.8+dx/dt*.2; v[1]=v[1]*.8+dy/dt*.2; }
-const endPtr=e=>{ touches.delete(e.pointerId); if(touches.size<2) pinch=null; if(panDrag&&panDrag.id===e.pointerId) panDrag=null;
+const endPtr=e=>{ if(palms.delete(e.pointerId)) return; touches.delete(e.pointerId); if(touches.size<2) pinch=null; if(panDrag&&panDrag.id===e.pointerId) panDrag=null;
   if(waitTouch&&waitTouch.id===e.pointerId){ const w=waitTouch; waitTouch=null; if(e.type==='pointerup'&&!pinch){ beginDraw(w.id,w.x,w.y,w.t,1); ptr=null; strokeEnd(); } } // a quick tap still makes a dot
   if(ptr&&e.pointerId===ptr.id){ const inked=!!stk&&stk.tool==='liner'; ptr=null; strokeEnd(); VZ.cam=[0,0]; VZ.finger=null; if(inked&&!(job.smudges&&job.smudges.length)) viewFollow(e.clientX,e.clientY); } };
 padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr);
@@ -1779,10 +1799,12 @@ $('#tMenu').onclick=async()=>{
   if(warmup) opts.push([`Start on ${CH[job.cust.ch].name}`,'real']);
   if(isClient(job.mode)&&job.phase==='ink'&&F.player) opts.push(['Step out (your customer waits)','store']);
   if(job.mode==='free'&&save.started) opts.push(['Back to the shop','shop']);
+  if(penSeen) opts.push([penOnly?'Pencil only: on (fingers do not draw)':'Pencil only: off (fingers draw)','pen']);
   opts.push(['Quit to title','quit']);
   const v=await modal(isClient(job.mode)||warmup?'Paused. Your customer is waiting patiently.':'Paused',opts);
   if(v==='restart'){ if(warmup) startWarmup(); else startPractice(job.idx); }
   if(v==='store') stepOut();
+  if(v==='pen'){ setPenOnly(!penOnly); toast(penOnly?'Pencil only: your hand and fingers will not draw':'Fingers draw again'); }
   if(v==='real') warm.start();
   if(v==='shop'){ buzz(false); stk=null; continueGame(); }
   // quitting mid-job: the customer goes home (a Day 2-3 customer simply comes back in next time)
