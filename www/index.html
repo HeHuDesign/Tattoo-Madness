@@ -1245,6 +1245,13 @@ function setInput(m){
   showJoy();
 }
 window.addEventListener('pointerdown',e=>setInput(e.pointerType==='touch'||e.pointerType==='pen'?'touch':'mouse'),true);
+// Safari (iPhone/iPad browser) ignores user-scalable=no: block its page pinch-zoom (gesture events) and double-tap zoom.
+// A quick second tap still presses the button it landed on
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{ if(e.touches.length>1||(e.scale&&e.scale!==1)) e.preventDefault(); },{passive:false});
+let lastTouchEnd=0; document.addEventListener('touchend',e=>{ const now=performance.now();
+  if(now-lastTouchEnd<350&&e.changedTouches.length===1){ e.preventDefault(); const b=e.target.closest&&e.target.closest('button'); if(b&&!b.disabled) b.click(); }
+  lastTouchEnd=now; },{passive:false});
 $('#inputChip').textContent={mouse:'Mouse',touch:'Touch',pad:'Controller'}[inputMode];
 function controlsLine(){
   if(inputMode==='pad') return "Left stick moves your machine. Squeeze RT to ink, harder for a heavier line. Hold LT to slow down for detail. X swaps tools. The D-pad reaches every button on the station.";
