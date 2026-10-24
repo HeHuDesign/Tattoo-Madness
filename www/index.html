@@ -397,6 +397,10 @@ button{font:inherit;color:inherit}
 .compact #dlg.narrator .txt{font-size:19px}
 .compact .hud .chip,.compact .fchips .chip{font-size:14px;padding:2px 8px}
 .compact #fPrompt{font-size:15px}
+.turnpad{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,38px);gap:3px}
+.turnpad .gbtn{width:38px;height:38px;padding:0;font-size:16px;line-height:1;font-family:system-ui,sans-serif}
+.turnpad .gbtn[aria-pressed="true"]{background:#7fcf6a}
+#tnu{grid-column:2;grid-row:1} #tnl{grid-column:1;grid-row:2} #tnr{grid-column:3;grid-row:2} #tnd{grid-column:2;grid-row:3}
 .compact #modal .wood{padding:12px 16px}
 .compact #modal p{font-size:17px;margin:0 0 10px}
 .compact #fade h2{font-size:40px}
@@ -428,6 +432,8 @@ button{font:inherit;color:inherit}
 .towel{position:absolute;left:12px;bottom:12px;width:64px;height:54px;z-index:7;touch-action:none;cursor:grab;filter:drop-shadow(2px 3px 0 rgba(0,0,0,.35))}
 .towel canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
 .towel.drag{cursor:grabbing;transform:scale(1.08)}
+.towel.none{opacity:.35}
+#newTowel{position:absolute;left:84px;bottom:12px;z-index:7}
 
 </style>
 </head>
@@ -497,7 +503,6 @@ button{font:inherit;color:inherit}
     <div class="tfloat" id="tFloat">
       <button class="gbtn small" id="tShow" title="Show the tools and menu again (F)">☰ Tools</button>
       <button class="gbtn small" id="tView2" aria-pressed="false" title="Move the view without inking (V)">Move view</button>
-      <button class="gbtn small hide" id="tFit2" title="Zoom back out (0)">Fit</button>
       <span class="chip wood" id="tMini"></span>
     </div>
     <div class="twork" id="twork">
@@ -513,6 +518,7 @@ button{font:inherit;color:inherit}
       </div>
       <div class="zoombtns" id="zoomBtns"><button class="gbtn small" id="zIn" title="Zoom in (+)">+</button><button class="gbtn small" id="zOut" title="Zoom out (−)">−</button></div>
       <div class="towel hide" id="towelObj" title="Paper towel: drag it over smudges"><canvas width="24" height="20"></canvas></div>
+      <button class="gbtn small hide" id="newTowel" title="Throw this towel away and take a fresh one">New towel</button>
     </div>
     <div class="ttools wood">
       <span class="toolrow">
@@ -529,7 +535,6 @@ button{font:inherit;color:inherit}
       </span>
       <span class="sep"></span>
       <button class="gbtn small" id="tView" aria-pressed="false" title="Move the view without inking: drag to pan, pinch or scroll to zoom (V)">Move view</button>
-      <button class="gbtn small hide" id="tFit" title="Zoom back out (0)">Fit</button>
       <button class="gbtn small hide" id="tSten" disabled>Stencil</button>
       <span class="free-only hide" id="shadeInks"><span class="sep"></span><span class="inks" id="sInks"></span></span>
       <span class="free-only hide" id="freeTools">
@@ -601,6 +606,7 @@ button{font:inherit;color:inherit}
   <section class="screen" id="scr-floor">
     <div class="fhud"><span class="fchips" id="fChips"></span><button class="gbtn small" id="fMenuBtn">Menu</button></div>
     <button class="gbtn go small hide" id="fPrompt"></button>
+    <div class="turnpad hide" id="turnPad" aria-label="Turn the furniture"><button class="gbtn small" id="tnu" title="Face the back">&#9650;</button><button class="gbtn small" id="tnl" title="Face left">&#9664;</button><button class="gbtn small" id="tnr" title="Face right">&#9654;</button><button class="gbtn small" id="tnd" title="Face the front">&#9660;</button></div>
   </section>
 
   <section class="screen" id="scr-store"><div class="dim"><div class="store wood">
@@ -786,7 +792,7 @@ const CUSTOMERS = [
 
 /* =============== SAVE =============== */
 const SAVE_KEY='tattooMadness.v1';
-const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[],letterIntro:false,apprDay:null,deeDecorFix:false,furnGuide:false,extraFurn:{},furnInv:{},expanded:{},inked:[],seenLineTip:false,runList:null,runGot:null,openedDay:0});
+const fresh = () => ({started:false,stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0],graduated:false,cust:0,coins:0,rep:0,scores:[],sound:true,sup:{needles:0,ink:0,wraps:0,ointment:0,film:0,towels:0},up:{seats:2,chairs:0,neon:false,rotary:false,light:false},staff:[],shops:[],reviews:[],career:false,cday:1,clock:600,seenClean:false,seenCare:false,seenWipe:false,robTut:false,shadeStars:0,seenShadeTip:false,toured:false,seenTimer:false,seenWaitBar:false,seenWalkout:false,workAt:'dee',shopState:{},runTut:false,runAsk:false,rob2:false,look:null,deeDied:0,clerk:null,hp:100,decor:{},furn:{},seenFurn:false,deeExpand:false,deeDecor:false,hospGuide:false,takeover:false,eastGuide:false,letter:false,eastKit:false,applicants:[],letterIntro:false,apprDay:null,deeDecorFix:false,furnGuide:false,extraFurn:{},furnInv:{},expanded:{},inked:[],seenLineTip:false,runList:null,runGot:null,openedDay:0});
 // Three save slots. Slot 1 keeps the original key so saves from before slots existed still load.
 const SLOT_KEYS=[SAVE_KEY,SAVE_KEY+'.slot2',SAVE_KEY+'.slot3'], SLOT_PICK='tattooMadness.slot', DEV_KEY='tattooMadness.dev';
 const readSlot=i=>{ try{ return JSON.parse(localStorage.getItem(SLOT_KEYS[i])); }catch(_){ return null; } };
@@ -852,7 +858,8 @@ function spriteRows(c,frame){
 function palette(c){ return {h:c.hair,s:c.skin,e:'#2a1a14',m:c.sex==='f'?'#c0506a':'#9c4a44',c:c.shirt,d:c.shirtD,p:c.pants,b:c.boots,T:'#2e5866',A:c.apron,k:c.hat||c.hair,i:'#e8e1d0'}; }
 // someone sitting in the tattoo chair: the top half of the sprite on the seat, legs stretched out along the chair
 function drawSeated(a){ const c=CH[a.ch], x=Math.round(a.x), y=Math.round(a.y), ch=F.active&&furnList().find(p=>p.type==='chair'&&Math.abs(p.x-a.x)<12&&Math.abs(p.y-a.y)<4);
-  sx.save(); if(ch&&ch.r%2){ sx.translate(2*x,0); sx.scale(-1,1); } sx.translate(x-14,y-22); sx.rotate(Math.PI/2); drawSprite(sx,c,0,0,0,false); sx.restore(); }
+  if(ch&&ch.r>=2){ sx.save(); sx.translate(0,y-18); sx.scale(1,ch.r===3?-.8:.8); sx.translate(0,-(y-18)); drawSprite(sx,c,x,y-2,0,false); sx.restore(); return; }
+  sx.save(); if(ch&&ch.r===1){ sx.translate(2*x,0); sx.scale(-1,1); } sx.translate(x-14,y-22); sx.rotate(Math.PI/2); drawSprite(sx,c,0,0,0,false); sx.restore(); }
 function drawSprite(ctx,c,x,y,frame,flip,sc=2){
   const rows=spriteRows(c,frame), pal=palette(c), w=10*sc, h=16*sc, ox=Math.round(x-w/2), oy=Math.round(y-h);
   ctx.fillStyle='rgba(30,15,10,.28)'; ctx.fillRect(ox+2,oy+h-2,w-4,3);
@@ -1316,7 +1323,6 @@ function layoutPad(){
   if(VZ.z<=1.001){ VZ.z=1; VZ.px=VZ.py=0; }
   const lim=s/2; VZ.px=clamp(dx*VZ.z+VZ.px,-lim,lim)-dx*VZ.z; VZ.py=clamp(dy*VZ.z+VZ.py,-lim,lim)-dy*VZ.z;
   dx=dx*VZ.z+VZ.px; dy=dy*VZ.z+VZ.py;
-  ['#tFit','#tFit2'].forEach(q=>$(q).classList.toggle('hide',VZ.z===1));
   s=Math.floor(s);
   padEl.style.width=padEl.style.height=s+'px'; padEl.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
   // the part of the skin that is actually on screen, so the controller cursor can't wander off-screen
@@ -1345,7 +1351,7 @@ function spacing(p){
 }
 // The towel (while inking) and the aftercare step drag a cloth instead of a needle
 const wipeMode=()=>job.phase==='care'||(job.phase==='ink'&&job.tool==='towel');
-const wipeStep=(x,y)=>job.phase==='care'?careAt(x,y):wipeAt(x,y,35);
+const wipeStep=(x,y)=>job.phase==='care'?careAt(x,y):towelWipeAt(x,y,35);
 function strokeBegin(x,y,p){
   if(job.phase==='wash') return;
   if(wipeMode()){ wipeLast=null; job.wiping=true; wipeStep(x,y); return; }
@@ -1449,7 +1455,6 @@ function viewTick(dt){
 // stop a stroke without keeping it (a second finger landed): liner ink is still in the stroke buffer, so it's thrown away
 function strokeAbort(){ if(job.wiping){ job.wiping=false; wipeLast=null; return; } if(!stk) return; if(stk.tool==='liner') bctx.clearRect(0,0,DOC,DOC); stk=null; buzz(false); }
 ['#tView','#tView2'].forEach(q=>$(q).onclick=()=>setViewMode(!VZ.mode));
-['#tFit','#tFit2'].forEach(q=>$(q).onclick=()=>{ viewReset(); layoutPad(); });
 padEl.addEventListener('wheel',e=>{ e.preventDefault(); viewZoom(VZ.z*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY); },{passive:false});
 
 /* pointer on pad */
@@ -1680,7 +1685,8 @@ function startJob(opts){
   job.inkAcc=0; job.smudges=real?[]:null; job.smudgePen=0; job.lateSmudges=0; job.smudgeNext=160+Math.random()*80; job.cover=null;
   dctx.clearRect(0,0,DOC,DOC); cDirt.style.display=real?'block':'none'; cDirt.style.opacity='';
   cWarn.style.display=''; document.querySelector('.ttools').classList.remove('hide'); $('#tDone').textContent='Done';
-  $('#towelBtn').classList.toggle('hide',!real||inputMode!=='pad'); $('#tInk').classList.toggle('hide',!real); if(real) renderInk();
+  $('#towelBtn').classList.toggle('hide',!real||inputMode!=='pad');
+  job.towel=null; if(real&&!newTowel()) setTimeout(()=>toast('No paper towels! You can not wipe smudges. Buy them at the Supply Store.'),600); drawTowel(); $('#tInk').classList.toggle('hide',!real); if(real) renderInk();
   $('#tSkip').classList.toggle('hide',!dev||job.mode==='free');
   TOOLS.liner.smooth=(save.up&&save.up.rotary&&job.mode!=='practice')?.72:.55;
   clearWork(); renderStencil(); buildMasks(); renderSlips(); showWarn(false); $('#tSten').setAttribute('aria-pressed',false);
@@ -2065,7 +2071,7 @@ async function graduate(){
   await say('dee',"Keep a paper towel in your other hand. Wipe the smudges as you go, before they set.");
   await say('dee',"When you're done, ointment and plastic wrap, or a sheet of healing film. Covered right, it heals right, and healed work is what brings people back.");
   await say('dee',"Here's a starter kit: needles, ink, ointment, wrap and a sheet of film. Tomorrow I'll show you around the floor.");
-  hideDlg(); save.graduated=true; save.sup={needles:4,ink:40,wraps:3,ointment:4,film:1}; persist();
+  hideDlg(); save.graduated=true; save.sup={needles:4,ink:40,wraps:3,ointment:4,film:1,towels:5}; persist();
   await dayCard('Day 2','The doors open'); busy=false; F.player=null; enterFloor(); await fade(false);
 }
 // Days 2-3 happen on the walkable floor: the next scripted customer walks in by themselves
@@ -2317,6 +2323,8 @@ function ensureCareerSave(){
   const d=fresh();
   // saves from before ointment existed: give graduated players a few tubes so their next tattoo isn't stuck
   if(save.sup&&save.sup.ointment==null&&save.graduated) save.sup.ointment=5;
+  // saves from before paper towels were a supply: a pack to start with
+  if(save.sup&&save.sup.towels==null&&save.graduated) save.sup.towels=10;
   save.sup={...d.sup,...(save.sup||{})};
   save.up={...d.up,...(save.up||{})};
   ['staff','shops','reviews','applicants'].forEach(k=>{ if(!Array.isArray(save[k])) save[k]=[]; });
@@ -2337,10 +2345,11 @@ const SUPPLY=[
   {id:'ink',name:'Black ink',desc:'100 ml bottle. A tattoo uses about 3 to 15 ml.',price:25,qty:100,unit:' ml'},
   {id:'wraps',name:'Plastic wrap',desc:'Pack of 10. Goes over the ointment for the first few hours.',price:12,qty:10,unit:''},
   {id:'ointment',name:'Healing ointment',desc:'Tube for 10 tattoos. Without it the tattoo dries out and heals worse.',price:15,qty:10,unit:''},
-  {id:'film',name:'Second-skin film',desc:'Pack of 5 clear healing sheets. Pricier than wrap, heals cleaner, no ointment needed.',price:30,qty:5,unit:''}];
+  {id:'film',name:'Second-skin film',desc:'Pack of 5 clear healing sheets. Pricier than wrap, heals cleaner, no ointment needed.',price:30,qty:5,unit:''},
+  {id:'towels',name:'Paper towels',desc:'Pack of 10. One towel per customer for wiping smudges. A dirty towel barely cleans.',price:8,qty:10,unit:''}];
 function missingSupplies(){ const m=[]; if(save.sup.needles<1) m.push('needles'); if(save.sup.ink<5) m.push('ink'); return m.join(' and '); }
 const supLow=()=>save.sup.needles<2||save.sup.ink<10||save.sup.ointment<1||(save.sup.wraps<1&&save.sup.film<1);
-const supText=()=>`Needles ${save.sup.needles} · Ink ${save.sup.ink}ml · Oint ${save.sup.ointment} · Wrap ${save.sup.wraps} · Film ${save.sup.film}`;
+const supText=()=>`Needles ${save.sup.needles} · Ink ${save.sup.ink}ml · Oint ${save.sup.ointment} · Wrap ${save.sup.wraps} · Film ${save.sup.film} · Towels ${save.sup.towels||0}`;
 // ink used so far on this tattoo: 2 ml to prime the machine, then about 1 ml per 1000 px² of skin inked (job.inkAcc, added up in stamp())
 const inkUsed=()=>Math.min(25,2+job.inkAcc/1000);
 const inkLeft=()=>save.sup.ink-inkUsed();
@@ -2385,7 +2394,7 @@ function addSmudge(x,y){
   const a=Math.random()*Math.PI*2, d=12+Math.random()*18, sx=clamp(x+Math.cos(a)*d,30,DOC-30), sy=clamp(y+Math.sin(a)*d,30,DOC-30), R=34;
   const light=stk&&stk.tool==='shade';
   for(let k=0;k<(light?3:5);k++){ const blood=Math.random()<(light?.15:.35), rad=blood?5+Math.random()*7:12+Math.random()*12;
-    dctx.globalAlpha=blood?.45:.4+Math.random()*.2; dctx.drawImage(dab(blood?'#a31d1d':'#1a1a1a',.35),sx-rad+(Math.random()-.5)*26,sy-rad+(Math.random()-.5)*26,rad*2,rad*2); }
+    dctx.globalAlpha=blood?.45:.4+Math.random()*.2; dctx.drawImage(dab(blood?'#a31d1d':(job.color||'#1a1a1a'),.35),sx-rad+(Math.random()-.5)*26,sy-rad+(Math.random()-.5)*26,rad*2,rad*2); }
   dctx.globalAlpha=1;
   job.smudges.push({x:sx,y:sy,R,age:0,warned:false,late:false,a0:alphaIn(sx-R,sy-R,R*2,R*2)||1});
 }
@@ -2407,16 +2416,34 @@ function tickSmudges(dt){
 }
 // the paper towel you drag around: it stays where you drop it and keeps the same size on screen however far you zoom in
 const towelEl=$('#towelObj'), TW={x:null,y:null,drag:null};
-(()=>{ const c=towelEl.querySelector('canvas').getContext('2d'), P=(x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(x,y,w,h); };
+function drawTowel(){ const c=towelEl.querySelector('canvas').getContext('2d'), P=(x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(x,y,w,h); }, t=job.towel;
+  c.clearRect(0,0,24,20); towelEl.classList.toggle('none',!t);
   P(2,2,20,16,'#cfc8bb'); P(3,3,18,14,'#f6f3ec'); P(3,3,18,2,'#ffffff');
   for(let y=6;y<16;y+=3) for(let x=5+(y%2);x<20;x+=3) P(x,y,1,1,'#ddd6c8');
-  P(12,3,1,14,'#e6e0d4'); P(17,13,4,4,'#e9e3d8'); P(17,13,1,4,'#cfc8bb'); P(17,13,4,1,'#cfc8bb'); })();
+  P(12,3,1,14,'#e6e0d4'); P(17,13,4,4,'#e9e3d8'); P(17,13,1,4,'#cfc8bb'); P(17,13,4,1,'#cfc8bb');
+  if(!t) return;
+  // wrinkles: crease lines and a crumpled, torn-off edge the more it's used
+  const n=Math.floor(t.dirt*7); for(let i=0;i<n;i++){ const x=3+(i*7)%17, y=3+(i*5)%13, len=3+(i%3)*2;
+    for(let k=0;k<len;k++) P(Math.min(20,x+k),Math.min(16,y+((k+i)%3===0?1:0)),1,1,'#c8c0b2'); }
+  if(t.dirt>.35){ c.clearRect(2,2,2,2); c.clearRect(20,16,2,2); }
+  if(t.dirt>.7){ c.clearRect(20,2,2,3); c.clearRect(2,15,3,3); }
+  t.stains.forEach(st=>{ c.globalAlpha=st.a; P(st.x,st.y,st.w,st.h,st.c); P(st.x+1,st.y-1,Math.max(1,st.w-2),1,st.c); c.globalAlpha=1; }); }
+function newTowel(){ if((save.sup.towels||0)<1){ job.towel=null; drawTowel(); return false; } save.sup.towels--; persist(); job.towel={dirt:0,stains:[]}; drawTowel(); return true; }
 function placeTowel(){ const tw=$('#twork').getBoundingClientRect(), w=towelEl.offsetWidth||64, h=towelEl.offsetHeight||54;
   if(!TW.moved){ TW.x=12; TW.y=tw.height-h-12; } TW.x=clamp(TW.x,0,Math.max(0,tw.width-w)); TW.y=clamp(TW.y,0,Math.max(0,tw.height-h));
   towelEl.style.left=TW.x+'px'; towelEl.style.top=TW.y+'px'; towelEl.style.bottom='auto'; }
-function showTowel(){ const on=current==='tattoo'&&isClient(job.mode)&&job.phase==='ink'; towelEl.classList.toggle('hide',!on); if(on&&!TW.drag) placeTowel(); }
+function showTowel(){ const on=current==='tattoo'&&isClient(job.mode)&&job.phase==='ink'; towelEl.classList.toggle('hide',!on); $('#newTowel').classList.toggle('hide',!on);
+  if(on){ if(!TW.drag) placeTowel(); $('#newTowel').textContent='New towel ('+(save.sup.towels||0)+')'; } }
 function towelWipe(){ const r=towelEl.getBoundingClientRect(), pr=padEl.getBoundingClientRect(); if(!pr.width) return;
-  const [x,y]=toDoc(r.left+r.width/2,r.top+r.height/2); wipeAt(x,y,r.width*.5/pr.width*DOC); }
+  const [x,y]=toDoc(r.left+r.width/2,r.top+r.height/2); towelWipeAt(x,y,r.width*.5/pr.width*DOC); }
+function towelWipeAt(x,y,rad){ const t=job.towel; if(!t) return; const box=[x-rad,y-rad,Math.max(2,rad*2|0),Math.max(2,rad*2|0)];
+  const before=alphaIn(...box); wipeAt(x,y,rad,1-.8*t.dirt); const got=Math.max(0,before-alphaIn(...box));
+  if(!got) return; const was=t.dirt; t.dirt=Math.min(1,t.dirt+got/700000);
+  // every bit of grime it picks up leaves a stain in the colors you're working with (and some blood)
+  if(Math.floor(t.dirt*14)>Math.floor(was*14)){ const blood=Math.random()<.4; t.stains.push({x:3+Math.random()*15|0,y:4+Math.random()*11|0,w:2+Math.random()*3|0,h:2+Math.random()*2|0,c:blood?'#a31d1d':(job.color||'#1a1a1a'),a:.45+t.dirt*.4}); }
+  if(Math.floor(t.dirt*14)>Math.floor(was*14)) drawTowel();
+  if(t.dirt>=.85&&was<.85) toast('This towel is filthy. It barely cleans now. Take a new one.'); }
+$('#newTowel').onclick=()=>{ if(!newTowel()) toast('No paper towels left! Buy more at the Supply Store.'); else { toast('Fresh towel'); blip(700); } showTowel(); };
 towelEl.addEventListener('pointerdown',e=>{ if(modalOpen||job.phase!=='ink'||palmy(e)) return; e.preventDefault(); e.stopPropagation();
   try{ towelEl.setPointerCapture(e.pointerId); }catch(err){} const r=towelEl.getBoundingClientRect(); TW.drag={id:e.pointerId,ox:e.clientX-r.left,oy:e.clientY-r.top}; wipeLast=null; towelEl.classList.add('drag'); towelWipe(); });
 towelEl.addEventListener('pointermove',e=>{ if(!TW.drag||e.pointerId!==TW.drag.id) return; const tw=$('#twork').getBoundingClientRect();
@@ -2424,9 +2451,9 @@ towelEl.addEventListener('pointermove',e=>{ if(!TW.drag||e.pointerId!==TW.drag.i
 const towelUp=e=>{ if(!TW.drag||e.pointerId!==TW.drag.id) return; TW.drag=null; wipeLast=null; towelEl.classList.remove('drag'); };
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>towelEl.addEventListener(t,towelUp));
 $('#zIn').onclick=()=>viewZoom(VZ.z*1.4); $('#zOut').onclick=()=>viewZoom(VZ.z/1.4);
-function wipeAt(x,y,r=40){
+function wipeAt(x,y,r=40,str=1){
   const im=dab('#000000',.35);
-  const go=(px,py)=>{ dctx.save(); dctx.globalCompositeOperation='destination-out'; dctx.globalAlpha=.14; dctx.drawImage(im,px-r,py-r,r*2,r*2); dctx.restore(); };
+  const go=(px,py)=>{ dctx.save(); dctx.globalCompositeOperation='destination-out'; dctx.globalAlpha=.14*str; dctx.drawImage(im,px-r,py-r,r*2,r*2); dctx.restore(); };
   if(!wipeLast) go(x,y);
   else { const dx=x-wipeLast[0], dy=y-wipeLast[1], n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/8)); for(let i=1;i<=n;i++) go(wipeLast[0]+dx*i/n,wipeLast[1]+dy*i/n); }
   wipeLast=[x,y];
@@ -2687,13 +2714,17 @@ async function buyDecor(key){ const [k,c]=key.split(':'), o=DECOR[k], all=save.d
   persist(); blip(880); renderStore('decor:'+key); }
 
 /* ---------- furniture: chairs, bench seats, desk, lamp, plant and (in bought shops) the supply closet ---------- */
-const FURN_INFO={chair:{name:'tattoo chair',fp:[-26,-14,26,12],c:[0,-1],turns:2},seat:{name:'bench seat',fp:[-8,-6,8,3],c:[0,-1]},desk:{name:'practice desk',fp:[-4,0,40,18],c:[18,9],turns:2},
+const FURN_INFO={chair:{name:'tattoo chair',fp:[-26,-14,26,12],fpS:[-10,-20,10,10],c:[0,-1],turns:4},seat:{name:'bench seat',fp:[-8,-6,8,3],c:[0,-1]},desk:{name:'practice desk',fp:[-4,0,40,18],c:[18,9],turns:2},
   lamp:{name:'floor lamp',fp:[-5,-16,8,2],c:[2,-7]},plant:{name:'plant',fp:[-14,-18,26,8],c:[6,-5]},closet:{name:'supply closet',fp:[-2,-12,24,4],c:[11,-4]},sofa:{name:'couch',fp:[-22,-10,22,4],fpS:[-10,-16,10,4],c:[0,-3],turns:4},radio:{name:'radio',fp:[-7,-4,7,2],c:[0,-1],turns:2},
   tv:{name:'TV',wall:true,w:34,h:24,fp:[0,0,0,0],c:[0,0]},pic:{name:'picture',wall:true,w:22,h:28,fp:[0,0,0,0],c:[0,0]}};
 const shopKey=()=>sceneTheme()?save.workAt:'dee';
 const furnStore=()=>{ if(!save.furn) save.furn={}; return save.furn[shopKey()]||(save.furn[shopKey()]={}); };
 // r = which way it's turned (a couch turned sideways takes up less width and more depth)
-const fpRect=(type,x,y,r)=>{ const inf=FURN_INFO[type], f=r%2&&inf.fpS?inf.fpS:inf.fp; return [x+f[0],y+f[1],x+f[2],y+f[3]]; };
+// a piece turned sideways uses its side footprint (a chair is long when r is 2 or 3, a couch is sideways when r is 1 or 3)
+const turnedLong=(type,r)=>type==='chair'?r>=2:!!(r%2);
+const fpRect=(type,x,y,r)=>{ const inf=FURN_INFO[type], f=turnedLong(type,r||0)&&inf.fpS?inf.fpS:inf.fp; return [x+f[0],y+f[1],x+f[2],y+f[3]]; };
+// arrow buttons while carrying: which way each piece can face
+const TURN_DIRS={sofa:{d:0,u:2,l:1,r:3},chair:{r:0,l:1,u:2,d:3},desk:{r:0,l:1},radio:{r:0,l:1}};
 const hits=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
 // spots nothing may go: the counter and the lane behind it, the doorway, and the room's edges
 function placeOK(type,x,y,others,rot){
@@ -2733,7 +2764,7 @@ function storeCarried(){ const c=F.carry; furnStore()[c.key]={stored:true}; furn
   toast(`${invName(c)} stored at the register (Furniture tab)`); }
 async function storeAsk(){ const nm=invName(F.carry).toLowerCase();
   if(await modal(`Store the ${nm} at the register? You can place it again any time from the register's Furniture tab.`,[['Keep carrying',false],['Store it',true,true]])) storeCarried(); }
-function placeStored(key){ const inv=furnInv(), i=inv.findIndex(e=>e.key===key); if(i<0) return; const e=inv[i]; inv.splice(i,1); delete furnStore()[key];
+function placeStored(key){ if(moveBlocked()) return; const inv=furnInv(), i=inv.findIndex(e=>e.key===key); if(i<0) return; const e=inv[i]; inv.splice(i,1); delete furnStore()[key];
   F.carry={key:e.key,type:e.type,kind:e.kind}; furnChanged(); persist(); const back=storeBack; storeBack=null; (back||enterFloor)(); toast(`Carrying the ${invName(e).toLowerCase()}. Find a spot for it.`); }
 function storedRows(){ const inv=furnInv();
   if(!inv.length) return '<p class="hint">No furniture stored here. Buy some at Comfy Corner Furniture across town (the orange spot on the map), or pick up a couch, plant, lamp, radio, TV or picture and bring it to the register to put it away.</p>';
@@ -2797,7 +2828,7 @@ function drawWallItem(type,x,y,kind,t){
 function miniDesign(k,mx,my,size,col,clip){ const b=designBox(k), s=size/Math.max(b.w,b.h);
   sx.save(); if(clip){ sx.beginPath(); sx.rect(...clip); sx.clip(); }
   sx.translate(mx,my); sx.scale(s,s); sx.translate(-(b.x+b.w/2),-(b.y+b.h/2)); sx.strokeStyle=col; sx.lineWidth=1.2/s; sx.lineJoin=sx.lineCap='round'; sx.stroke(pathOf(k)); sx.restore(); }
-async function wallMoveAsk(w){ const nm=invName(w).toLowerCase();
+async function wallMoveAsk(w){ if(moveBlocked()) return; const nm=invName(w).toLowerCase();
   if(await modal(`Move the ${nm}?`,[['Leave it',false],['Move it',true,true]])){ F.carry={key:w.key,type:w.type,kind:w.kind}; furnChanged(); blip(520); } }
 // TV and radio keep waiting customers happier in the shop they're in
 function entF(){ return (furnList().some(p=>p.type==='radio')?.85:1)*(wallList().some(p=>p.type==='tv')?.75:1); }
@@ -2809,9 +2840,12 @@ const F={active:false,custs:[],player:null,dee:null,staffActs:{},sst:{},target:n
 const KEYMOVE={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
 const seatPos=i=>{ const p=piece('seat'+i); if(p) return {x:p.x,y:p.y}; const {cx}=sceneGeo(); return {x:Math.max(14,cx-128)+i*16,y:H-12}; };
 const chairBase=k=>{ const p=piece('chair'+k); if(p) return {x:p.x,y:p.y}; const {cx,fy}=sceneGeo(); return {x:cx+layout().chair,y:fy-6}; };
-const chairFlip=k=>{ const p=piece('chair'+k); return !!(p&&p.r%2); };
-const chairSit=k=>{ const b=chairBase(k); return {x:b.x+(chairFlip(k)?6:-6),y:b.y}; };
-const staffPos=k=>{ const b=chairBase(k); return {x:b.x+(chairFlip(k)?32:-32),y:Math.min(H-4,b.y+18)}; };
+const chairFlip=k=>{ const p=piece('chair'+k); return !!(p&&p.r===1); };
+const chairLong=k=>{ const p=piece('chair'+k); return !!(p&&p.r>=2); };
+// the artist faces the chair: standing left of it looks right, right of it (flipped or long chair) looks left
+const artistFlip=k=>!(chairFlip(k)||chairLong(k));
+const chairSit=k=>{ const b=chairBase(k); return chairLong(k)?{x:b.x,y:b.y}:{x:b.x+(chairFlip(k)?6:-6),y:b.y}; };
+const staffPos=k=>{ const b=chairBase(k); return chairLong(k)?{x:b.x+22,y:Math.min(H-4,b.y+4)}:{x:b.x+(chairFlip(k)?32:-32),y:Math.min(H-4,b.y+18)}; };
 const artistPos=()=>staffPos(0);
 const doorOut=()=>({x:sceneGeo().cx,y:H+30});
 const clockText=()=>{ const t=save.clock|0, h=(t/60)|0, m=t%60; return `${((h+11)%12)+1}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
@@ -2823,7 +2857,11 @@ function drawPiece(p,chair,L){ const {x,y}=p, r=p.r||0;
     sx.save(); if(r===3){ sx.translate(2*x,0); sx.scale(-1,1); }
     R(x+3,y-26,6,24,'#3f6b6b'); R(x+3,y-26,6,2,'#5a8a8a'); R(x-8,y-12,12,10,'#4a7a7a'); R(x-8,y-12,12,1,'#6a9a9a'); R(x-10,y-17,6,15,'#355a5a'); R(x-10,y-17,6,1,'#4a7a7a');
     R(x-9,y-2,3,3,'#2a1a10'); R(x+5,y-2,3,3,'#2a1a10'); sx.restore(); return; }
-  if(r%2&&FURN_INFO[p.type].turns===2){ const ax=x+(p.type==='desk'?18:0); sx.save(); sx.translate(2*ax,0); sx.scale(-1,1); drawPiece({...p,r:0},chair,L); sx.restore(); return; }
+  if(p.type==='chair'&&r>=2){ const dk='rgba(0,0,0,.22)'; R(x-6,y+2,12,8,'#2b2b2b'); R(x-2,y-4,4,8,'#555');
+    if(r===2){ R(x-8,y-50,16,22,chair[0]); R(x-6,y-48,3,18,chair[1]); R(x+6,y-50,2,22,dk); R(x-8,y-30,16,28,chair[0]); R(x-8,y-30,16,2,chair[1]); R(x+6,y-30,2,28,dk); R(x-7,y-3,14,3,'#2b2b2b'); }
+    else { R(x-7,y-34,14,3,'#2b2b2b'); R(x-8,y-31,16,26,chair[0]); R(x-8,y-31,16,2,chair[1]); R(x+6,y-31,2,26,dk); R(x-9,y-21,18,21,chair[0]); R(x-9,y-21,18,2,chair[1]); R(x-7,y-18,3,15,chair[1]); R(x+7,y-21,2,21,dk); }
+    return; }
+  if(p.type==='chair'&&r===1||r%2&&FURN_INFO[p.type].turns===2){ const ax=x+(p.type==='desk'?18:0); sx.save(); sx.translate(2*ax,0); sx.scale(-1,1); drawPiece({...p,r:0},chair,L); sx.restore(); return; }
   if(p.type==='chair'){ R(x-10,y+2,22,8,'#2b2b2b'); R(x-2,y-4,6,8,'#555'); R(x-22,y-12,44,10,chair[0]); R(x-22,y-12,44,2,chair[1]); R(x+14,y-36,10,26,chair[0]); R(x+16,y-34,2,22,chair[1]); R(x-24,y-18,10,4,'#2b2b2b'); }
   if(p.type==='seat'){ R(x-8,y-9,16,4,'#8a5532'); R(x-8,y-9,16,1,'#c58a52'); R(x-7,y-5,2,5,'#5a3520'); R(x+5,y-5,2,5,'#5a3520'); }
   if(p.type==='lamp'){ R(x,y-60,2,60,'#333'); R(x-8,y-64,16,6,'#d8d0c0'); R(x-6,y-58,12,3,'rgba(255,240,200,.5)'); }
@@ -2904,7 +2942,7 @@ function enterFloor(){
     F.dee={ch:'dee',x:cx-90,y:fy-12,tx:cx-90,ty:fy-12,behind:true};
     F.arrivalAt=Math.max(F.arrivalAt,save.clock+10);
   }
-  save.staff.forEach(st=>{ regStaff(st); if(st.off===save.cday){ delete F.staffActs[st.id]; return; } if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:!chairFlip(st.chair)}; } });
+  save.staff.forEach(st=>{ regStaff(st); if(st.off===save.cday){ delete F.staffActs[st.id]; return; } if(!F.staffActs[st.id]){ const p=staffPos(st.chair); F.staffActs[st.id]={ch:'st_'+st.id,x:p.x,y:p.y,tx:p.x,ty:p.y,flip:artistFlip(st.chair)}; } });
   // Dee is behind the counter in Dee's shop (until Day 4); otherwise your counter clerk, if you've hired one
   const deeHere=F.appr||(save.workAt==='dee'&&!save.deeDied);
   if(deeHere){ F.dee.behind=true; F.dee.fallBack=false; F.dee.down=false; F.dee.dead=false; F.dee.x=F.dee.tx=cx-90; F.dee.y=F.dee.ty=fy-12; }
@@ -2953,7 +2991,7 @@ const blockedAt=(x,y)=>floorBlocks().some(r=>x>r[0]&&x<r[2]&&y>r[1]&&y<r[3]);
 // if you were already inside something (e.g. after a fight), you can always walk out of it
 function unblock(p,ox,oy){ if(!blockedAt(p.x,p.y)||blockedAt(ox,oy)) return; if(!blockedAt(p.x,oy)) p.y=oy; else if(!blockedAt(ox,p.y)) p.x=ox; else { p.x=ox; p.y=oy; } }
 function floorTick(dt){
-  const p=F.player; if(!p) return;
+  const p=F.player; if(!p) return; if(tick%6===0) renderTurnPad();
   const pm=F.padMove; F.padMove=[0,0];
   if(modalOpen){ p.moving=false; passiveTick(dt); return; } // a box is open: you stand still, but the shop doesn't
   let mx=pm[0]+joy.x, my=pm[1]+joy.y; const k=F.keys;
@@ -3012,7 +3050,8 @@ function pieceBusy(p){
   if(p.type==='chair'){ if(p.k===0) return !!(F.jobCust||F.suspended||F.custs.some(c=>c.by==='you'&&(c.state==='toChair'||c.state==='inChair')));
     const st=save.staff.find(s=>s.chair===p.k); return !!(st&&F.sst[st.id]&&F.sst[st.id].busy); }
   return false; }
-function pickUp(p){ if(pieceBusy(p)){ toast('Someone is using that right now'); return; }
+const moveBlocked=()=>{ if(F.carry) return true; if(F.open&&save.career){ toast('Close the doors before moving furniture'); return true; } return false; };
+function pickUp(p){ if(moveBlocked()) return; if(pieceBusy(p)){ toast('Someone is using that right now'); return; }
   F.carry={key:p.key,type:p.type,k:p.k,kind:p.kind,r:p.r||0}; furnChanged(); blip(520); toast(`Carrying the ${FURN_INFO[p.type].name}`); }
 function sellValue(c){
   if(c.type==='chair'&&c.k>0) return Math.round(UPGRADES.find(u=>u.id==='chairs').price(save.up.chairs-1)/2);
@@ -3024,15 +3063,18 @@ function sellValue(c){
 async function carryMenu(){
   const c=F.carry, g=carrySpot(), nm=FURN_INFO[c.type].name, val=sellValue(c);
   const turns=FURN_INFO[c.type].turns||1;
-  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(turns>1) opts.push(['Turn it','turn']); if(val&&!c.newRoom) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
+  const opts=[['Put it down here','put',g.ok,!g.ok]]; if(val&&!c.newRoom) opts.push([`Sell it (${val} coins)`,'sell']); opts.push(['Keep carrying','keep']);
   if(newRoomOnly(c)&&!g.ok&&g.x<sceneGeo().cx+182&&turns<2){ await modal(c.newRoom?'Dee wants the new bench in the new room, past where the wall was.':'Extra tattoo chairs go in the new room, past where the wall was.',[['Keep carrying','keep',true]]); return; }
   const v=await modal(g.ok?(g.wall?`Hang the ${nm} here?`:`Put the ${nm} down here?`):(g.wall?`It can't hang there (window, sign, pictures or the closet). Find a free spot on the wall.`:`Something is in the way here. Find a free spot for the ${nm}.`),opts);
   if(v==='put'){ const {cx,fy}=sceneGeo(), st=furnStore(); st[c.key]=g.wall?{wx:g.x,wy:g.y}:{dx:g.x-cx,dy:g.y-fy,r:c.r||0,own:true}; F.carry=null; furnChanged(); persist(); blip(700);
-    save.staff.forEach(s=>{ const a=F.staffActs[s.id]; if(a&&'chair'+s.chair===c.key){ const sp=staffPos(s.chair); a.x=a.tx=sp.x; a.y=a.ty=sp.y; a.flip=!chairFlip(s.chair); } }); }
-  if(v==='turn'){ turnCarried(); carryMenu(); return; }
+    save.staff.forEach(s=>{ const a=F.staffActs[s.id]; if(a&&'chair'+s.chair===c.key){ const sp=staffPos(s.chair); a.x=a.tx=sp.x; a.y=a.ty=sp.y; a.flip=artistFlip(s.chair); } }); }
   if(v==='sell'){ const ok=await modal(`Sell the ${nm} for ${val} coins? This can't be undone.`,[['Keep it',false,true],['Sell it',true]]); if(ok) sellCarried(val); }
 }
-function turnCarried(){ const c=F.carry, n=c&&FURN_INFO[c.type].turns; if(!n||n<2) return; c.r=((c.r||0)+1)%n; furnChanged(); blip(600); }
+function turnCarried(dir=1){ const c=F.carry, n=c&&FURN_INFO[c.type].turns; if(!n||n<2) return; c.r=(((c.r||0)+dir)%n+n)%n; furnChanged(); blip(600); }
+function turnTo(d){ const c=F.carry, m=c&&TURN_DIRS[c.type]; if(!m||m[d]==null) return; c.r=m[d]; furnChanged(); blip(600); }
+function renderTurnPad(){ const c=F.carry, m=c&&!FURN_INFO[c.type].wall&&TURN_DIRS[c.type], el=$('#turnPad'); el.classList.toggle('hide',!m||modalOpen);
+  if(m) ['u','l','r','d'].forEach(d=>{ const b=$('#tn'+d); b.disabled=m[d]==null; b.setAttribute('aria-pressed',m[d]===(c.r||0)); }); }
+['u','l','r','d'].forEach(d=>{ $('#tn'+d).onclick=()=>turnTo(d); });
 function sellCarried(val){
   const c=F.carry, st=furnStore();
   if(c.type==='chair'){ if(save.staff.length>save.up.chairs-1){ toast('Every staff member needs a chair. Let someone go first.'); return; }
@@ -3369,7 +3411,7 @@ async function deeRunCheck(){
   save.runAsk=true; F.busy=true; await sleep(400);
   save.sup.ointment=0; save.sup.wraps=0; // the shop really is out
   // and if the ink won't last the customers still to come (about 5 ml each), ink goes on the list too
-  const needInk=save.sup.ink<5*(CUSTOMERS.length-save.cust); save.runList=needInk?['ointment','wraps','ink']:['ointment','wraps']; save.runGot=[]; persist();
+  const needInk=save.sup.ink<5*(CUSTOMERS.length-save.cust); save.runList=['ointment','wraps',...(needInk?['ink']:[]),...((save.sup.towels||0)<CUSTOMERS.length-save.cust?['towels']:[])]; save.runGot=[]; persist();
   await say('dee',needInk?"Kid! We're out of ointment and wrap, and the ink is running low too. The next customer is walking in right now. I need a supply run.":"Kid! We're out of ointment and wrap, and the next customer is walking in right now. I need a supply run.");
   await say('dee',"Here's 60 coins. Walk out the front door and open the city map. The Supply Store is the blue blip. I've marked it for you, this once.");
   await say('dee',"Buy what we need and get back here fast, before we lose the customer!");
@@ -3584,7 +3626,7 @@ $('#bNextDay').onclick=async()=>{
 };
 async function startCareer(){
   save.career=true; ensureCareerSave(); save.cday=1; save.clock=DAY_START;
-  save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5); save.sup.ointment=Math.max(save.sup.ointment,5);
+  save.sup.needles=Math.max(save.sup.needles,5); save.sup.ink=Math.max(save.sup.ink,50); save.sup.wraps=Math.max(save.sup.wraps,5); save.sup.ointment=Math.max(save.sup.ointment,5); save.sup.towels=Math.max(save.sup.towels||0,5);
   F.player=null; F.custs=[]; F.sst={}; F.staffActs={}; F.today={you:0,staff:0,jobs:0,sjobs:0,lost:0}; F.arrivalAt=DAY_START+15; F.open=false; F.lateToast=false; F.closing=false; persist();
   save.workAt='dee'; persist();
   await dayCard('Day 4','Working for Dee'); enterFloor(); await fade(false);
@@ -4309,6 +4351,7 @@ function pollPad(dt){
   if(current==='floor'&&!modalOpen){
     let mx=lx,my=ly; if(on(12))my=-1; if(on(13))my=1; if(on(14))mx=-1; if(on(15))mx=1;
     F.padMove=[mx,my];
+    if(F.carry){ if(down(4)) turnCarried(-1); if(down(5)) turnCarried(1); }
     if(confirm&&!woke) floorInteract();
     if(down(9)||down(8)) floorMenu();
     return;
