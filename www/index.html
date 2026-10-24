@@ -1450,12 +1450,15 @@ let ptr=null;
 const touches=new Map(), palms=new Set(); let pinch=null, waitTouch=null, panDrag=null;
 // palm rejection: a big contact patch is a resting hand and never inks. Once a pencil (stylus) has been used on this device,
 // fingers and palms never ink at all (two fingers can still pinch). Turned off again in the station menu
-const PEN_KEY='tattooMadness.pen', PALM_SIZE=44;
+const PEN_KEY='tattooMadness.pen', PALM_SIZE=80;
 let penOnly=false, penSeen=false; try{ const v=localStorage.getItem(PEN_KEY); penOnly=v==='1'; penSeen=v!=null; }catch(e){}
 function setPenOnly(v){ penOnly=v; penSeen=true; try{ localStorage.setItem(PEN_KEY,v?'1':'0'); }catch(e){} }
 const palmy=e=>e.pointerType==='touch'&&Math.max(e.width||0,e.height||0)>=PALM_SIZE;
 function dropTouch(id){ touches.delete(id); palms.add(id); if(touches.size<2) pinch=null; if(waitTouch&&waitTouch.id===id) waitTouch=null;
   if(ptr&&ptr.id===id){ strokeAbort(); ptr=null; } }
+// forget every finger, palm and pinch (a new job, or a screen change that swallowed the lift-off). Tablets reuse contact ids,
+// so a stale palm id would otherwise block the next pencil stroke
+function resetTouches(){ touches.clear(); palms.clear(); pinch=null; waitTouch=null; panDrag=null; ptr=null; }
 function pinchInfo(){ const p=[...touches.values()]; return {d:Math.max(20,Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)),x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2}; }
 function beginDraw(id,x,y,t,pr){ ptr={id,t,c:[x,y],p:1,touch:true}; const [dx,dy]=toDoc(x,y); strokeBegin(dx,dy,pr); }
 const toDoc=(cx,cy)=>{ const r=padEl.getBoundingClientRect(); return [(cx-r.left)/r.width*DOC,(cy-r.top)/r.height*DOC]; };
@@ -1466,6 +1469,7 @@ function ptrPressure(e,speed){
 padEl.addEventListener('pointerdown',e=>{
   if(e.button!==0||modalOpen) return; padEl.setPointerCapture(e.pointerId);
   const pen=e.pointerType==='pen';
+  palms.delete(e.pointerId); touches.delete(e.pointerId); if(ptr&&ptr.id===e.pointerId) ptr=null;
   if(palmy(e)){ palms.add(e.pointerId); return; }
   VZ.anim=null; VZ.vel=[0,0]; VZ.cam=[0,0]; VZ.finger=null; VZ.lastMove=performance.now();
   // the pencil always draws: it never counts toward a pinch, and a line a resting hand started is thrown away
@@ -1511,7 +1515,7 @@ function flowPan(dx,dy,px,py){ if(VZ.z<=1||!stk||stk.tool!=='liner') return;
 const endPtr=e=>{ if(palms.delete(e.pointerId)) return; touches.delete(e.pointerId); if(touches.size<2) pinch=null; if(panDrag&&panDrag.id===e.pointerId) panDrag=null;
   if(waitTouch&&waitTouch.id===e.pointerId){ const w=waitTouch; waitTouch=null; if(e.type==='pointerup'&&!pinch){ beginDraw(w.id,w.x,w.y,w.t,1); ptr=null; strokeEnd(); } } // a quick tap still makes a dot
   if(ptr&&e.pointerId===ptr.id){ const inked=!!stk&&stk.tool==='liner'; ptr=null; strokeEnd(); VZ.cam=[0,0]; VZ.finger=null; if(inked&&!(job.smudges&&job.smudges.length)) viewFollow(e.clientX,e.clientY); } };
-padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr);
+padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr); padEl.addEventListener('lostpointercapture',e=>{ if(touches.has(e.pointerId)||palms.has(e.pointerId)||(ptr&&ptr.id===e.pointerId)) endPtr(e); });
 padEl.addEventListener('pointerleave',()=>{ hover=null; updateRing(); });
 
 let hover=null; const padCursor={x:300,y:300,show:false,drawing:false};
@@ -1650,6 +1654,7 @@ function failRound(){
 function clearWork(){ lctx.clearRect(0,0,DOC,DOC); sctx.clearRect(0,0,DOC,DOC); bctx.clearRect(0,0,DOC,DOC); job.dirty=false; }
 
 function startJob(opts){
+  resetTouches();
   Object.assign(job,{elapsed:0,stenVisible:true,upload:null,shadeSpec:null,lineSpec:null,failWhy:null,...opts});
   if(job.shadeSpec&&!DESIGNS[job.design].shade) job.shadeSpec=null; // designs without a shading area stay lines-only
   job.shadeStep=false; job.lineRes=null; $('#shadeInks').classList.add('hide');
