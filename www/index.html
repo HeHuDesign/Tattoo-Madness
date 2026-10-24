@@ -508,11 +508,12 @@ button{font:inherit;color:inherit}
     <div class="twork" id="twork">
       <div class="pad" id="pad">
         <canvas id="cBody" class="body" width="1200" height="1200"></canvas>
+        <!-- the stencil sits under the ink, like on real skin: your lines cover it -->
+        <canvas id="cSten" class="sten" width="600" height="600"></canvas>
         <canvas id="cShade" width="600" height="600"></canvas>
         <canvas id="cLine" width="600" height="600"></canvas>
         <canvas id="cDirt" width="600" height="600"></canvas>
         <canvas id="cBuf" width="600" height="600"></canvas>
-        <canvas id="cSten" class="sten" width="600" height="600"></canvas>
         <canvas id="cWarn" class="warn" width="600" height="600"></canvas>
         <div class="ring" id="ring"></div>
       </div>
