@@ -1461,6 +1461,9 @@ function dropTouch(id){ touches.delete(id); palms.add(id); if(touches.size<2) pi
 function resetTouches(){ touches.clear(); palms.clear(); pinch=null; waitTouch=null; panDrag=null; ptr=null; }
 function pinchInfo(){ const p=[...touches.values()]; return {d:Math.max(20,Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)),x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2}; }
 function beginDraw(id,x,y,t,pr){ ptr={id,t,c:[x,y],p:1,touch:true}; const [dx,dy]=toDoc(x,y); strokeBegin(dx,dy,pr); }
+// a finger that waited out the pinch check: start its line and replay where it moved meanwhile
+const PINCH_WAIT=150;
+function startWaited(w){ beginDraw(w.id,w.x,w.y,w.t,1); for(const p of w.pts){ if(!ptr) return; ptr.t=p.t; ptr.c=[p.x,p.y]; const [x,y]=toDoc(p.x,p.y); strokeMove(x,y,ptr.p); } }
 const toDoc=(cx,cy)=>{ const r=padEl.getBoundingClientRect(); return [(cx-r.left)/r.width*DOC,(cy-r.top)/r.height*DOC]; };
 function ptrPressure(e,speed){
   if(e.pointerType==='pen'&&e.pressure>0) return e.pressure;
@@ -1483,8 +1486,8 @@ padEl.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch'&&penOnly) return;
   if(VZ.mode){ panDrag={id:e.pointerId,x:e.clientX,y:e.clientY}; return; }
   // a finger waits a moment before inking, in case a second one follows for a pinch
-  if(e.pointerType==='touch'){ const w={id:e.pointerId,x:e.clientX,y:e.clientY,t:e.timeStamp}; waitTouch=w;
-    setTimeout(()=>{ if(waitTouch===w&&touches.size===1){ waitTouch=null; beginDraw(w.id,w.x,w.y,w.t,1); } },90); return; }
+  if(e.pointerType==='touch'){ const w={id:e.pointerId,x:e.clientX,y:e.clientY,t:e.timeStamp,pts:[]}; waitTouch=w;
+    setTimeout(()=>{ if(waitTouch===w&&touches.size===1){ waitTouch=null; startWaited(w); } },PINCH_WAIT); return; }
   ptr={id:e.pointerId,t:e.timeStamp,c:[e.clientX,e.clientY],p:1};
   const [x,y]=toDoc(e.clientX,e.clientY); strokeBegin(x,y,ptrPressure(e,0));
 });
@@ -1497,7 +1500,8 @@ padEl.addEventListener('pointermove',e=>{
   // pinch zooms toward the fingers; with the fingers spread apart (not bunched together) moving them also pans around the skin
   if(pinch&&touches.size>=2){ const n=pinchInfo(); viewZoom(pinch.z*n.d/pinch.d,n.x,n.y); if(n.d>=PAN_SPREAD) viewPan(n.x-pinch.x,n.y-pinch.y); pinch.x=n.x; pinch.y=n.y; pinch.z=VZ.z; pinch.d=n.d; return; }
   if(panDrag&&e.pointerId===panDrag.id){ viewPan(e.clientX-panDrag.x,e.clientY-panDrag.y); panDrag.x=e.clientX; panDrag.y=e.clientY; return; }
-  if(waitTouch&&e.pointerId===waitTouch.id&&Math.hypot(e.clientX-waitTouch.x,e.clientY-waitTouch.y)>6){ const w=waitTouch; waitTouch=null; beginDraw(w.id,w.x,w.y,w.t,1); }
+  // while waiting, a finger never inks (even if it slides): its path is kept and drawn once it's clearly not a pinch
+  if(waitTouch&&e.pointerId===waitTouch.id){ waitTouch.pts.push({x:e.clientX,y:e.clientY,t:e.timeStamp}); return; }
   if(!ptr||e.pointerId!==ptr.id) return;
   const was=ptr.c.slice(), evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
   for(const ev of (evs.length?evs:[e])){
@@ -1513,7 +1517,7 @@ function flowPan(dx,dy,px,py){ if(VZ.z<=1||!stk||stk.tool!=='liner') return;
   // your stroke's speed and direction, smoothed (pixels per ms), so jitters don't wiggle the view
   const v=VZ.vel||(VZ.vel=[0,0]); v[0]=v[0]*.8+dx/dt*.2; v[1]=v[1]*.8+dy/dt*.2; }
 const endPtr=e=>{ if(palms.delete(e.pointerId)) return; touches.delete(e.pointerId); if(touches.size<2) pinch=null; if(panDrag&&panDrag.id===e.pointerId) panDrag=null;
-  if(waitTouch&&waitTouch.id===e.pointerId){ const w=waitTouch; waitTouch=null; if(e.type==='pointerup'&&!pinch){ beginDraw(w.id,w.x,w.y,w.t,1); ptr=null; strokeEnd(); } } // a quick tap still makes a dot
+  if(waitTouch&&waitTouch.id===e.pointerId){ const w=waitTouch; waitTouch=null; if(e.type==='pointerup'&&!pinch){ startWaited(w); ptr=null; strokeEnd(); } } // a quick tap still makes a dot
   if(ptr&&e.pointerId===ptr.id){ const inked=!!stk&&stk.tool==='liner'; ptr=null; strokeEnd(); VZ.cam=[0,0]; VZ.finger=null; if(inked&&!(job.smudges&&job.smudges.length)) viewFollow(e.clientX,e.clientY); } };
 padEl.addEventListener('pointerup',endPtr); padEl.addEventListener('pointercancel',endPtr); padEl.addEventListener('lostpointercapture',e=>{ if(touches.has(e.pointerId)||palms.has(e.pointerId)||(ptr&&ptr.id===e.pointerId)) endPtr(e); });
 padEl.addEventListener('pointerleave',()=>{ hover=null; updateRing(); });
